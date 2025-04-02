@@ -1,8 +1,8 @@
 EMS Dev Kit
 
 ESP32 peripheral module Arduino framework examples:
- 2. RS-485 (MODBUS)
- 3. Buttons (voltage divider array on analog GPIO)
+ 1. RS-485 (MODBUS)
+ 2. Buttons (voltage divider array on analog GPIO)
 
 Installation:
  1. install VSCode and PlatformIO VSCode extension
