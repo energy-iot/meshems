@@ -19,10 +19,10 @@
 #define DISPLAY_CS_PIN 9
 
 // RS-485 
-#define RS485_RX_1             GPIO_NUM_6
-#define RS485_TX_1             GPIO_NUM_7 
-#define RS485_RX_2             GPIO_NUM_16
-#define RS485_TX_2             GPIO_NUM_15
+#define RS485_RX_1             GPIO_NUM_6   // RX here maps to RS485 HW-519 module's silk screen "RXD"
+#define RS485_TX_1             GPIO_NUM_7   // TX here maps to RS485 HW-519 module's silk screen "TXD"
+#define RS485_RX_2             GPIO_NUM_15  // RX here maps to RS485 HW-519 module's silk screen "RXD"
+#define RS485_TX_2             GPIO_NUM_16  // TX here maps to RS485 HW-519 module's silk screen "TXD"
 
 // Relays
-#define RELAY_1_PIN 8
+#define RELAY_1_PIN 18
