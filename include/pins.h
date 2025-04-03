@@ -9,13 +9,20 @@
 #define ANALOG_BTN_PIN  A7
 #endif
 
-//OLED
-#define DISPLAY_RST_PIN 2
-#define DISPLAY_DC_PIN 42
-#define DISPLAY_CS_PIN 41
+//SPI OLED display
+//#define DISPLAY_RST_PIN 2
+//#define DISPLAY_DC_PIN 42
+//#define DISPLAY_CS_PIN 41
+
+#define DISPLAY_RST_PIN 46
+#define DISPLAY_DC_PIN 3
+#define DISPLAY_CS_PIN 9
 
 // RS-485 
 #define RS485_RX_1             GPIO_NUM_6
 #define RS485_TX_1             GPIO_NUM_7 
 #define RS485_RX_2             GPIO_NUM_16
 #define RS485_TX_2             GPIO_NUM_15
+
+// Relays
+#define RELAY_1_PIN 8
