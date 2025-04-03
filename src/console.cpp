@@ -1,6 +1,5 @@
 #include <console.h>
 #include <display.h>
-//#include <debug.h>
 
 Console _console;
 
@@ -10,7 +9,6 @@ Console getConsole() {
 
 Console::Console() {
     logLinePtr = 0;
-    //output_serial = 0;
     for(int i=0;i<NUM_LINES;i++) {
         consoleLog[i] = String();
     }
@@ -27,7 +25,7 @@ void Console::redrawConsole() {
         display->drawString(0, y, consoleLog[i]); 
         //SerialPins.println(consoleLog[i]);
     }
-    getUI()->render();//display->display();
+    getUI()->render();
 }
 
 void Console::redrawConsoleFrame(SH1106 *display) { 
@@ -45,9 +43,6 @@ void Console::scroll() {
     }
 }
 
-//void Console::setOutputSerial(SoftwareSerial* ser) {
-//    output_serial = ser;
-//}
 void Console::addLine(const char* line) {
     String l(line);
     return addLine(l);

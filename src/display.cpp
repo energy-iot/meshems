@@ -25,10 +25,6 @@ SOFTWARE.
 See more at http://blog.squix.ch
 */
 #include <display.h>
-//#include <debug.h>
-//#include <modbus_thermostat.h>
-//#include <energy_model.h>
-//#include <spi_mutex.h>
 #include <console.h>
 #include <pins.h>
 
@@ -39,7 +35,7 @@ SH1106 display(true, DISPLAY_RST_PIN, DISPLAY_DC_PIN, DISPLAY_CS_PIN); // FOR SP
 SH1106Ui ui( &display );
 
 char rssi_overlay[12];
-int second_counter = 0;
+int second_interval = 0;
 int start_millis = 0;
 
 void display_set_rssi(const char* rssi) {
@@ -131,78 +127,6 @@ bool drawEnergyFrame2(SH1106 *display, SH1106UiState* state, int x, int y) {
   return false;
 }
 
-bool drawEnergyFrame3(SH1106 *display, SH1106UiState* state, int x, int y) {
-  display->clear();
-  display->setFont(ArialMT_Plain_10);
-  display->setTextAlignment(TEXT_ALIGN_CENTER);
-
-  display->drawString(60,0,"Current Transformers 1-6");
-
-  display->setFont(ArialMT_Plain_16);
-  char str[32];
-
-  display->setTextAlignment(TEXT_ALIGN_LEFT);  
-  sprintf(str, "4 %02.02fA", (energy_model.board[0].cal_currentCT[3] < 0 ? energy_model.board[0].cal_currentCT[3]*-1 : energy_model.board[0].cal_currentCT[3]));
-  display->drawString(0, 10, str);
-
-  display->setTextAlignment(TEXT_ALIGN_RIGHT);
-  sprintf(str, "3 %02.02fA", (energy_model.board[0].cal_currentCT[2] < 0 ? energy_model.board[0].cal_currentCT[2]*-1 :energy_model.board[0].cal_currentCT[2]));
-  display->drawString(128, 10, str);
-
-  display->setTextAlignment(TEXT_ALIGN_LEFT);
-  sprintf(str, "5 %02.02fA", (energy_model.board[0].cal_currentCT[4] < 0 ? energy_model.board[0].cal_currentCT[4]*-1 :energy_model.board[0].cal_currentCT[4]));
-  display->drawString(0, 27, str);
-
-  display->setTextAlignment(TEXT_ALIGN_RIGHT);
-  sprintf(str, "2 %02.02fA", (energy_model.board[0].cal_currentCT[1] < 0 ? energy_model.board[0].cal_currentCT[1]*-1 :energy_model.board[0].cal_currentCT[1]));
-  display->drawString(128, 27, str);
-
-  display->setTextAlignment(TEXT_ALIGN_LEFT);
-  sprintf(str, "6 %02.02fA", (energy_model.board[0].cal_currentCT[5] < 0 ? energy_model.board[0].cal_currentCT[5]*-1 :energy_model.board[0].cal_currentCT[5]));
-  display->drawString(0, 44, str);
-
-  display->setTextAlignment(TEXT_ALIGN_RIGHT);
-  sprintf(str, "1 %02.02fA", (energy_model.board[0].cal_currentCT[0] < 0 ? energy_model.board[0].cal_currentCT[0]+-1 :energy_model.board[0].cal_currentCT[0]));
-  display->drawString(128, 44, str);
-
-  return false;
-}
-bool drawEnergyFrame4(SH1106 *display, SH1106UiState* state, int x, int y) {
-  display->clear();
-  display->setFont(ArialMT_Plain_10);
-  display->setTextAlignment(TEXT_ALIGN_CENTER);
-
-  display->drawString(60,0,"Current Transformers 7-12");
-
-  display->setFont(ArialMT_Plain_16);
-  char str[32];
-
-  display->setTextAlignment(TEXT_ALIGN_LEFT);  
-  sprintf(str, "10 %02.02fA", (energy_model.board[1].cal_currentCT[3] < 0 ? energy_model.board[1].cal_currentCT[3]*-1 : energy_model.board[1].cal_currentCT[3]));
-  display->drawString(0, 10, str);
-
-  display->setTextAlignment(TEXT_ALIGN_RIGHT);
-  sprintf(str, "9 %02.02fA", (energy_model.board[1].cal_currentCT[2] < 0 ? energy_model.board[1].cal_currentCT[2]*-1 :energy_model.board[1].cal_currentCT[2]));
-  display->drawString(128, 10, str);
-
-  display->setTextAlignment(TEXT_ALIGN_LEFT);
-  sprintf(str, "11 %02.02fA", (energy_model.board[1].cal_currentCT[4] < 0 ? energy_model.board[1].cal_currentCT[4]*-1 :energy_model.board[1].cal_currentCT[4]));
-  display->drawString(0, 27, str);
-
-  display->setTextAlignment(TEXT_ALIGN_RIGHT);
-  sprintf(str, "8 %02.02fA", (energy_model.board[1].cal_currentCT[1] < 0 ? energy_model.board[1].cal_currentCT[1]*-1 :energy_model.board[1].cal_currentCT[1]));
-  display->drawString(128, 27, str);
-
-  display->setTextAlignment(TEXT_ALIGN_LEFT);
-  sprintf(str, "12 %02.02fA", (energy_model.board[1].cal_currentCT[5] < 0 ? energy_model.board[1].cal_currentCT[5]*-1 :energy_model.board[1].cal_currentCT[5]));
-  display->drawString(0, 44, str);
-
-  display->setTextAlignment(TEXT_ALIGN_RIGHT);
-  sprintf(str, "7 %02.02fA", (energy_model.board[1].cal_currentCT[0] < 0 ? energy_model.board[1].cal_currentCT[0]+-1 :energy_model.board[1].cal_currentCT[0]));
-  display->drawString(128, 44, str);
-
-  return false;
-}
 */
 
 bool drawFrame3(SH1106 *display, SH1106UiState* state, int x, int y) {
@@ -334,8 +258,6 @@ SH1106Ui* setup_display() {
   // Inital UI takes care of initalising the display too.
   ui.init();
 
-//TODO add "oled_display" : {"flipVertically":0} to evse_config.json (1=flip)
-//if (get_evse_config()->oled_display_flip)
   display.flipScreenVertically();
 
   start_millis = millis();
@@ -344,22 +266,24 @@ SH1106Ui* setup_display() {
 }
 SH1106* getDisplay() {return &display;};
 
+void show_seconds_counter() {
+  //print seconds counter in the overlay
+  if (millis() - second_interval > 1000) {
+    char tbuf[16] = {0};
+    sprintf(tbuf, "t:%d", (millis()-start_millis/1000)/1000);
+    display_set_rssi(tbuf);
+    second_interval = millis();
+  }
+}
+
 void loop_display() {
- // if (xSemaphoreTake (spiMutex, (TickType_t)500)) {
-    int remainingTimeBudget = ui.update();
-    if (remainingTimeBudget > 0) {
-      // You can do some work here
-      // Don't do stuff if you are below your
-      // time budget.
-      //Serial.printf("DISPLAY WAITING FOR NO REASON: %d\n", remainingTimeBudget);
-      delay(remainingTimeBudget);
-    }
-   // xSemaphoreGive(spiMutex);
- // }
- if (millis() - second_counter > 1000) {
-  char tbuf[16] = {0};
-  sprintf(tbuf, "t:%d", (millis()-start_millis/1000)/1000);
-  display_set_rssi(tbuf);
-  second_counter = millis();
- }
+  ui.update();
+  //int remainingTimeBudget = ui.update();
+  //if (remainingTimeBudget > 0) {
+    // You can do some work here
+    // Don't do stuff if you are below your
+    // time budget.
+    //delay(remainingTimeBudget);
+  //}
+  show_seconds_counter();
 }

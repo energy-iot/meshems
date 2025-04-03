@@ -39,15 +39,14 @@ uint8_t Modbus_SHT20::poll() {
         Serial.printf("MODBUS SHT20: addr:%d reg:0x001 value:%d temperature:%2.1fC\n", modbus_address, getResponseBuffer(0), getResponseBuffer(0)/10.0); 
 #endif
         timestamp_last_report = now();
-        //route_poll_response(reg, getResponseBuffer(0); //TODO parse multi-byte response in route_poll_response instead of here
-        Serial.printf("MODBUS SHT20: Temperature: %2.1fC  Humidity:%2.1f%%\n", getResponseBuffer(0)/10.0, getResponseBuffer(1)/10.0);
         temperature = getResponseBuffer(0);
         humidity = getResponseBuffer(1);
+        //route_poll_response(reg, getResponseBuffer(0); //TODO parse multi-byte response in route_poll_response instead of here
+        Serial.printf("MODBUS SHT20: Temperature: %2.1fC  Humidity:%2.1f%%\n", temperature/10.0, humidity/10.0);
+
     } else {
         timestamp_last_failure = now();
-//#ifdef ENABLE_DEBUG_MODBUS
         Serial.println("MODBUS SHT20 POLL FAIL");
-//#endif
     }
     
     return result;
