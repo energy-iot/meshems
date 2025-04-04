@@ -29,7 +29,7 @@
 
 //CAN
 #define CAN0_CS     2
-//#define CAN0_SO    SPI MISO
-//#define CAN0_SI    SPI MOSI
-//#define CAN0_SCK    SPI clock?
+#define CAN0_SO     42  //SPI MISO
+#define CAN0_SI     41  //SPI MOSI
+#define CAN0_SCK    8   //SPI clock
 #define CAN0_INT    17
