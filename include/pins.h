@@ -26,3 +26,10 @@
 
 // Relays
 #define RELAY_1_PIN 18
+
+//CAN
+#define CAN0_CS     2
+//#define CAN0_SO    SPI MISO
+//#define CAN0_SI    SPI MOSI
+//#define CAN0_SCK    SPI clock?
+#define CAN0_INT    17

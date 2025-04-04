@@ -4,6 +4,7 @@
 #include <display.h>
 #include <console.h>
 #include <SPI.h>
+#include <can.h>
 
 void setup() {
     Serial.begin(115200);
@@ -15,6 +16,8 @@ void setup() {
     delay(1000);
 
     setup_modbus_master();
+    setup_can();
+
     setup_buttons();
     _console.addLine("      EMS Devkit");
 
@@ -24,4 +27,5 @@ void loop() {
     loop_buttons();
     loop_modbus_master();
     loop_display();
+    // loop_can(); uncomment when ready to talk to transceiver
 }
