@@ -12,7 +12,7 @@
 
  // CAN TX Variables
  unsigned long prevTX = 0;                                        // Variable to store last execution time
- const unsigned int invlTX = 1000;                                // One second interval constant
+ const unsigned int invlTX = 5000;                                // Five second interval constant
  byte data[] = {0xAA, 0x55, 0x01, 0x10, 0xFF, 0x12, 0x34, 0x56};  // Generic CAN data to send
  
  // CAN RX Variables
@@ -68,14 +68,14 @@
      Serial.println();
    }
    
-   if(millis() - prevTX >= invlTX){                    // Send this at a one second interval. 
+   if(millis() - prevTX >= invlTX){                    // Send this at a N second interval. 
      prevTX = millis();
      byte sndStat = CAN0.sendMsgBuf(0x100, 8, data);
      
      if(sndStat == CAN_OK)
-       Serial.println("Message Sent Successfully!");
+       Serial.println("CAN Message Sent Success!"); // TODO perhaps display data or more meaningful, iterate a CAN sent success stats metric
      else
-       Serial.println("Error Sending Message...");
+       Serial.println("CAN Error Sending Message"); // TODO perhaps display data or more meaningful, iterate a CAN sent error stats metric
  
    }
  }

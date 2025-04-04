@@ -8,7 +8,7 @@
 
 void setup() {
     Serial.begin(115200);
-    Serial.println("Starting...");
+    Serial.println("Started...setup in 4 secs");
     delay(4000);
 
     SPI.begin();
@@ -22,7 +22,7 @@ void setup() {
     setup_can();
 
     setup_buttons();
-    _console.addLine("      EMS Devkit");
+    _console.addLine("      EMS setup done");
 
 }
 
@@ -31,5 +31,5 @@ void loop() {
     loop_modbus_master();
     loop_modbus_client();
     loop_display();
-    //loop_can(); //uncomment when ready to talk to transceiver
+    loop_can(); //uncomment when ready to talk to transceiver
 }
