@@ -18,6 +18,7 @@ void setup() {
     delay(1000);
 
     setup_modbus_master();
+    setup_modbus_client();
     setup_can();
 
     setup_buttons();
@@ -28,6 +29,7 @@ void setup() {
 void loop() {
     loop_buttons();
     loop_modbus_master();
+    loop_modbus_client();
     loop_display();
     //loop_can(); //uncomment when ready to talk to transceiver
 }

@@ -10,6 +10,6 @@ BIAS RESISTORS DETAILED TECH SPECS HERE https://control.com/forums/threads/modbu
 TESTING WITH 150 OHM RESISTOR ACROSS LAST FURTHEST A-B MODBUS RTU ENDPOINT THIS CAN BE 620 OHM ALTERNATIVELY - FURTHER SCOPE TESTING REQUIRED ON CAT5E VS STP RS485 CBLE 
 */
 
-void setup_modbus_slaves();
+void setup_modbus_clients();
 void setup_modbus_master();
 void loop_modbus_master();

@@ -7,7 +7,8 @@
 #define THERMOSTAT_1_ADDR 0x01
 
 SoftwareSerial _modbus1(RS485_RX_1, RS485_TX_1); //(rx, tx) corresponds with HW519 rxd txd pins
-SoftwareSerial _modbus2(RS485_RX_2, RS485_TX_2); //(rx, tx) corresponds with HW519 rxd txd pins
+//mb2 is a client in EMS ModCan 
+//SoftwareSerial _modbus2(RS485_RX_2, RS485_TX_2); //(rx, tx) corresponds with HW519 rxd txd pins
 
 //the temp/humidity sensor (SHT20)
 Modbus_SHT20 sht20;
@@ -21,7 +22,7 @@ void setup_sht20() {
 }
 
 
-void setup_modbus_slaves() {
+void setup_modbus_clients() {
   //setup_thermostats();
   //setup_dtm();
   setup_sht20();
@@ -36,9 +37,8 @@ void setup_modbus_master() {
   gpio_reset_pin(RS485_TX_2);
 
   _modbus1.begin(9600);
-  _modbus2.begin(9600);
 
-  setup_modbus_slaves();
+  setup_modbus_clients();
 
   //sht20.poll();
 }
