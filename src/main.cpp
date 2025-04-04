@@ -8,10 +8,12 @@
 
 void setup() {
     Serial.begin(115200);
+    Serial.println("Starting...");
+    delay(4000);
+
     SPI.begin();
     setup_display();
     
-    Serial.println("Starting...");
     drawBitmap(40, 5, RICK_WIDTH, RICK_HEIGHT, rick); 
     delay(1000);
 
@@ -27,5 +29,5 @@ void loop() {
     loop_buttons();
     loop_modbus_master();
     loop_display();
-    // loop_can(); uncomment when ready to talk to transceiver
+    loop_can(); //uncomment when ready to talk to transceiver
 }
