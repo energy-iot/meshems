@@ -31,5 +31,5 @@ void loop() {
     loop_modbus_master();
     loop_modbus_client();
     loop_display();
-    loop_can(); //uncomment when ready to talk to transceiver
+    //loop_can(); //uncomment when ready to talk to transceiver
 }

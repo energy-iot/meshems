@@ -13,3 +13,4 @@ TESTING WITH 150 OHM RESISTOR ACROSS LAST FURTHEST A-B MODBUS RTU ENDPOINT THIS 
 void setup_modbus_clients();
 void setup_modbus_master();
 void loop_modbus_master();
+void update();

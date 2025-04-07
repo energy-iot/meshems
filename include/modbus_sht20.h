@@ -20,6 +20,8 @@ class Modbus_SHT20 : public ModbusMaster {
 
         float getTemperature();
         float getHumidity();
+        float getRawTemperature();
+        float getRawHumidity();
 
     private:
         uint8_t modbus_address;

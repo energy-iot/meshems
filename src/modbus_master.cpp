@@ -1,6 +1,7 @@
 #include <SoftwareSerial.h>
 #include <modbus.h>
 #include <pins.h>
+#include <data_model.h>
 
 #define POLL_INTERVAL 10000 //300000 //5 mins
 //MODBUS slave devices
@@ -43,10 +44,17 @@ void setup_modbus_master() {
   //sht20.poll();
 }
 
+void update() {
+  //harvest temp/humidity from sht20
+  inputRegisters[1] = sht20.getRawTemperature();
+  inputRegisters[2] = sht20.getRawHumidity();
+}
+
 void loop_modbus_master() {
   if (millis() - lastMillis > POLL_INTERVAL) {
     Serial.println("poll thermostat");
     sht20.poll();
+    update();
     lastMillis = millis();
   }
 }

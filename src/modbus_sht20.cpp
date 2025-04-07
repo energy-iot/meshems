@@ -4,7 +4,8 @@
 #define PAUSE_ON_RAMP_LEVELS 30000
 
 Modbus_SHT20::Modbus_SHT20() {
- 
+    temperature = -1;
+    humidity = -1;
 }
 
 uint8_t Modbus_SHT20::get_modbus_address() {
@@ -16,7 +17,8 @@ void Modbus_SHT20::set_modbus_address(uint8_t addr) {
 }
 float Modbus_SHT20::getTemperature() { return temperature/10.0; }
 float Modbus_SHT20::getHumidity() { return humidity/10.0; }
-
+float Modbus_SHT20::getRawTemperature() { return temperature; }
+float Modbus_SHT20::getRawHumidity() { return humidity; }
 void Modbus_SHT20::route_poll_response(uint16_t reg, uint16_t response) {
     switch (reg) {
         case rTEMPERATURE :
