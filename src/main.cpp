@@ -27,7 +27,7 @@ void setup() {
 
 void loop() {
     loop_buttons();
-    loop_modbus_master();
+    // loop_modbus_master();
     loop_display();
     loop_can(); //uncomment when ready to talk to transceiver
 }
