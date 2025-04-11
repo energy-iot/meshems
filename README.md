@@ -55,7 +55,7 @@ B/ Front-of-meter IEEE ISV StreetPoleEMS meaningful integrations:
 16. 18650 optional holdover battery backup of EMS - store restorable "warm" timestamped states/events  into flash
 17. RTC clock - sleep and deep sleep of peripherals and/or ESP32S3
     
-Networking LAN/WAN extended radio module WWAN/WAN/LAN
+Networking LAN/WAN extended radio module WWAN/WAN/LAN:
 19. ETHERNET MAC/PHY wan/lan dual port 
 20. BLE mesh as LAN
 21. G3 ALLIANCE RF+PLC MAC/PHY module support as WAN/LAN mesh networking
