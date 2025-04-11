@@ -13,7 +13,7 @@ Installation:
  5. build and flash
 
 Port Labs April 22-23 workshop code challenges:  
-A/ meaningful to behind-the-meter Sunspec self-cert readiness of Modbus/Canbus IWF hubcore functions:
+LANE A/ meaningful to behind-the-meter Sunspec self-cert readiness of Modbus/Canbus IWF hubcore functions:
 1. Sunspec BESS Gridtie Battery Modbus register support
 2. Sunspec Gridtie Inverter Modbus register support
 3. Sunspec Gridtie Solar Controller Modbus register support
@@ -30,7 +30,7 @@ BUILDING STU/MTU addons
 13. BYO Z-wave Plus Iot device interop plugin
 14. Suggestions?  Other Building Iot Systems interworking endpoint devices & Hubs
 
-B/ Front-of-meter IEEE ISV StreetPoleEMS meaningful integrations:
+LANE B/ Front-of-meter IEEE ISV StreetPoleEMS meaningful integrations:
 1. FrontOfTheMeter OPENAMI 2way monitor and control PUB/SUB topic structure framework
 2. STREETPOLEEMS MESH distributed Intelligence Pub/Sub intra-networking
 3. FLEXMEASURES layering export into ESP32S3
