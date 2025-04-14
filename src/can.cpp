@@ -13,7 +13,6 @@
  // CAN TX Variables
  unsigned long prevTX = 0;                                        // Variable to store last execution time
  const unsigned int invlTX = 1000;                                // Five second interval constant
- byte data[] = {0xAA, 0x55, 0x01, 0x10, 0xFF, 0x12, 0x34, 0x56};  // Generic CAN data to send
  
  // CAN RX Variables
 //  long unsigned int rxId;
@@ -32,34 +31,26 @@ long unsigned int canID;       // Can message ID
  SPIClass canSPI = SPIClass();
  // Create the CAN controller with custom SPI
  MCP_CAN CAN0(&canSPI, CAN0_CS);
+ //MCP_CAN CAN0(CAN0_CS);
+ 
+ byte data[8] = {0, 0, 0, 0, 0, 0, 0, 0};  // Msg 8 byte data
  
  void setup_can()
  {   
-  pinMode(CAN0_INT, INPUT);                           // Configuring pin for /INT input
+  pinMode(CAN0_INT, INPUT);                           // Configuring MCP2515 interrupt pin as in input
 
   // Initialize your custom SPI
   canSPI.begin(CAN0_SCK, CAN0_SO, CAN0_SI);
-  Serial.println("canSPI Initialized Successfully!");
+  Serial.println("canSPI Created Successfully!");
   
-  // Initialize MCP2515 and save the status code
-  byte status = CAN0.begin(MCP_ANY, CAN_500KBPS, MCP_8MHZ);
-  
-  // Print the status code in different formats
-  Serial.print("MCP2515 Initialization Status Code: ");
-  Serial.print(status);                  // Decimal
-
-  // Initialize MCP2515 running at 8MHz with a baudrate of 500kb/s and the masks and filters disabled.
-  if(status == CAN_OK) {
+  Serial.println("CAN transmitter test");
+   // Initialize MCP2515 running at 8MHz with a baudrate of 500kb/s
+  if(CAN0.begin(MCP_ANY, CAN_500KBPS, MCP_8MHZ) == CAN_OK) 
     Serial.println("MCP2515 Initialized Successfully!");
-    // Set to normal mode
-    CAN0.setMode(MCP_NORMAL);
-    Serial.println("MCP2515 in Normal Mode!");
-  } else {
+  else 
     Serial.println("Error Initializing MCP2515...");
-  }
- 
-   CAN0.setMode(MCP_NORMAL);
-   Serial.println("MCP2515 Example...");
+
+  CAN0.setMode(MCP_NORMAL);   // Normal mode to allow messages to be transmitted
  }
  
  void loop_can()

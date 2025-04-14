@@ -12,22 +12,22 @@ void setup() {
     delay(4000);
 
     SPI.begin();
-    setup_display();
+    //setup_display();
     
     drawBitmap(40, 5, RICK_WIDTH, RICK_HEIGHT, rick); 
     delay(1000);
 
-    setup_modbus_master();
+    // setup_modbus_master();
     setup_can();
 
-    setup_buttons();
+    //setup_buttons();
     _console.addLine("      EMS setup done");
 
 }
 
 void loop() {
-    loop_buttons();
+    //loop_buttons();
     // loop_modbus_master();
-    loop_display();
+    //loop_display();
     loop_can(); //uncomment when ready to talk to transceiver
 }
