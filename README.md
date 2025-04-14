@@ -9,70 +9,126 @@ This development kit supports multiple peripherals using the Arduino framework:
 - CANBUS V2.0 interface
 - Input buttons (using voltage divider array on analog GPIO)
 
+## Hardware Overview
+
+### Core Specifications
+- **Processor:** Xtensa® dual-core 32-bit LX7 microprocessor, up to 240 MHz
+- **Memory:** 16MB Flash + 8MB PSRAM (N16R8 variant)
+- **Connectivity:** Wi-Fi 802.11 b/g/n and Bluetooth 5 (LE)
+- **USB:** USB OTG interface with Type-C connector
+- **GPIO:** 45 programmable GPIO pins
+- **Dimensions:** 51mm x 25.5mm x 10mm
+- **Operating Voltage:** 3.3V
+- **Datasheet:** [ESP32S3 Technical Reference Manual](https://www.espressif.com/sites/default/files/documentation/esp32-s3_technical_reference_manual_en.pdf)
+- **Development Board Datasheet:** [ESP32S3-DevKitC-1 Datasheet](https://docs.espressif.com/projects/esp-dev-kits/en/latest/esp32s3/esp32-s3-devkitc-1/index.html)
+
+### xx Breakout RS-485 MODBUS RTU Module
+- Industry-standard RS-485 interface for MODBUS RTU communication
+- Built-in transceiver with automatic direction control
+- 3-pin screw terminal for easy connection (A, B, GND)
+- Supports baud rates up to 115200 bps
+- **Operating voltage:** 5V (level-shifted from ESP32-S3 at 3.3V)
+- **Module Datasheet:** RS-485 Transceiver Datasheet
+
+### MCP2515 Breakout - CANBUS V2.0 Interface
+- CAN 2.0B compliant controller and transceiver
+- Supports standard (11-bit) and extended (29-bit) identifiers
+- Maximum bitrate: 1 Mbit/s
+- Screw terminals for CANH and CANL connections
+- Integrated termination resistors (jumper selectable)
+- **Controller Datasheet:** [MCP2515 CAN Controller](https://ww1.microchip.com/downloads/en/DeviceDoc/MCP2515-Stand-Alone-CAN-Controller-with-SPI-20001801J.pdf)
+- **Transceiver Datasheet:** [TJA1051 CAN Transceiver](https://www.nxp.com/docs/en/data-sheet/TJA1051.pdf)
+
+### Additional Communication Options
+- **Ethernet:** 10/100 Mbps Ethernet with RJ45 connector (optional module)
+- **BLE/BLE Mesh:** Utilizing ESP32S3's built-in Bluetooth capabilities
+
+### Input/Output Capabilities
+- **Button Array Interface:** Analog input with voltage divider network
+- **Display:** Optional 2.4" TFT display (SPI interface)
+- **Expansion Headers:** Breakout area is avaible on the perfboard to allow for use of the remaining GPIO pins
+- **Relay:** Single 1A SSR (Solid State Relay) for AC Mains control
+
+### Power Supply Options
+- **USB Power:** 5V via USB Type-C connector
+- **DC Power:** 5VDC via screw terminals to on board, connects directly to 5VIN of ESP32 (5V input MAX).
+- **AC Power:** ⚠️ 120VAC input via screw terminals on board to power supply. 
+
+### ⚠️ WARNING: AC Power Safety
+### DANGER - RISK OF ELECTRIC SHOCK, SERIOUS INJURY OR DEATH
+This development kit includes a connection for AC power input. When working with AC power (especially 120V/240V mains voltage):
+
+- **Professional Installation Required:** All AC power connections MUST be installed by a qualified electrician in accordance with local electrical codes and regulations.
+- **Enclosure Mandatory:** When used with AC power connections, the device MUST be mounted in an appropriate, non-conductive enclosure with restricted access.
+- **Safety Precautions:**
+- ALWAYS disconnect AC power before making any changes to the wiring
+- NEVER touch any AC terminals or components when power is connected
+- Ensure proper grounding of all components
+- Install appropriate circuit protection (fuses, breakers)
+- Keep AC and DC/logic circuits strictly separate
+**Not UL/CE Certified for AC Applications:** This development kit by itself is NOT certified for direct connection to AC mains.
+
+**⚠️ Failure to follow these safety guidelines could result in severe electrical shock, fire, serious injury, or death. ⚠️**
+
+### Physical Specifications
+- PCB Dimensions: 100mm x 75mm (main board)
+- Mounting: 4x M3 mounting holes (3.2mm diameter)
+
 ## Installation Guide
 ### Prerequisites
-
 - A computer with internet connection
 - ESP32S3 N16R8 DEV KIT C1 hardware
 - USB-C cable for connecting the development board to your computer
 
 ### Step 1: Install Visual Studio Code
-Download Visual Studio Code from https://code.visualstudio.com/
-Follow the installation instructions for your operating system:
-
-**Windows:** Run the installer and follow the prompts
-**macOS:** Drag the application to your Applications folder
+1. Download Visual Studio Code from https://code.visualstudio.com/
+2. Follow the installation instructions for your operating system:
+  - **Windows:** Run the installer and follow the prompts
+  - **macOS:** Drag the application to your Applications folder
 
 ### Step 2: Install PlatformIO Extension
 
-Open VSCode
-Click on the Extensions icon in the left sidebar (or press Ctrl+Shift+X)
-Search for "PlatformIO IDE"
-Click "Install" on the PlatformIO IDE extension
-Wait for the installation to complete (this may take a few minutes)
-Restart VSCode when prompted
+1. Open VSCode
+2. Click on the Extensions icon in the left sidebar (or press Ctrl+Shift+X)
+3. Search for "PlatformIO IDE"
+4. Click "Install" on the PlatformIO IDE extension
+5. Wait for the installation to complete (this may take a few minutes)
+6. Restart VSCode when prompted
 
 ### Step 3: Clone the Repository
-Open a terminal/command prompt
-Navigate to the directory where you want to store the project
-Clone the repository using git:
-git clone https://github.com/yourusername/EIOT.Energy-EMS-Dev-Kit.git
-(Replace the URL with the actual repository URL)
+1. Open a terminal/command prompt
+2. Navigate to the directory where you want to store the project
+3. Clone the repository using git:
+4. `git clone https://github.com/nesl-admin/ems-dev.git`
 
 ### Step 4: Open the Project in VSCode
-
-In VSCode, click on the PlatformIO icon in the left sidebar
-Select "Open Project" from the PlatformIO home screen
-Navigate to the cloned repository folder and select it
-Wait for VSCode to load the project and initialize PlatformIO
+1. In VSCode, click on the PlatformIO icon in the left sidebar
+2. Select "Open Project" from the PlatformIO home screen
+3. Navigate to the cloned repository folder and select it
+4. Wait for VSCode to load the project and initialize PlatformIO
 
 ### Step 5: Configure the Project
-
-Wait for PlatformIO to download all required dependencies (libraries)
-**IMPORTANT:** Set the environment to ESP32S3 N16R8 DEV KIT C
-Open the platformio.ini file in the project root
-Make sure the environment section contains [env:esp32s3_n16r8] or similar
-If not, add or modify the environment section to match the ESP32S3 N16R8 DEV KIT C
-
-
+1. Wait for PlatformIO to download all required dependencies (libraries)
+  **IMPORTANT:** Set the environment to ESP32S3 N16R8 DEV KIT C
+  - Open the platformio.ini file in the project root
+  - Make sure the environment section contains [env:esp32s3_n16r8] or similar
+  - If not, add or modify the environment section to match the ESP32S3 N16R8 DEV KIT C
 
 ### Step 6: Build and Flash the Firmware
-Connect your ESP32S3 DEV KIT to your computer via USB
-In VSCode, click on the PlatformIO icon in the left sidebar
-Select "Project Tasks" from the menu
-Under "General", click "Build" to compile the project
-After successful build, click "Upload" to flash the firmware to your device
-Monitor the progress in the terminal window at the bottom of VSCode
+1. Connect your ESP32S3 DEV KIT to your computer via USB-C
+2. In VSCode, click on the PlatformIO icon in the left sidebar
+3. Select "Project Tasks" from the menu
+4. Under "General", click "Build" to compile the project
+5. After successful build, click "Upload" to flash the firmware to your device
+6. Monitor the progress in the terminal window at the bottom of VSCode
 
 ### Troubleshooting
 
-If you encounter upload errors, ensure that:
-The correct USB port is selected (can be changed in platformio.ini)
-You have proper USB drivers installed for your development board
-Your board is in bootloader mode (if required)
-
-For dependency issues, try running "Clean" before "Build"
-Check the PlatformIO documentation for additional help: https://docs.platformio.org/
+- If you encounter upload errors, ensure that:
+  - The correct USB port is selected (can be changed in platformio.ini)
+  - You have proper USB drivers installed for your development board
+  - Your board is in bootloader mode (if required)
+- Check the PlatformIO documentation for additional help: https://docs.platformio.org/
 
 ## Development Tracks
 
@@ -133,4 +189,4 @@ These challenges focus on Sunspec self-certification readiness for Modbus/Canbus
 The code challenges listed above will be covered during the Port Labs workshop. Participants can choose challenges from either Lane A or Lane B based on their interests and requirements.
 
 ## Contributing
-Feel free to suggest additional integration ideas or contribute to existing challenges.
+Feel free to suggest additional integration ideas via a pull request or contribute to existing challenges.
