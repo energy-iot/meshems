@@ -22,7 +22,6 @@ void setup_sht20() {
   sht20.begin(THERMOSTAT_1_ADDR, _modbus1);
 }
 
-
 void setup_modbus_clients() {
   //setup_thermostats();
   //setup_dtm();

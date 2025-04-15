@@ -25,7 +25,7 @@
 #define RS485_TX_2             GPIO_NUM_16  // TX here maps to RS485 HW-519 module's silk screen "TXD"
 
 // Relays
-#define RELAY_1_PIN 18
+#define RELAY_1_PIN 38
 
 //CAN
 #define CAN0_CS     2
@@ -33,10 +33,3 @@
 #define CAN0_SI     41  //SPI MOSI
 #define CAN0_SCK    8   //SPI clock
 #define CAN0_INT    17
-
-//CAN
-// #define CAN0_CS     10
-// #define CAN0_SO     13  //SPI MISO
-// #define CAN0_SI     11  //SPI MOSI
-// #define CAN0_SCK    12   //SPI clock
-// #define CAN0_INT    17
