@@ -9,7 +9,7 @@ This development kit supports multiple peripherals using the Arduino framework:
 - CANBUS V2.0 interface
 - Input buttons (using voltage divider array on analog GPIO)
 
-<img src="ems_board_pinput_V001.png" alt="board" width="450"/>
+<img src="/ems_board_pinout_V001.png" alt="board" width="450"/>
 
 ## Hardware Overview
 
