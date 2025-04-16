@@ -9,6 +9,8 @@ This development kit supports multiple peripherals using the Arduino framework:
 - CANBUS V2.0 interface
 - Input buttons (using voltage divider array on analog GPIO)
 
+<img src="ems_board_pinput_V001.png" alt="board" width="450"/>
+
 ## Hardware Overview
 
 ### Core Specifications
@@ -22,13 +24,13 @@ This development kit supports multiple peripherals using the Arduino framework:
 - **Datasheet:** [ESP32S3 Technical Reference Manual](https://www.espressif.com/sites/default/files/documentation/esp32-s3_technical_reference_manual_en.pdf)
 - **Development Board Datasheet:** [ESP32S3-DevKitC-1 Datasheet](https://docs.espressif.com/projects/esp-dev-kits/en/latest/esp32s3/esp32-s3-devkitc-1/index.html)
 
-### xx Breakout RS-485 MODBUS RTU Module
+### HW-519 Breakout RS-485 MODBUS RTU Module
 - Industry-standard RS-485 interface for MODBUS RTU communication
 - Built-in transceiver with automatic direction control
 - 3-pin screw terminal for easy connection (A, B, GND)
 - Supports baud rates up to 115200 bps
 - **Operating voltage:** 5V (level-shifted from ESP32-S3 at 3.3V)
-- **Module Datasheet:** RS-485 Transceiver Datasheet
+- **Module Datasheet:** [RS-485 Transceiver Datasheet](https://www.analog.com/media/en/technical-documentation/data-sheets/MAX1487-MAX491.pdf)
 
 ### MCP2515 Breakout - CANBUS V2.0 Interface
 - CAN 2.0B compliant controller and transceiver
@@ -40,7 +42,6 @@ This development kit supports multiple peripherals using the Arduino framework:
 - **Transceiver Datasheet:** [TJA1051 CAN Transceiver](https://www.nxp.com/docs/en/data-sheet/TJA1051.pdf)
 
 ### Additional Communication Options
-- **Ethernet:** 10/100 Mbps Ethernet with RJ45 connector (optional module)
 - **BLE/BLE Mesh:** Utilizing ESP32S3's built-in Bluetooth capabilities
 
 ### Input/Output Capabilities
@@ -61,8 +62,8 @@ This development kit includes a connection for AC power input. When working with
 - **Professional Installation Required:** All AC power connections MUST be installed by a qualified electrician in accordance with local electrical codes and regulations.
 - **Enclosure Mandatory:** When used with AC power connections, the device MUST be mounted in an appropriate, non-conductive enclosure with restricted access.
 - **Safety Precautions:**
-- ALWAYS disconnect AC power before making any changes to the wiring
-- NEVER touch any AC terminals or components when power is connected
+- **ALWAYS disconnect AC power** before making any changes to the wiring
+- **NEVER touch any AC terminals** or components when power is connected
 - Ensure proper grounding of all components
 - Install appropriate circuit protection (fuses, breakers)
 - Keep AC and DC/logic circuits strictly separate
@@ -74,10 +75,10 @@ This development kit includes a connection for AC power input. When working with
 - PCB Dimensions: 100mm x 75mm (main board)
 - Mounting: 4x M3 mounting holes (3.2mm diameter)
 
-## Installation Guide
+## Dev Environment Installation Guide
 ### Prerequisites
 - A computer with internet connection
-- ESP32S3 N16R8 DEV KIT C1 hardware
+- EMS Dev kit hardware
 - USB-C cable for connecting the development board to your computer
 
 ### Step 1: Install Visual Studio Code
