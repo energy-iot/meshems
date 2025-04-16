@@ -14,22 +14,23 @@
 //#define DISPLAY_DC_PIN 42
 //#define DISPLAY_CS_PIN 41
 
-#define DISPLAY_RST_PIN 46
-#define DISPLAY_DC_PIN 3
-#define DISPLAY_CS_PIN 9
+// ==================== SPI DISPLAY ====================
+#define DISPLAY_RST_PIN 46  //Reset
+#define DISPLAY_DC_PIN 3    //Data clock
+#define DISPLAY_CS_PIN 9    //Chip select
 
-// RS-485 
+// ==================== RS485 INTERFACE ================
 #define RS485_RX_1             GPIO_NUM_6   // RX here maps to RS485 HW-519 module's silk screen "RXD"
 #define RS485_TX_1             GPIO_NUM_7   // TX here maps to RS485 HW-519 module's silk screen "TXD"
 #define RS485_RX_2             GPIO_NUM_15  // RX here maps to RS485 HW-519 module's silk screen "RXD"
 #define RS485_TX_2             GPIO_NUM_16  // TX here maps to RS485 HW-519 module's silk screen "TXD"
 
-// Relays
-#define RELAY_1_PIN 38
+// ==================== RELAY ==========================
+#define RELAY_1_PIN 38  //Pin to toggle the onboard SSR
 
-//CAN
-#define CAN0_CS     2
+// ==================== CAN INTERFACE ==================
+#define CAN0_CS     2   //SPI chip select
 #define CAN0_SO     42  //SPI MISO
 #define CAN0_SI     41  //SPI MOSI
 #define CAN0_SCK    8   //SPI clock
-#define CAN0_INT    17
+#define CAN0_INT    17  //Message interrupt output

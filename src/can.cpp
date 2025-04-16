@@ -1,5 +1,7 @@
-/* 
- * CAN Bus Interface for ESP32
+ /*****************************************************************************
+ * @file can.cpp
+ * @brief Interface code to allow reading/writing of CAN 2.0 messages to an MCP2515 device
+ * 
  * This module provides both transmit and receive functionality for CAN communications
  * using the MCP2515 CAN controller. Features include:
  *   - Configurable message transmission timing
@@ -8,7 +10,9 @@
  * 
  * Hardware: ESP32 with MCP2515 CAN controller connected via SPI
  * Dependencies: mcp_can.h library
- */
+ * 
+ * Author(s): Doug Mendonca, Liam O'Brien
+ *****************************************************************************/
 
  #include <mcp_can.h>
  #include <SPI.h>
@@ -90,7 +94,7 @@ void setup_can()
   CAN0.setMode(MCP_NORMAL);
 
   if (CAN_DEBUG_LEVEL > 0) {
-    Serial.println("CAN interface is active");
+    Serial.println("INFO - CAN interface is active");
     
     if (CAN_OPERATING_MODE == CAN_MODE_READ_ONLY) {
       Serial.println("INFO - CAN Mode: READ ONLY");
@@ -122,7 +126,7 @@ void loop_can()
     if (millis() - prevTX >= CAN_TX_INTERVAL) {
       prevTX = millis();
       
-      // Example: Send data with ID 0x100
+      // EXAMPLE: Send data with ID 0x100
       if (!sendCANMessage(0x100, 8, txData)) {
         if (CAN_DEBUG_LEVEL > 0) {
           Serial.println("ERROR: Failed to send CAN message");

@@ -8,13 +8,19 @@
 
 void setup() {
     Serial.begin(115200);
-    Serial.println("Started...setup in 4 secs");
+    Serial.println("INFO - Booting...Setup in 4s");
     delay(4000);
 
     SPI.begin();
     setup_display();
     
-    drawBitmap(40, 5, RICK_WIDTH, RICK_HEIGHT, rick); 
+    drawBitmap(40, 5, LOGO_WIDTH, LOGO_HEIGHT, rick); // Render Rick Bitmap Array
+    delay(1000);
+    
+    // drawBitmap(40, 5, LOGO_WIDTH, LOGO_HEIGHT, eIOT_logo_7060); // Render EIOT Logo 70x70 Array
+    // delay(1000);
+
+    drawBitmap(40, 5, LOGO_WIDTH, LOGO_HEIGHT, eIOT_logo_6048); // Render EIOT Logo 60x48 Array
     delay(1000);
 
     setup_modbus_master();
@@ -22,7 +28,7 @@ void setup() {
     setup_can();
 
     setup_buttons();
-    _console.addLine("      EMS setup done");
+    _console.addLine("   EMS Setup Done!");
 
 }
 
@@ -31,5 +37,5 @@ void loop() {
     loop_modbus_master();
     loop_modbus_client();
     loop_display();
-    loop_can(); //uncomment when ready to talk to transceiver
+    loop_can();
 }
