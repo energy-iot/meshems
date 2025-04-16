@@ -1,3 +1,18 @@
+/*****************************************************************************
+ * @file pins.h
+ * @brief Pin definitions for dev board
+ * 
+ * This header defines all GPIO pin assignments for the system peripherals:
+ * - Analog button array (using voltage divider)
+ * - SPI OLED display (SH1106)
+ * - RS-485 interfaces (dual channels using HW-519 modules)
+ * - Relay control
+ * - CAN bus interface (MCP2515)
+ * 
+ * 
+ * Author(s): Doug Mendonca, Liam O'Brien
+ *****************************************************************************/
+
 #pragma once
 
 // analog button array (voltage divider)
