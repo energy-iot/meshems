@@ -5,6 +5,8 @@
 #include <console.h>
 #include <SPI.h>
 #include <can.h>
+#include <wifi.h>
+#include <mqtt_client.h>
 
 void setup() {
     Serial.begin(115200);
@@ -12,6 +14,9 @@ void setup() {
     delay(4000);
 
     SPI.begin();
+
+    setup_wifi();
+    setup_mqtt_client();
     setup_display();
     
     drawBitmap(40, 5, LOGO_WIDTH, LOGO_HEIGHT, rick); // Render Rick Bitmap Array
@@ -38,4 +43,5 @@ void loop() {
     loop_modbus_client();
     loop_display();
     loop_can();
+    loop_mqtt();
 }
