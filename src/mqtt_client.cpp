@@ -31,13 +31,7 @@
 #include <TimeLib.h>
 #include <WiFiMulti.h>
 #include <data_model.h>
-
-#define DEVICE_ID_PREFIX "NESL"
-#define MQTT_TOPIC "nesl"
-#define MQTT_PUBLISH_INTERVAL 30000
-String mqtt_server("test.mosquitto.org"); //("public.cloud.shiftr.io"); //note: shiftr requires user:public pw:public
-String mqtt_user;                         //("public");
-String mqtt_pass;                         //("public");
+#include <config.h>
 
 WiFiClient transportClient;                 // the network client for MQTT (also works with EthernetLarge)
 PubSubClient mqttclient(transportClient);   // the MQTT client
@@ -45,25 +39,19 @@ PubSubClient mqttclient(transportClient);   // the MQTT client
 unsigned long mqtt_interval_ts = 0;
 static char mqtt_data[128] = "";
 static int mqtt_connection_error_count = 0;
-String device_id;
-String topic_cmd;
-String topic_device;
-String topic_device_resource;
+String topic_device;          // device topic (publish/subscribe under here)
+String topic_cmd;             // command topic (for 'southbound' commands)
 
 void generateTopics() {
   //the top-level device topic string, eg: NESLE8D3ECAE3D98
   topic_device = MQTT_TOPIC;
   topic_device.concat("/");
-  topic_device.concat(device_id.c_str());
+  topic_device.concat(getDeviceID());
   topic_device.concat("/");
 
   //the command topic we subscribe to, eg: NESLE8D3ECAE3D98/cmd
   topic_cmd = topic_device;
   topic_cmd.concat("cmd");
-
-  //the device resource reporting topic, eg: NESLE8D3ECAE3D98/res
-  topic_device_resource = topic_device;
-  topic_device_resource.concat("res");
 }
 
 // -------------------------------------------------------------------
@@ -74,7 +62,7 @@ boolean mqtt_connect()
 {
   Serial.printf("MQTT Connecting...timeout in:%d\r\n", transportClient.getTimeout());
 
-  if (transportClient.connect(mqtt_server.c_str(), 1883) != 1) //8883 for TLS
+  if (transportClient.connect(MQTT_SERVER, 1883) != 1) //8883 for TLS
   {
      Serial.println("MQTT connect timeout.");
      return (0);
@@ -85,15 +73,15 @@ boolean mqtt_connect()
   mqttclient.setBufferSize(MAX_DATA_LEN + 200);
   mqttclient.setKeepAlive(180);
 
-  if (mqtt_user.length() == 0) {
+  if (strcmp(MQTT_USER, "") == 0) {
     //allows for anonymous connection
-    mqttclient.connect(device_id.c_str()); // Attempt to connect
+    mqttclient.connect(getDeviceID()); // Attempt to connect
   } else {
-    mqttclient.connect(device_id.c_str(), mqtt_user.c_str(), mqtt_pass.c_str()); // Attempt to connect
+    mqttclient.connect(getDeviceID(), MQTT_USER, MQTT_PW); // Attempt to connect
   }
 
   if (mqttclient.state() == 0) {
-    Serial.printf("MQTT connected: %s\r\n", mqtt_server.c_str());
+    Serial.printf("MQTT connected: %s\r\n", MQTT_SERVER);
     
     //subscribe to command topic
     if (!mqttclient.subscribe(topic_cmd.c_str())) {
@@ -156,6 +144,12 @@ void mqtt_publish_comma_sep_colon_delim(const char* subtopic, const char * data)
     } while (*data++ != 0);
 }
 
+// Subscriber callback
+//
+// We're subscribed to the following topics:
+// <top>/<device_id>/cmd
+//
+// 
 void subscriber_callback(char* topic, uint8_t* payload, unsigned int length) {
   //sanity
   if (length > 254) {
@@ -187,21 +181,7 @@ void subscriber_callback(char* topic, uint8_t* payload, unsigned int length) {
   }
 }
 
-void generateDeviceID() {
-  uint32_t low = ESP.getEfuseMac() & 0xFFFFFFFF;
-  uint32_t high = (ESP.getEfuseMac() >> 32) % 0xFFFFFFFF;
-  uint64_t fullMAC = word(low, high);
-  char _id[20];
-  sprintf(_id, "%s%X%X", DEVICE_ID_PREFIX, high, low);
-  device_id = _id;
-}
-
-const char* getDeviceID() {
-  return device_id.c_str();
-}
-
 void setup_mqtt_client() {
-  generateDeviceID(); //must be called first
   generateTopics();
   mqttclient.setCallback(subscriber_callback);
   if (!mqtt_connect()) {

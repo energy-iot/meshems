@@ -7,6 +7,7 @@
 #include <can.h>
 #include <wifi.h>
 #include <mqtt_client.h>
+#include <config.h>
 
 void setup() {
     Serial.begin(115200);
@@ -14,6 +15,8 @@ void setup() {
     delay(4000);
 
     SPI.begin();
+
+    generateDeviceID();
 
     setup_wifi();
     setup_mqtt_client();
@@ -37,10 +40,14 @@ void setup() {
 
 }
 
+//All we have to decide is what to do with the time that is given us. -GtG
+
+//buttons are more responsive 
 void loop() {
-    loop_buttons();
+   loop_buttons();
     loop_modbus_master();
     loop_modbus_client();
+   loop_buttons(); 
     loop_display();
     loop_can();
     loop_mqtt();
