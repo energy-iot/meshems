@@ -5,7 +5,7 @@
 #define WIFI_SSID "E@rthday2025"
 #define WIFI_PW "EMSWorkshop"
 
-int CONNECT_ATTEMPTS = 10;
+int CONNECT_ATTEMPTS = 3;
 WiFiMulti wifiMulti;
 
 bool wifi_client_connected() {
