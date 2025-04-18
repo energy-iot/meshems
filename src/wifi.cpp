@@ -2,13 +2,10 @@
 #include <WiFiMulti.h>
 #include <wifi.h>
 
-#define WIFI_SSID "Starlink"
-#define WIFI_PW "tikka2013"
+#define WIFI_SSID "E@rthday2025"
+#define WIFI_PW "EMSWorkshop"
+
 int CONNECT_ATTEMPTS = 10;
-
-String SSID;
-String PW;
-
 WiFiMulti wifiMulti;
 
 bool wifi_client_connected() {
@@ -16,29 +13,12 @@ bool wifi_client_connected() {
 }
 
 bool setup_wifi() {
-  return setup_wifi(SSID, PW);
-}
-
-bool setup_wifi(String SSID, String PW) {
-  if (SSID.isEmpty()) {
-    SSID = WIFI_SSID;
-  }
-  if (PW.isEmpty()) {
-    PW = WIFI_PW;
-  }
-  Serial.println("wifi connecting...");
-  Serial.println(SSID);
-  wifiMulti.addAP(SSID.c_str(), PW.c_str());
+  Serial.printf("wifi connecting: %s\n", WIFI_SSID);
+  wifiMulti.addAP(WIFI_SSID, WIFI_PW);
   while (wifiMulti.run() != WL_CONNECTED && (CONNECT_ATTEMPTS-- > 0)) {
     delay(1000);
-    Serial.printf("wifi failed to connect - retrying %s\n", SSID);
+    Serial.printf("wifi failed to connect - retrying %s\n", WIFI_SSID);
   }
-  if (wifi_client_connected()) {
-    Serial.print("connected: ");
-    Serial.println(WiFi.localIP());
-  } else {
-    Serial.printf("wifi failed to connect to %s\n", SSID.c_str());
-    return false;
-  }
-  return true;
+  Serial.printf("wifi: %s: %s\n", WIFI_SSID, wifi_client_connected() ?  WiFi.localIP().toString().c_str() : "FAILED");
+  return wifi_client_connected();
 }

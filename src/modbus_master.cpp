@@ -65,8 +65,8 @@
   * Update data model with current sensor readings
   */
  void update() {
-     inputRegisters[1] = sht20.getRawTemperature();
-     inputRegisters[2] = sht20.getRawHumidity();
+     inputRegisters[0] = sht20.getTemperature();
+     inputRegisters[1] = sht20.getHumidity();
  }
  
  /**

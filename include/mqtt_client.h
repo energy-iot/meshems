@@ -79,4 +79,6 @@ boolean mqtt_connected();
 String uint64ToString(uint64_t input);
 String getCommandTopic();
 
+const char* getDeviceID();
+
 #endif // _EMONESP_MQTT_H

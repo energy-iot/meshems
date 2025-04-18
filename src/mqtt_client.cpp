@@ -1,43 +1,69 @@
+/*
+   -------------------------------------------------------------------
+   EmonESP Serial to Emoncms gateway
+   -------------------------------------------------------------------
+   Adaptation of Chris Howells OpenEVSE ESP Wifi
+   by Trystan Lea, Glyn Hudson, OpenEnergyMonitor
+
+   Modified to use with the CircuitSetup.us Split Phase Energy Meter by jdeglavina
+   Modified to use with EMS Workshop by dmendonca
+
+   All adaptation GNU General Public License as below.
+
+   -------------------------------------------------------------------
+
+   This file is part of OpenEnergyMonitor.org project.
+   EmonESP is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation; either version 3, or (at your option)
+   any later version.
+   EmonESP is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+   You should have received a copy of the GNU General Public License
+   along with EmonESP; see the file COPYING.  If not, write to the
+   Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+   Boston, MA 02111-1307, USA.
+*/
+
 #include "mqtt_client.h"
 #include <TimeLib.h>
 #include <WiFiMulti.h>
 #include <data_model.h>
 
-#define mqtt_publish_interval 30000
-String mqtt_server("192.168.1.70");
-String mqtt_user;
-String mqtt_pass;
+#define DEVICE_ID_PREFIX "NESL"
+#define MQTT_TOPIC "nesl"
+#define MQTT_PUBLISH_INTERVAL 30000
+String mqtt_server("test.mosquitto.org"); //("public.cloud.shiftr.io"); //note: shiftr requires user:public pw:public
+String mqtt_user;                         //("public");
+String mqtt_pass;                         //("public");
 
-String DEVICE_ID;
-WiFiClient transportClient;                 // Create Wifi client for MQTT
-PubSubClient mqttclient(transportClient);   // Create client for MQTT
+WiFiClient transportClient;                 // the network client for MQTT (also works with EthernetLarge)
+PubSubClient mqttclient(transportClient);   // the MQTT client
 
-static char input[MAX_DATA_LEN];
 unsigned long mqtt_interval_ts = 0;
-
-long lastMqttReconnectAttempt = 0;
-int clientTimeout = 0;
-int i = 0;
-
-static char mqtt_device_id[32] = "";
 static char mqtt_data[128] = "";
 static int mqtt_connection_error_count = 0;
-String cmd_topic_buf;
-String device_topic_buf;
-String device_resource_topic_buf;
+String device_id;
+String topic_cmd;
+String topic_device;
+String topic_device_resource;
 
 void generateTopics() {
-  device_topic_buf = "NESL";
-  device_topic_buf.concat("/");
-  device_topic_buf.concat(DEVICE_ID.c_str());
-  device_topic_buf.concat("/");
+  //the top-level device topic string, eg: NESLE8D3ECAE3D98
+  topic_device = MQTT_TOPIC;
+  topic_device.concat("/");
+  topic_device.concat(device_id.c_str());
+  topic_device.concat("/");
 
-  cmd_topic_buf = device_topic_buf;
-  cmd_topic_buf.concat("cmd");
+  //the command topic we subscribe to, eg: NESLE8D3ECAE3D98/cmd
+  topic_cmd = topic_device;
+  topic_cmd.concat("cmd");
 
-  device_resource_topic_buf = device_topic_buf;
-  device_resource_topic_buf.concat("res");
-
+  //the device resource reporting topic, eg: NESLE8D3ECAE3D98/res
+  topic_device_resource = topic_device;
+  topic_device_resource.concat("res");
 }
 
 // -------------------------------------------------------------------
@@ -61,27 +87,26 @@ boolean mqtt_connect()
 
   if (mqtt_user.length() == 0) {
     //allows for anonymous connection
-    mqttclient.connect(DEVICE_ID.c_str()); // Attempt to connect
+    mqttclient.connect(device_id.c_str()); // Attempt to connect
   } else {
-    mqttclient.connect(DEVICE_ID.c_str(), mqtt_user.c_str(), mqtt_pass.c_str()); // Attempt to connect
+    mqttclient.connect(device_id.c_str(), mqtt_user.c_str(), mqtt_pass.c_str()); // Attempt to connect
   }
 
-  if (mqttclient.state() == 0)
-  {
+  if (mqttclient.state() == 0) {
     Serial.printf("MQTT connected: %s\r\n", mqtt_server.c_str());
     
     //subscribe to command topic
-    if (!mqttclient.subscribe(cmd_topic_buf.c_str())) {
+    if (!mqttclient.subscribe(topic_cmd.c_str())) {
       delay(250);
-      if (!mqttclient.subscribe(cmd_topic_buf.c_str())) {
+      if (!mqttclient.subscribe(topic_cmd.c_str())) {
         delay(500);
-        if (!mqttclient.subscribe(cmd_topic_buf.c_str())) {
-          Serial.printf("MQTT: FAILED TO SUBSCRIBE TO COMMAND TOPIC: %s\r\n", cmd_topic_buf.c_str());
+        if (!mqttclient.subscribe(topic_cmd.c_str())) {
+          Serial.printf("MQTT: FAILED TO SUBSCRIBE TO COMMAND TOPIC: %s\r\n", topic_cmd.c_str());
           return false;
         }
       }
     }
-    Serial.printf("MQTT: SUBSCRIBED TO COMMAND TOPIC: %s\r\n", cmd_topic_buf.c_str());
+    Serial.printf("MQTT: SUBSCRIBED TO COMMAND TOPIC: %s\r\n", topic_cmd.c_str());
     //  mqttclient.publish(getDeviceTopic().c_str(), "connected"); // Once connected, publish an announcement..
   } else {
     Serial.println("MQTT failed: ");
@@ -91,13 +116,14 @@ boolean mqtt_connect()
   return (1);
 }
 
-//construct a comma-sep colon-delim string for the publish method
+//construct a comma-sep colon-delim string for the publish func
 void mqtt_publish_meter() {
-  char buf[64];
-  sprintf(buf,"temp:%2.1f,V1:%2.2f,V2:%2.2f,freq:%2.1f", (float)inputRegisters[0], (float)inputRegisters[1], (float)inputRegisters[2], (float)inputRegisters[3]);
-  mqtt_publish_comma_sep_colon_delim("meter", buf);  
+  char buf[32];
+  sprintf(buf,"temp:%2.1f,humid:%2.2f", (float)inputRegisters[0], (float)inputRegisters[1]);
+  mqtt_publish_comma_sep_colon_delim("meter", buf);
 }
 
+//pull apart a comma-sep colon-delim name:value string and publish the name:value pairs under 'subtopic'
 void mqtt_publish_comma_sep_colon_delim(const char* subtopic, const char * data) {
     String topicBuf;
     char buf[256];
@@ -107,7 +133,7 @@ void mqtt_publish_comma_sep_colon_delim(const char* subtopic, const char * data)
       strncpy(buf, data, pos);
       buf[pos] = 0;
       String st(subtopic);
-      topicBuf = device_topic_buf;
+      topicBuf = topic_device;
       topicBuf.concat(st+"/");
       topicBuf.concat(buf);
       //topic_ptr[pos] = 0;
@@ -136,19 +162,25 @@ void subscriber_callback(char* topic, uint8_t* payload, unsigned int length) {
     Serial.printf("MQTT CALLBACK: not handled: payload len overrun:%d\n", length);
     return;
   }
-  if (strcmp(topic, cmd_topic_buf.c_str()) == 0) {
+  if (strcmp(topic, topic_cmd.c_str()) == 0) {
     char payload_buf[length+1] = {0};
     strncpy(payload_buf, (char*)payload, length);
     payload_buf[length] = '\0'; //ensure null-termination
     Serial.printf("\n***MQTT CALLBACK: topic '%s', payload '%s'\n", topic, payload_buf);
-    //"report" command triggers an EVSE data model dump to MQTT
-    if (strncmp(payload_buf, "report", 6) == 0) {
+    if (strstr(payload_buf, "report") == 0) {
+      //trigger a data-model dump
       return;
     }
-    if (strncmp((char*)payload, "meter/", 5) == 0) {
+    if (strstr((char*)payload_buf, "meter") == 0) {
+      //control the meter
       return;
     }
-    if (strncmp((char*)payload, "battery/", 5) == 0) {
+    if (strstr((char*)payload_buf, "bms") == 0) {
+      //BMS command
+      return;
+    }
+    if (strstr((char*)payload_buf, "inverter") == 0) {
+      //inverter command
       return;
     }
     // add new commands here
@@ -159,13 +191,13 @@ void generateDeviceID() {
   uint32_t low = ESP.getEfuseMac() & 0xFFFFFFFF;
   uint32_t high = (ESP.getEfuseMac() >> 32) % 0xFFFFFFFF;
   uint64_t fullMAC = word(low, high);
-  char _id[32];
-  sprintf(_id, "NESL%X%X", high, low);
-  DEVICE_ID = _id;
+  char _id[20];
+  sprintf(_id, "%s%X%X", DEVICE_ID_PREFIX, high, low);
+  device_id = _id;
 }
 
 const char* getDeviceID() {
-  return DEVICE_ID.c_str();
+  return device_id.c_str();
 }
 
 void setup_mqtt_client() {
@@ -187,7 +219,7 @@ void setup_mqtt_client() {
 
 void loop_mqtt() {
 
-    if ((millis() - mqtt_interval_ts > mqtt_publish_interval)) {
+    if ((millis() - mqtt_interval_ts > MQTT_PUBLISH_INTERVAL)) {
       bool mqtt_connected = mqttclient.connected();
       if (!mqtt_connected) {
         mqtt_connected = mqtt_connect();
@@ -214,13 +246,13 @@ boolean mqtt_connected()
 }
 
 void mqtt_publish_door_opened() {
-  char buf[40] = {0};
-  sprintf(buf,"%s/door", device_resource_topic_buf);
+  char buf[32] = {0};
+  sprintf(buf,"%s/door", topic_device);
   mqttclient.publish(buf, "open", 0);
 }
 
 void mqtt_publish_door_closed() {
-  char buf[40] = {0};
-  sprintf(buf,"%s/door", device_resource_topic_buf);
+  char buf[32] = {0};
+  sprintf(buf,"%s/door", topic_device);
   mqttclient.publish(buf, "closed", 0);
 }
