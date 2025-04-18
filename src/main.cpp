@@ -28,7 +28,11 @@ void setup() {
     setup_can();
 
     setup_buttons();
-    _console.addLine("   EMS Setup Done!");
+    _console.addLine(" EMS In-service Ready!");
+    _console.addLine("  Check MQTT @");
+    _console.addLine("  test.mosquitto.org");
+    _console.addLine("  filter EMS/#");
+    _console.addLine("  Push a button?");
 
 }
 
