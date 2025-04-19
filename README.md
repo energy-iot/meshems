@@ -6,8 +6,9 @@ A development kit based on the ESP32S3 N16R8 DEV KIT C1 for energy management sy
 ## Features
 This development kit supports multiple peripherals using the Arduino framework:
 - RS-485 MODBUS RTU communication
-- CANBUS V2.0 interface
+- CANBUS V2.0 interface via SPI
 - Input buttons (using voltage divider array on analog GPIO)
+- 1.3in OLED Dispay over SPI (SH1106)
 
 <img src="/ems_board_pinout_V001.png" alt="board" width="650"/>
 
@@ -46,7 +47,7 @@ This development kit supports multiple peripherals using the Arduino framework:
 
 ### Input/Output Capabilities
 - **Button Array Interface:** Analog input with voltage divider network
-- **Display:** Optional 2.4" TFT display (SPI interface)
+- **Display:** Optional 1.3" OLED display (SPI interface)
 - **Expansion Headers:** Breakout area is avaible on the perfboard to allow for use of the remaining GPIO pins
 - **Relay:** Single 1A SSR (Solid State Relay) for AC Mains control
 
