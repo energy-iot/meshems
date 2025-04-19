@@ -59,8 +59,12 @@ void setup() {
     setup_modbus_client();
     setup_can(); // Initialize CAN bus communication
 
-    setup_buttons(); // Initialize button input handling system (analog button array)
-    _console.addLine("   EMS Setup Done!"); // Add status message to OLED display
+    setup_buttons();
+    _console.addLine(" EMS In-service Ready!");
+    _console.addLine("  Check MQTT @");
+    _console.addLine("  test.mosquitto.org");
+    _console.addLine("  filter EMS/#");
+    _console.addLine("  Push a button?");
 
 }
 
