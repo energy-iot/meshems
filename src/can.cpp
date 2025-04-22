@@ -13,7 +13,7 @@
  * 
  * Author(s): Doug Mendonca, Liam O'Brien
  *****************************************************************************/
-
+ 
  #include <mcp_can.h>
  #include <SPI.h>
  #include <pins.h>
@@ -26,14 +26,14 @@ enum CAN_OPERATION_MODE {
 };
 
 // Set operating mode here
-#define CAN_OPERATING_MODE CAN_MODE_WRITE_ONLY
+#define CAN_OPERATING_MODE CAN_MODE_READ_ONLY
 // Message transmission interval (milliseconds)
 #define CAN_TX_INTERVAL 1000   // 1 second between transmitted messages
 // Debug level
 #define CAN_DEBUG_LEVEL 1      // 0=Off, 1=Basic, 2=Detailed
 // Crystal frequency of your MCP2515 in this case 8MHZ for our dev board (Typical values: 8MHz, 16MHz)
 #define MCP_CRYSTAL_FREQ MCP_8MHZ
-// Crystal frequency of your MCP2515 in this case 8MHZ for our dev board (Typical values: 8MHz, 16MHz)
+// CAN bus data baud rate, in this case 500kbps (Typical values: 125kbps, 250kbps, 500kbps, 1Mbps)
 #define MCP_BUS_BAUD CAN_500KBPS
 
 // ==================== CAN Variables ====================
@@ -73,7 +73,7 @@ void setup_can()
   // Configure pin for interrupt signal from MCP2515
   pinMode(CAN0_INT, INPUT);
 
-  // Initialize custom SPI interface
+  // Initialize secondary SPI interface
   canSPI.begin(CAN0_SCK, CAN0_SO, CAN0_SI);
 
   if (CAN_DEBUG_LEVEL > 0) {

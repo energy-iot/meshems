@@ -6,9 +6,9 @@
 
 #define MQTT_TOPIC              "nesl"
 #define MQTT_PUBLISH_INTERVAL   30000
-#define MQTT_SERVER             "test.mosquitto.org"
-#define MQTT_USER               ""
-#define MQTT_PW                 ""
+#define MQTT_SERVER             "public.cloud.shiftr.io" //"test.mosquitto.org"
+#define MQTT_USER               "public"
+#define MQTT_PW                 "public"
 
 void generateDeviceID();
 const char* getDeviceID();
