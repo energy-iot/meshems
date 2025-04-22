@@ -7,12 +7,30 @@
  #include <modbus.h>
  #include <pins.h>
  #include <data_model.h>
+ #include <console.h>
+
+ // Declare the scanner function
+void scanModbusDevices(SoftwareSerial &serialPort);
+
+ // ModbusMaster success/failure constants if not defined
+#ifndef ku8MBSuccess
+#define ku8MBSuccess 0x00
+#define ku8MBIllegalFunction 0x01
+#define ku8MBIllegalDataAddress 0x02
+#define ku8MBIllegalDataValue 0x03
+#define ku8MBSlaveDeviceFailure 0x04
+#define ku8MBTimeout 0xE0
+#define ku8MBInvalidCRC 0xE1
+#define ku8MBInvalidSlaveID 0xE2
+#endif
  
  // Poll every 10 seconds (300000ms = 5 mins for production)
  #define POLL_INTERVAL 10000 
+ #define EVSE_POLL_INTERVAL 5000 // 5 seconds
 
 // ==================== Modbus Device Addresses ====================
  #define THERMOSTAT_1_ADDR 0x01
+ #define EVSE_ADDR 0x06
  
  // ==================== Serial Interface Setup ====================
  // RS485 serial connections
@@ -21,10 +39,16 @@
  
  // Temperature/humidity sensor
  Modbus_SHT20 sht20;
+
+ //the EVSE controller
+Modbus_EVSE evse;
  
  // Timing variables
  unsigned long lastMillis, lastEVSEMillis, lastEVSEChargingMillis = 0;
  
+ // Since _console is defined in main.cpp, we need to declare it as external here
+//extern Console _console;
+
  /**
   * Initialize SHT20 temperature/humidity sensor
   */
@@ -33,6 +57,27 @@
      sht20.set_modbus_address(THERMOSTAT_1_ADDR);
      sht20.begin(THERMOSTAT_1_ADDR, _modbus1);
  }
+
+/**
+ * Initialize EVSE Controller
+ */
+ void setup_evse() {
+    Serial.printf("SETUP: MODBUS: EVSE: address:%d\n", EVSE_ADDR);
+    evse.set_modbus_address(EVSE_ADDR);
+    evse.begin(EVSE_ADDR, _modbus1);
+    
+    // Initial poll to get current state
+    uint8_t result = evse.poll();
+    if (result == ku8MBSuccess) {
+      Serial.printf("EVSE initial state: %s\n", evse.getStatusString());
+      
+      // Could set initial parameters here if needed
+      // For example:
+      // evse.setMaxCurrent(32); // Set max current to 32A
+    } else {
+      Serial.println("EVSE initialization failed!");
+    }
+  }
  
  /**
   * Initialize all Modbus clients
@@ -40,8 +85,8 @@
  void setup_modbus_clients() {
      //setup_thermostats();  // Future expansion
      //setup_dtm();          // Future expansion
-     setup_sht20();          // Initialize SHT20
-     //setup_evse();         // Future expansion
+     //setup_sht20();          // Initialize SHT20
+     setup_evse();           // Initialize EKEPC2 EVSE
  }
  
  /**
@@ -59,6 +104,11 @@
      
      // Setup connected devices
      setup_modbus_clients();
+
+     // Scan for devices - output only to Serial, not console
+    // Serial.println("Scanning for devices...");
+    // Serial.println("Port 1:");
+    // scanModbusDevices(_modbus1);
  }
  
  /**
@@ -69,14 +119,36 @@
      inputRegisters[2] = sht20.getRawHumidity();
  }
  
+ void loop_evse() {
+    if (millis() - lastEVSEMillis > EVSE_POLL_INTERVAL) {
+      Serial.println("Poll EVSE controller");
+      uint8_t result = evse.poll();
+      
+      if (result == ku8MBSuccess) {
+        Serial.println("EVSE: " + String(evse.getStatusString()));
+        
+        if (evse.isCharging()) {
+            Serial.println("Charging at " + String(evse.getChargeCurrent()) + "A");
+        } else if (evse.isConnected()) {
+          Serial.println("EV connected, not charging");
+        }
+      }
+      
+      lastEVSEMillis = millis();
+    }
+  }
+
  /**
   * Main polling loop for Modbus communication
   */
  void loop_modbus_master() {
      if (millis() - lastMillis > POLL_INTERVAL) {
-         Serial.println("poll thermostat");
-         sht20.poll();        // Get new readings
-         update();            // Update data model
+         Serial.println("Poll Devices");
+         //sht20.poll();        // Get new readings
+         //update();            // Update data model
          lastMillis = millis();
      }
+     
+     // Poll EVSE at its own interval
+     loop_evse();
  }
