@@ -42,11 +42,20 @@
 #include <wifi.h>
 #include <mqtt_client.h>
 #include <config.h>
+#ifdef ENABLE_PROVISIONER
+#include <provision.h>
+#endif
 
 void setup() {
     Serial.begin(115200);   // Initialize serial communication for debugging
     Serial.println("INFO - Booting...Setup in 3s");
     delay(3000);
+    
+#ifdef ENABLE_PROVISIONER
+provision_etek_modbus();
+return;
+#endif
+
 
     SPI.begin();
 
@@ -70,7 +79,7 @@ void setup() {
     setup_buttons();
     _console.addLine(" EMS In-service Ready!");
     _console.addLine("  Check MQTT @");
-    _console.addLine("  test.mosquitto.org");
+    _console.addLine("  public.cloud.shiftr.io");
     _console.addLine("  filter EMS/#");
     _console.addLine("  Push a button?");
 
@@ -89,6 +98,9 @@ void setup() {
  * 
  */
 void loop() {
+    #ifdef ENABLE_PROVISIONER
+return;
+#endif
    loop_buttons();
     loop_modbus_master();
     loop_modbus_client();
