@@ -12,7 +12,7 @@
  #define POLL_INTERVAL 10000 
 
 // ==================== Modbus Device Addresses ====================
-#define THERMOSTAT_1_ADDR 0x04
+#define THERMOSTAT_1_ADDR 0x01
 #define DDS238_1_ADDR 0x01
 #define DDS238_2_ADDR 0x02
 #define DDS238_3_ADDR 0x03

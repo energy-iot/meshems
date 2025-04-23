@@ -11,7 +11,7 @@ class Modbus_DDS238 : public ModbusMaster {
         uint8_t get_modbus_address();
         void set_modbus_address(uint8_t addr);
         //uint8_t query_register(uint16_t reg);
-        uint16_t read_modbus_value(int registerAddress);
+        float read_modbus_value(uint16_t registerAddress);
 
         enum MB_Reg {
             rTOTAL_ENERGY = 0,          // 1/100 kWh
@@ -24,31 +24,33 @@ class Modbus_DDS238 : public ModbusMaster {
             rACTIVE_POWER = 0xE,        // 1W
             rREACTIVE_POWER = 0xF,      // 1VAr
             rPOWER_FACTOR = 0x10,       // 1/1000
-            rFREQUENCY = 0x11           // 1/100 Hz
+            rFREQUENCY = 0x11,           // 1/100 Hz
+            rMETADATA = 0x15          // 1-247 (high byte), 1-16 (low byte)
         };
 
         // Struct for current, voltage, and power factor
         struct PowerData {
-            unsigned long timestamp_last_report;
-            unsigned int total_energy;  // Wh
-            unsigned int export_energy; // Wh
-            unsigned int import_energy; // Wh
-            unsigned int voltage;       // mV
-            unsigned int current;       // mA
-            unsigned int active_power;  // W
-            unsigned int reactive_power; // VAr
-            unsigned int power_factor;  // 0.001
-            unsigned int frequency;     // 0.01 Hz
+            unsigned long timestamp_last_report = 0;
+            float total_energy = 0;  // Wh
+            float export_energy = 0; // Wh
+            float import_energy = 0; // Wh
+            float voltage = 0;       // mV
+            float current = 0;       // mA
+            float active_power = 0;  // W
+            float reactive_power = 0; // VAr
+            float power_factor = 0;  // 0.001
+            float frequency = 0;     // 0.01 Hz
+            float metadata = 0;      // 1-247 (high byte), 1-16 (low byte)
         };
 
         void poll(); //return num polled
         PowerData last_reading;
 
-        // float getTotalEnergy();
-        // float getExportEnergy();
-        // float getImportEnergy();
-        // float getVoltage();
-        // float getCurrent();
+        float getTotalEnergy();
+        float getExportEnergy();
+        float getImportEnergy();
+        float getVoltage();
+        float getCurrent();
     private:
         uint8_t modbus_address;
         unsigned long timestamp_last_report;
