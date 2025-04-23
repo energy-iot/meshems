@@ -27,8 +27,10 @@
 
  //DDS238
  Modbus_DDS238 dds238_1;
- Modbus_DDS238 dds238_2;
- Modbus_DDS238 dds238_3;
+
+ //UNcomment for the 3-meter boxes
+ //Modbus_DDS238 dds238_2;
+ //Modbus_DDS238 dds238_3;
  
  // Timing variables
  unsigned long lastMillis, lastEVSEMillis, lastEVSEChargingMillis = 0;
@@ -44,10 +46,10 @@
 
  void setup_dds238() {
     Serial.printf("SETUP: MODBUS: DDS238 #1: address:%d\n", THERMOSTAT_1_ADDR);
-    dds238_1.set_modbus_address(2);
-    dds238_2.set_modbus_address(DDS238_2_ADDR);
-    dds238_3.set_modbus_address(DDS238_3_ADDR);
-    dds238_1.begin(2, _modbus1);
+    dds238_1.set_modbus_address(DDS238_1_ADDR);
+    //dds238_2.set_modbus_address(DDS238_2_ADDR);
+    //dds238_3.set_modbus_address(DDS238_3_ADDR);
+    dds238_1.begin(DDS238_1_ADDR, _modbus1);
     //dds238_2.begin(DDS238_2_ADDR, _modbus1);
     //dds238_3.begin(DDS238_3_ADDR, _modbus1);
  }
@@ -58,7 +60,7 @@
  void setup_modbus_clients() {
      //setup_thermostats();  // Future expansion
      //setup_dtm();          // Future expansion
-     setup_sht20();          // Initialize SHT20
+     //setup_sht20();          // Initialize SHT20
      //setup_evse();         // Future expansion
      setup_dds238();
  }

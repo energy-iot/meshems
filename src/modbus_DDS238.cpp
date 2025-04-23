@@ -1,4 +1,4 @@
-#include <Modbus_DDS238.h>
+#include <modbus_dds238.h>
 #include <TimeLib.h>
 
 #define PAUSE_ON_RAMP_LEVELS 30000
