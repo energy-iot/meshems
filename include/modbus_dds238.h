@@ -12,6 +12,7 @@ class Modbus_DDS238 : public ModbusMaster {
         void set_modbus_address(uint8_t addr);
         //uint8_t query_register(uint16_t reg);
         float read_modbus_value(uint16_t registerAddress);
+        float read_modbus_extended_value(uint16_t registerAddress);
 
         enum MB_Reg {
             rTOTAL_ENERGY = 0,          // 1/100 kWh
@@ -31,15 +32,15 @@ class Modbus_DDS238 : public ModbusMaster {
         // Struct for current, voltage, and power factor
         struct PowerData {
             unsigned long timestamp_last_report = 0;
-            float total_energy = 0;  // Wh
-            float export_energy = 0; // Wh
-            float import_energy = 0; // Wh
-            float voltage = 0;       // mV
-            float current = 0;       // mA
-            float active_power = 0;  // W
-            float reactive_power = 0; // VAr
-            float power_factor = 0;  // 0.001
-            float frequency = 0;     // 0.01 Hz
+            float total_energy = 0;  // kWh
+            float export_energy = 0; // kWh
+            float import_energy = 0; // kWh
+            float voltage = 0;       // V
+            float current = 0;       // A
+            float active_power = 0;  // kW
+            float reactive_power = 0; // kVAr
+            float power_factor = 0;  // 0-1
+            float frequency = 0;     // Hz
             float metadata = 0;      // 1-247 (high byte), 1-16 (low byte)
         };
 

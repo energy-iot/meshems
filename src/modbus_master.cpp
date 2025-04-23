@@ -9,16 +9,15 @@
  #include <data_model.h>
  
  // Poll every 10 seconds (300000ms = 5 mins for production)
- #define POLL_INTERVAL 10000 
+ #define POLL_INTERVAL 1000 
 
-// ==================== Modbus Device Addresses ====================
-#define THERMOSTAT_1_ADDR 0x01
-#define DDS238_1_ADDR 0x01
-#define DDS238_2_ADDR 0x02
-#define DDS238_3_ADDR 0x03
+ // ==================== Modbus Device Addresses ====================
+ #define THERMOSTAT_1_ADDR 0x01
+ #define DDS238_1_ADDR 0x01
+ #define DDS238_2_ADDR 0x02
+ #define DDS238_3_ADDR 0x03
  
  // ==================== Serial Interface Setup ====================
- // RS485 serial connections
  SoftwareSerial _modbus1(RS485_RX_1, RS485_TX_1); // HW519 module pinout
  //SoftwareSerial *modbus2(RS485_RX_2, RS485_TX_2); // Client in EMS ModCan
  
