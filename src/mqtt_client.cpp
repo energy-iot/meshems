@@ -33,9 +33,9 @@
 #include <data_model.h>
 #include <config.h>
 #include <ArduinoJson.h>
-#include <modbus_dds238.h>
+#include <modbus_master.h>
 #include <sunspec_model_213.h>
-
+#include "modbus_devices.h"
 
 WiFiClient transportClient;                 // the network client for MQTT (also works with EthernetLarge)
 PubSubClient mqttclient(transportClient);   // the MQTT client
@@ -253,7 +253,7 @@ void loop_mqtt() {
       }
       //mqtt_publish(input);
       if (mqtt_connected) {
-        // mqtt_publish_meter();
+        //mqtt_publish_meter("MyMeter", dds238_1.last_reading);
       }
       mqtt_interval_ts = millis();
     }

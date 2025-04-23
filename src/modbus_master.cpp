@@ -7,7 +7,7 @@
  #include <modbus.h>
  #include <pins.h>
  #include <data_model.h>
- 
+
  // Poll every 10 seconds (300000ms = 5 mins for production)
  #define POLL_INTERVAL 1000 
 
