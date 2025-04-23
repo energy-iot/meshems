@@ -88,7 +88,7 @@
  void update() {
      inputRegisters[0] = sht20.getTemperature();
      inputRegisters[1] = sht20.getHumidity();
-     Serial.printf("MODBUS METER current: %2.1f\n", dds238_1.getCurrent());
+     //Serial.printf("MODBUS METER current: %2.1f\n", dds238_1.getCurrent());
  }
  
  /**
