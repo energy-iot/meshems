@@ -56,14 +56,14 @@ void setup() {
     
     // Initialize Modbus RTU master/client communication
     setup_modbus_master(); // This sets up communication with sensors like the SHT20 temp/humidity sensor or other devices
-    setup_modbus_client();
+    setup_modbus_client(); // This sets up the Modbus server with SunSpec compliance
     setup_can(); // Initialize CAN bus communication
 
     setup_buttons();
     _console.addLine(" EMS In-service Ready!");
-    _console.addLine("  Check MQTT @");
-    _console.addLine("  test.mosquitto.org");
-    _console.addLine("  filter EMS/#");
+    _console.addLine("  SunSpec Enabled");
+    _console.addLine("  Sol-Ark -> SunSpec");
+    _console.addLine("  Model 701 Active");
     _console.addLine("  Push a button?");
 
 }
