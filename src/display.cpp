@@ -27,6 +27,7 @@ See more at http://blog.squix.ch
 #include <display.h>
 #include <console.h>
 #include <pins.h>
+#include <data_model.h>  // Added for currentHistory access
 
 // Uncomment one of the following based on OLED type
 // SH1106(bool HW_SPI, int rst, int dc, int cs );
@@ -167,12 +168,127 @@ bool drawConsoleFrame(SH1106 *display, SH1106UiState* state, int x, int y) {
   return false;
 }
 
+/**
+ * Draw the current timeline graph frame
+ */
+bool drawCurrentTimelineFrame(SH1106 *display, SH1106UiState* state, int x, int y) {
+  display->clear();
+  display->setTextAlignment(TEXT_ALIGN_LEFT);
+  display->setFont(ArialMT_Plain_10);
+  
+  // Draw graph title
+  display->drawString(0, 0, "Current Timeline (A)");
+  
+  // Draw graph area outline
+  int graphX = 0;
+  int graphY = 12;
+  int graphWidth = 128;
+  int graphHeight = 44;
+  display->drawRect(graphX, graphY, graphWidth, graphHeight);
+  
+  // Check if we have any data
+  if (currentHistory.count == 0) {
+    display->drawString(10, 30, "No data available");
+    return false;
+  }
+  
+  // Draw Y-axis labels (current values)
+  char buf[10];
+  sprintf(buf, "%0.1f", currentHistory.maxValue);
+  display->drawString(0, graphY, buf);
+  sprintf(buf, "%0.1f", currentHistory.minValue);
+  display->drawString(0, graphY + graphHeight - 10, buf);
+  
+  // Calculate display parameters
+  float yRange = currentHistory.maxValue - currentHistory.minValue;
+  if (yRange <= 0) yRange = 1.0; // Avoid division by zero
+  
+  // Add 10% padding to the range for better visualization
+  float padding = yRange * 0.1;
+  float scaledMin = currentHistory.minValue - padding;
+  float scaledMax = currentHistory.maxValue + padding;
+  float scaledRange = scaledMax - scaledMin;
+  
+  // Draw the timeline
+  int lastX = -1;
+  int lastY = -1;
+  
+  // Calculate how many points to plot (based on buffer size and display width)
+  int numPoints = min(currentHistory.count, graphWidth - 2);
+  int xStep = (graphWidth - 2) / numPoints;
+  if (xStep < 1) xStep = 1;
+  
+  // Calculate the starting index in the circular buffer
+  int startIdx = 0;
+  if (currentHistory.count >= CURRENT_HISTORY_SIZE) {
+    // Buffer is full, so start from the oldest point
+    startIdx = (currentHistory.currentIndex) % CURRENT_HISTORY_SIZE;
+  }
+  
+  // Draw each point
+  for (int i = 0; i < numPoints; i++) {
+    // Get the value from the circular buffer
+    int bufIdx = (startIdx + i) % CURRENT_HISTORY_SIZE;
+    float value = currentHistory.values[bufIdx];
+    
+    // Scale to display coordinates
+    int pointX = graphX + 1 + i * xStep;
+    int pointY = graphY + graphHeight - 1 - ((value - scaledMin) / scaledRange) * (graphHeight - 2);
+    
+    // Ensure point is within bounds
+    pointY = constrain(pointY, graphY + 1, graphY + graphHeight - 2);
+    
+    // Draw point
+    display->setPixel(pointX, pointY);
+    
+    // Draw line to previous point (approximation using individual pixels)
+    if (lastX != -1) {
+      // Draw a simple line by plotting individual pixels (Bresenham's line algorithm)
+      int dx = abs(pointX - lastX);
+      int dy = abs(pointY - lastY);
+      int sx = (lastX < pointX) ? 1 : -1;
+      int sy = (lastY < pointY) ? 1 : -1;
+      int err = dx - dy;
+      int err2;
+      
+      int x0 = lastX;
+      int y0 = lastY;
+      
+      while (true) {
+        display->setPixel(x0, y0);
+        if (x0 == pointX && y0 == pointY) break;
+        
+        err2 = 2 * err;
+        if (err2 > -dy) {
+          err -= dy;
+          x0 += sx;
+        }
+        if (err2 < dx) {
+          err += dx;
+          y0 += sy;
+        }
+      }
+    }
+    
+    // Update last position
+    lastX = pointX;
+    lastY = pointY;
+  }
+  
+  // Draw current value on the graph
+  float currentVal = currentHistory.values[(currentHistory.currentIndex - 1 + CURRENT_HISTORY_SIZE) % CURRENT_HISTORY_SIZE];
+  sprintf(buf, "Current: %0.2f A", currentVal);
+  display->drawString(30, 0, buf);
+  
+  return false;
+}
+
 // how many frames are there?
-int frameCount = 1;
+int frameCount = 2; // Updated frame count
 // this array keeps function pointers to all frames
 // frames are the single views that slide from right to left
 //bool (*frames[])(SH1106 *display, SH1106UiState* state, int x, int y) = { drawThermostatFrame, drawEnergyFrame2, drawEnergyFrame3, drawEnergyFrame4}; //, drawFrame2, drawFrame3, drawFrame4 };
-bool (*frames[])(SH1106 *display, SH1106UiState* state, int x, int y) = {drawConsoleFrame};//drawFrame3, drawFrame4 };
+bool (*frames[])(SH1106 *display, SH1106UiState* state, int x, int y) = {drawConsoleFrame, drawCurrentTimelineFrame};//drawFrame3, drawFrame4 };
 //bool (*frames[])(SH1106 *display, SH1106UiState* state, int x, int y) = { drawEnergyFrame3, drawEnergyFrame4}; //, drawFrame2, drawFrame3, drawFrame4 };
 //bool (*frames[])(SH1106 *display, SH1106UiState* state, int x, int y) = { drawConsoleFrame , drawThermostatFrame, drawEnergyFrame, drawEnergyFrame2, drawEnergyFrame3}; //, drawFrame2, drawFrame3, drawFrame4 };
 
