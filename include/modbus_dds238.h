@@ -44,7 +44,7 @@ class Modbus_DDS238 : public ModbusMaster {
             float metadata = 0;      // 1-247 (high byte), 1-16 (low byte)
         };
 
-        void poll(); //return num polled
+        uint8_t poll();
         PowerData last_reading;
 
         float getTotalEnergy();
@@ -52,14 +52,19 @@ class Modbus_DDS238 : public ModbusMaster {
         float getImportEnergy();
         float getVoltage();
         float getCurrent();
+        float getActivePower();
+        float getPowerFactor();
+        float getFrequency();
     private:
         uint8_t modbus_address;
         unsigned long timestamp_last_report;
         unsigned long timestamp_last_failure;
 
-        // float voltage;
-        // float current;
-        // float power_factor;
-        // float total_enery;
-        // float export_energy;
+        float voltage;
+        float current;
+        float active_power;
+        float power_factor;
+        float frequency;
+        float total_enery;
+        float export_energy;
 };

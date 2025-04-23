@@ -27,13 +27,13 @@
       <h3>Polling Settings</h3>
       <div class='form-row'>
         <label for='interval'>Polling Interval (ms):</label>
-        <input type='number' id='interval' min='50' max='10000' step='50' value='200'>
+        <input type='number' id='interval' min='50' max='10000' step='50' value='100'>
         <button onclick='updateInterval()' style='margin-left: 10px;'>Update</button>
       </div>
       <div class='status' id='intervalStatus'></div>
       <div class='form-row'>
         <label>Current Interval:</label>
-        <span id='currentInterval'>200 ms</span>
+        <span id='currentInterval'>100 ms</span>
       </div>
     </div>
   </div>
@@ -117,9 +117,9 @@
         });
     }
 
-    // Update initially and then every 500ms
+    // Update initially and then every 100ms
     updateChart();
-    setInterval(updateChart, 500);
+    setInterval(updateChart, 100);
   </script>
 </body>
 </html> 

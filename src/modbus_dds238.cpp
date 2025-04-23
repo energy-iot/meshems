@@ -33,7 +33,8 @@ float Modbus_DDS238::read_modbus_extended_value(uint16_t registerAddress) {
     return (float)(getResponseBuffer(0) << 16 + getResponseBuffer(1));
 }
 
-void Modbus_DDS238::poll() {
+uint8_t Modbus_DDS238::poll() {
+    uint8_t success = ku8MBSuccess;
     // Create a PowerData struct and populate it by making getResponseBuffer() calls
     try {
         last_reading.total_energy = read_modbus_extended_value(rTOTAL_ENERGY)/100;
@@ -41,8 +42,8 @@ void Modbus_DDS238::poll() {
         last_reading.import_energy = read_modbus_extended_value(rIMPORT_ENERGY_LOW)/100;
         last_reading.voltage = read_modbus_value(rVOLTAGE)/10;
         last_reading.current = read_modbus_value(rCURRENT)/100;
-        last_reading.active_power = read_modbus_value(rACTIVE_POWER)/1000;
-        last_reading.reactive_power = read_modbus_value(rREACTIVE_POWER)/1000;
+        last_reading.active_power = read_modbus_value(rACTIVE_POWER)/10;
+        last_reading.reactive_power = read_modbus_value(rREACTIVE_POWER)/10;
         last_reading.power_factor = read_modbus_value(rPOWER_FACTOR)/1000;
         last_reading.frequency = read_modbus_value(rFREQUENCY)/100;
         last_reading.timestamp_last_report = now();
@@ -51,16 +52,18 @@ void Modbus_DDS238::poll() {
         Serial.printf("MODBUS DDS238: Total Energy: %.2f kWh\n", last_reading.total_energy);
         Serial.printf("MODBUS DDS238: Export Energy: %.2f kWh\n", last_reading.export_energy);
         Serial.printf("MODBUS DDS238: Import Energy: %.2f kWh\n", last_reading.import_energy);
-        Serial.printf("MODBUS DDS238: Voltage: %.2f V\n", last_reading.voltage);
+        Serial.printf("MODBUS DDS238: Voltage: %.1f V\n", last_reading.voltage);
         Serial.printf("MODBUS DDS238: Current: %.2f A\n", last_reading.current);
-        Serial.printf("MODBUS DDS238: Active Power: %.3f kW\n", last_reading.active_power);
-        Serial.printf("MODBUS DDS238: Reactive Power: %.3f kVAr\n", last_reading.reactive_power);
+        Serial.printf("MODBUS DDS238: Active Power: %.1f W\n", last_reading.active_power);
+        Serial.printf("MODBUS DDS238: Reactive Power: %.1f VAr\n", last_reading.reactive_power);
         Serial.printf("MODBUS DDS238: Power Factor: %.3f\n", last_reading.power_factor);
-        Serial.printf("MODBUS DDS238: Frequency: %.2f Hz\n", last_reading.frequency);
+        Serial.printf("MODBUS DDS238: Frequency: %.1f Hz\n", last_reading.frequency);
         Serial.printf("MODBUS DDS238: Metadata: %d\n", last_reading.metadata);
     } catch (std::runtime_error& e) {
         Serial.println("MODBUS DDS238: Error reading registers");
+        success = ku8MBResponseTimedOut;
     }
+    return success;
 }
 
  float Modbus_DDS238::getTotalEnergy() {
@@ -80,4 +83,16 @@ float Modbus_DDS238::getVoltage() {
 
 float Modbus_DDS238::getCurrent() {
     return last_reading.current;
+}
+
+float Modbus_DDS238::getActivePower() {
+    return last_reading.active_power;
+}
+
+float Modbus_DDS238::getPowerFactor() {
+    return last_reading.power_factor;
+}
+
+float Modbus_DDS238::getFrequency() {
+    return last_reading.frequency;
 }

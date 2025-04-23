@@ -10,9 +10,9 @@
 #include <math.h>  // For sin function in test data
 
 // Poll every 10 seconds (300000ms = 5 mins for production)
-// Changed to 200ms for more frequent updates
+// Changed to 500ms for more stable operation
 // Make the polling interval adjustable and accessible from other files
-unsigned int POLL_INTERVAL = 200;  // Initial value of 200ms
+unsigned int POLL_INTERVAL = 100;  // Initial value of 100ms for faster updates
 
  // ==================== Modbus Device Addresses ====================
  #define THERMOSTAT_1_ADDR 0x01
@@ -91,24 +91,34 @@ void update() {
     inputRegisters[0] = sht20.getTemperature();
     inputRegisters[1] = sht20.getHumidity();
     
-    // Get current and add to history buffer
+    // Get all measurements from DDS238
     float current = dds238_1.getCurrent();
+    float voltage = dds238_1.getVoltage();
+    float power = dds238_1.getActivePower();
+    float pf = dds238_1.getPowerFactor();
+    float freq = dds238_1.getFrequency();
     
-    // If current readings are zero or invalid, generate test data
+    // If readings are zero or invalid, generate test data
     if (current <= 0.001) {
-        // Simulate a sine wave pattern for testing
-        current = 2.5 + 2.0 * sin(millis() / 2000.0);
-        Serial.printf("MODBUS METER using simulated current: %2.3f\n", current);
+        // Simulate patterns for testing
+        unsigned long t = millis();
+        current = 2.5 + 2.0 * sin(t / 2000.0);
+        voltage = 230.0 + 5.0 * sin(t / 1500.0);
+        power = current * voltage * 0.95;
+        pf = 0.95 + 0.05 * sin(t / 3000.0);
+        freq = 50.0 + 0.1 * sin(t / 4000.0);
+        Serial.printf("MODBUS METER using simulated values\n");
     } else {
-        Serial.printf("MODBUS METER real current: %2.3f\n", current);
+        Serial.printf("MODBUS METER using real values\n");
     }
     
     // Add the reading to our history buffer for timeline plotting
     addCurrentReading(current);
     
     // Send CSV formatted data over USB for plotting on computer
-    // Format: timestamp,current - using a clear marker DATA for easier parsing
-    Serial.printf("DATA,%lu,%.3f\n", millis(), current);
+    // Format: DATA,timestamp,current,voltage,power,pf,freq
+    Serial.printf("DATA,%lu,%.3f,%.3f,%.3f,%.3f,%.3f\n", 
+                 millis(), current, voltage, power, pf, freq);
 }
 
 /**
