@@ -88,12 +88,19 @@ void setup() {
  * - Handle Modbus client requests
  * 
  */
+
+unsigned long lastMillis = 0;
+
 void loop() {
    loop_buttons();
-    loop_modbus_master();
+   
+   if (millis() - lastMillis > 1000) {
+        PowerData last_reading = loop_modbus_master();
+        lastMillis = millis();
+        loop_mqtt(last_reading);
+   }
     loop_modbus_client();
    loop_buttons(); 
     loop_display();
     loop_can();
-    loop_mqtt();
 }

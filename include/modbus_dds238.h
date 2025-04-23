@@ -1,6 +1,7 @@
 #pragma once
 
 #include <modbus_master.h>
+#include "data_model.h"
 
 class Modbus_DDS238 : public ModbusMaster {
     public:
@@ -29,23 +30,7 @@ class Modbus_DDS238 : public ModbusMaster {
             rMETADATA = 0x15          // 1-247 (high byte), 1-16 (low byte)
         };
 
-        // Struct for current, voltage, and power factor
-        struct PowerData {
-            unsigned long timestamp_last_report = 0;
-            float total_energy = 0;  // kWh
-            float export_energy = 0; // kWh
-            float import_energy = 0; // kWh
-            float voltage = 0;       // V
-            float current = 0;       // A
-            float active_power = 0;  // kW
-            float reactive_power = 0; // kVAr
-            float power_factor = 0;  // 0-1
-            float frequency = 0;     // Hz
-            float metadata = 0;      // 1-247 (high byte), 1-16 (low byte)
-        };
-
-        void poll(); //return num polled
-        PowerData last_reading;
+        PowerData poll(); //return num polled
 
         float getTotalEnergy();
         float getExportEnergy();

@@ -36,6 +36,7 @@
 #include <modbus_master.h>
 #include <sunspec_model_213.h>
 #include "modbus_devices.h"
+#include "data_model.h"
 
 WiFiClient transportClient;                 // the network client for MQTT (also works with EthernetLarge)
 PubSubClient mqttclient(transportClient);   // the MQTT client
@@ -111,7 +112,7 @@ boolean mqtt_connect()
   return (1);
 }
 
-void mqtt_publish_meter(String meterId, const Modbus_DDS238::PowerData& meterData) {
+void mqtt_publish_meter(String meterId, const PowerData& meterData) {
   SunSpecModel213 sunSpecData;
 
   // For now assume phase A. This can be extended to put the meter readings in the
@@ -140,13 +141,13 @@ void mqtt_publish_meter(String meterId, const Modbus_DDS238::PowerData& meterDat
 void mqtt_publish_json(const char* subtopic, const JsonDocument * payload) {
     String topicBuf;
     String jsonString;
-    if (measureJson(*payload) >= 256) {
+    if (measureJson(*payload) >= 1024) {
       Serial.println("MQTT publish: payload too large");
       return;
     }
     serializeJson(*payload, jsonString);
     // It's annoying to have to set this limit, but maybe a static size is better for performance?
-    char data[256];
+    char data[1024];
     jsonString.toCharArray(data, sizeof(data));
     topicBuf = topic_device;
     topicBuf.concat(subtopic);
@@ -244,19 +245,20 @@ void setup_mqtt_client() {
   mqtt_interval_ts = now();
 }
 
-void loop_mqtt() {
+void loop_mqtt(PowerData last_reading) {
 
-    if ((millis() - mqtt_interval_ts > MQTT_PUBLISH_INTERVAL)) {
       bool mqtt_connected = mqttclient.connected();
       if (!mqtt_connected) {
         mqtt_connected = mqtt_connect();
       }
       //mqtt_publish(input);
       if (mqtt_connected) {
-        //mqtt_publish_meter("MyMeter", dds238_1.last_reading);
+        mqtt_publish_meter("MyMeter", last_reading);
+        Serial.println("Publishing!");
+      } else {
+        Serial.println("MQTT not connected!");
       }
       mqtt_interval_ts = millis();
-    }
     mqttclient.loop();
 }
 

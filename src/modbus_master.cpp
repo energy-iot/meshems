@@ -32,7 +32,7 @@
  //Modbus_DDS238 dds238_3;
  
  // Timing variables
- unsigned long lastMillis, lastEVSEMillis, lastEVSEChargingMillis = 0;
+// unsigned long lastMillis, lastEVSEMillis, lastEVSEChargingMillis = 0;
  
  /**
   * Initialize SHT20 temperature/humidity sensor
@@ -93,15 +93,17 @@
  /**
   * Main polling loop for Modbus communication
   */
- void loop_modbus_master() {
-     if (millis() - lastMillis > POLL_INTERVAL) {
-         Serial.println("poll thermostat");
-         //sht20.poll();        // Get new readings
-         dds238_1.poll();     // Get new readings
-         //dds238_2.poll();     // Get new readings
-         //dds238_3.poll();     // Get new readings
+ PowerData loop_modbus_master() {
+    PowerData last_reading;
+     
+    Serial.println("poll meter");
+    //sht20.poll();        // Get new readings
+    last_reading = dds238_1.poll();     // Get new readings
+    //dds238_2.poll();     // Get new readings
+    //dds238_3.poll();     // Get new readings
 
-         update();            // Update data model
-         lastMillis = millis();
-     }
+    update();            // Update data model
+    //lastMillis = millis();
+
+     return last_reading;
  }

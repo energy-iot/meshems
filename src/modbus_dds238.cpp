@@ -1,5 +1,6 @@
 #include <modbus_dds238.h>
 #include <TimeLib.h>
+#include <data_model.h>
 
 #define PAUSE_ON_RAMP_LEVELS 30000
 
@@ -33,8 +34,9 @@ float Modbus_DDS238::read_modbus_extended_value(uint16_t registerAddress) {
     return (float)(getResponseBuffer(0) << 16 + getResponseBuffer(1));
 }
 
-void Modbus_DDS238::poll() {
+PowerData Modbus_DDS238::poll() {
     // Create a PowerData struct and populate it by making getResponseBuffer() calls
+    PowerData last_reading;
     try {
         last_reading.total_energy = read_modbus_extended_value(rTOTAL_ENERGY)/100;
         last_reading.export_energy = read_modbus_extended_value(rEXPORT_ENERGY_LOW)/100;
@@ -61,6 +63,7 @@ void Modbus_DDS238::poll() {
     } catch (std::runtime_error& e) {
         Serial.println("MODBUS DDS238: Error reading registers");
     }
+    return last_reading;
 }
 
  float Modbus_DDS238::getTotalEnergy() {
