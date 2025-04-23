@@ -32,6 +32,10 @@
 #include <WiFiMulti.h>
 #include <data_model.h>
 #include <config.h>
+#include <ArduinoJson.h>
+#include <modbus_dds238.h>
+#include <sunspec_model_213.h>
+
 
 WiFiClient transportClient;                 // the network client for MQTT (also works with EthernetLarge)
 PubSubClient mqttclient(transportClient);   // the MQTT client
@@ -41,6 +45,9 @@ static char mqtt_data[128] = "";
 static int mqtt_connection_error_count = 0;
 String topic_device;          // device topic (publish/subscribe under here)
 String topic_cmd;             // command topic (for 'southbound' commands)
+
+// Function prototype for mqtt_publish_json
+void mqtt_publish_json(const char* subtopic, const JsonDocument* payload);
 
 void generateTopics() {
   //the top-level device topic string, eg: NESLE8D3ECAE3D98
@@ -104,11 +111,51 @@ boolean mqtt_connect()
   return (1);
 }
 
-//construct a comma-sep colon-delim string for the publish func
-void mqtt_publish_meter() {
-  char buf[32];
-  sprintf(buf,"temp:%2.1f,humid:%2.2f", (float)inputRegisters[0], (float)inputRegisters[1]);
-  mqtt_publish_comma_sep_colon_delim("meter", buf);
+void mqtt_publish_meter(String meterId, const Modbus_DDS238::PowerData& meterData) {
+  SunSpecModel213 sunSpecData;
+
+  // For now assume phase A. This can be extended to put the meter readings in the
+  // correct phase using configuration data about which meter is on which phase.
+  sunSpecData.PhV_phA = meterData.voltage;
+  sunSpecData.A_phA = meterData.current;
+  sunSpecData.W_phA = meterData.active_power * 1000;
+  sunSpecData.TotWhImport = meterData.import_energy * 1000;
+  sunSpecData.TotWhExport = meterData.export_energy * 1000;
+  sunSpecData.Hz = meterData.frequency;
+  sunSpecData.PF_phA = meterData.power_factor;
+  sunSpecData.VAR_phA = meterData.reactive_power * 1000;
+
+  long timestamp = meterData.timestamp_last_report;
+  String topicBuf = "meter/" + meterId;
+  topicBuf.concat("meter");
+
+  JsonDocument jsonDoc;
+  sunSpecData.toJson(jsonDoc);
+  jsonDoc["timestamp"] = timestamp;
+
+  mqtt_publish_json(topicBuf.c_str(), &jsonDoc);
+}
+
+
+void mqtt_publish_json(const char* subtopic, const JsonDocument * payload) {
+    String topicBuf;
+    String jsonString;
+    if (measureJson(*payload) >= 256) {
+      Serial.println("MQTT publish: payload too large");
+      return;
+    }
+    serializeJson(*payload, jsonString);
+    // It's annoying to have to set this limit, but maybe a static size is better for performance?
+    char data[256];
+    jsonString.toCharArray(data, sizeof(data));
+    topicBuf = topic_device;
+    topicBuf.concat(subtopic);
+    if (!mqttclient.publish(topicBuf.c_str(), data)) {
+        Serial.println("MQTT publish: failed");
+    }
+#ifdef ENABLE_DEBUG_MQTT
+    Serial.printf("topic: %s, data: %s\n", topicBuf.c_str(), data);
+#endif
 }
 
 //pull apart a comma-sep colon-delim name:value string and publish the name:value pairs under 'subtopic'
@@ -206,7 +253,7 @@ void loop_mqtt() {
       }
       //mqtt_publish(input);
       if (mqtt_connected) {
-        mqtt_publish_meter();
+        // mqtt_publish_meter();
       }
       mqtt_interval_ts = millis();
     }
