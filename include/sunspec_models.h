@@ -17,31 +17,35 @@
 
 // Common Model (1) register offsets
 #define COMMON_MODEL_ID 0
-#define COMMON_MODEL_LENGTH 2
-#define COMMON_MANUFACTURER 4
-#define COMMON_MODEL 20
-#define COMMON_OPTIONS 36
-#define COMMON_VERSION 52
-#define COMMON_SERIAL 54
+#define COMMON_MODEL_LENGTH 1
+#define COMMON_MANUFACTURER 2
+#define COMMON_MODEL 18
+#define COMMON_OPTIONS 34
+#define COMMON_VERSION 42
+#define COMMON_SERIAL 50
+#define COMMON_DEVICE_ADDR 66
 
 // Inverter Model (701) register offsets
 #define INV_MODEL_ID 0
-#define INV_MODEL_LENGTH 2
-#define INV_AC_CURRENT 4
-#define INV_AC_CURRENT_A 6
-#define INV_AC_CURRENT_B 8
-#define INV_AC_CURRENT_C 10
-#define INV_AC_VOLTAGE_AB 12
-#define INV_AC_VOLTAGE_BC 14
-#define INV_AC_VOLTAGE_CA 16
-#define INV_AC_VOLTAGE_AN 18
-#define INV_AC_VOLTAGE_BN 20
-#define INV_AC_VOLTAGE_CN 22
-#define INV_AC_POWER 24
-#define INV_AC_FREQUENCY 26
-#define INV_AC_VA 28
-#define INV_AC_VAR 30
-#define INV_AC_PF 32
+#define INV_MODEL_LENGTH 1
+#define INV_STATUS 4 // 4 Inverter State
+
+#define INV_AC_CURRENT 14
+#define INV_AC_CURRENT_A 45
+#define INV_AC_CURRENT_B 68
+#define INV_AC_CURRENT_C 91
+#define INV_AC_VOLTAGE_AB 46
+#define INV_AC_VOLTAGE_BC 69
+#define INV_AC_VOLTAGE_CA 92
+#define INV_AC_VOLTAGE_AN 47
+#define INV_AC_VOLTAGE_BN 70
+#define INV_AC_VOLTAGE_CN 93
+#define INV_AC_POWER 10
+#define INV_AC_FREQUENCY 17
+#define INV_AC_VA 11
+#define INV_AC_VAR 12
+#define INV_AC_PF 13
+
 #define INV_AC_ENERGY_WH 34
 #define INV_DC_CURRENT 36
 #define INV_DC_VOLTAGE 38
@@ -50,8 +54,8 @@
 #define INV_TEMP_SINK 44
 #define INV_TEMP_TRANSFORMER 46
 #define INV_TEMP_OTHER 48
-#define INV_STATUS 50
-#define INV_STATUS_VENDOR 52
+
+#define INV_STATUS_VENDOR 123
 
 // Status flags for INV_STATUS
 #define STAT_OFF 0x0001

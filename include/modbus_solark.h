@@ -2,6 +2,61 @@
 
 #include <modbus_master.h>
 
+// Register mapping structure for Sol-Ark
+struct SolArkRegisterMap {
+    // Energy registers
+    static const uint16_t BATTERY_CHARGE_ENERGY = 70;
+    static const uint16_t BATTERY_DISCHARGE_ENERGY = 71;
+    static const uint16_t GRID_BUY_ENERGY = 76;
+    static const uint16_t GRID_SELL_ENERGY = 77;
+    static const uint16_t GRID_FREQUENCY = 79;
+    static const uint16_t LOAD_ENERGY = 84;
+    static const uint16_t PV_ENERGY = 108;
+    
+    // Grid and inverter registers
+    static const uint16_t GRID_VOLTAGE = 152;
+    static const uint16_t INVERTER_VOLTAGE = 156;
+    static const uint16_t GRID_CURRENT_L1 = 160;
+    static const uint16_t GRID_CURRENT_L2 = 161;
+    static const uint16_t GRID_CT_CURRENT_L1 = 162;
+    static const uint16_t GRID_CT_CURRENT_L2 = 163;
+    static const uint16_t INVERTER_CURRENT_L1 = 164;
+    static const uint16_t INVERTER_CURRENT_L2 = 165;
+    static const uint16_t SMART_LOAD_POWER = 166;
+    static const uint16_t GRID_POWER = 169;
+    
+    // Power and battery registers
+    static const uint16_t INVERTER_OUTPUT_POWER = 175;
+    static const uint16_t LOAD_POWER_L1 = 176;
+    static const uint16_t LOAD_POWER_L2 = 177;
+    static const uint16_t LOAD_POWER_TOTAL = 178;
+    static const uint16_t LOAD_CURRENT_L1 = 179;
+    static const uint16_t LOAD_CURRENT_L2 = 180;
+    static const uint16_t BATTERY_TEMPERATURE = 182;
+    static const uint16_t BATTERY_VOLTAGE = 183;
+    static const uint16_t BATTERY_SOC = 184;
+    static const uint16_t PV1_POWER = 186;
+    static const uint16_t PV2_POWER = 187;
+    
+    // Battery status registers
+    static const uint16_t BATTERY_POWER = 190;
+    static const uint16_t BATTERY_CURRENT = 191;
+    static const uint16_t LOAD_FREQUENCY = 192;
+    static const uint16_t INVERTER_FREQUENCY = 193;
+    static const uint16_t GRID_RELAY_STATUS = 194;
+    static const uint16_t GENERATOR_RELAY_STATUS = 195;
+};
+
+// Scaling factors for Sol-Ark values
+struct SolArkScalingFactors {
+    static constexpr float VOLTAGE = 10.0f;
+    static constexpr float CURRENT = 100.0f;
+    static constexpr float ENERGY = 10.0f;
+    static constexpr float FREQUENCY = 100.0f;
+    static constexpr float TEMPERATURE_OFFSET = 1000.0f;
+    static constexpr float TEMPERATURE_SCALE = 10.0f;
+};
+
 class Modbus_SolArkLV : public ModbusMaster {
     public:
         Modbus_SolArkLV();
@@ -71,6 +126,14 @@ class Modbus_SolArkLV : public ModbusMaster {
         bool isBuyingFromGrid();
 
     private:
+        // Helper method for sign correction
+        int16_t correctSignedValue(uint16_t value) {
+            if (value > 32767) {
+                return value - 65535;
+            }
+            return value;
+        }
+        
         uint8_t modbus_address;
         unsigned long timestamp_last_report;
         unsigned long timestamp_last_failure;
