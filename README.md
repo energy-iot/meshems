@@ -54,7 +54,7 @@ This development kit supports multiple peripherals using the Arduino framework:
 ### Power Supply Options
 - **USB Power:** 5V via USB Type-C connector
 - **DC Power:** 5VDC via screw terminals to on board, connects directly to 5VIN of ESP32 (5V input MAX).
-- **AC Power:** ⚠️ 120VAC input via screw terminals on board to power supply. 
+- **AC Power:** ⚠️ 120/240VAC 50/60 hz input via screw terminals on board to power supply. 
 
 ### ⚠️ WARNING: AC Power Safety
 ### DANGER - RISK OF ELECTRIC SHOCK, SERIOUS INJURY OR DEATH
