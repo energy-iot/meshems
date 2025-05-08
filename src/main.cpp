@@ -39,6 +39,7 @@
 #include <console.h>    // Console UI for the display
 #include <SPI.h>        // SPI communication for display/CAN
 #include <can.h>        // Implementation of CAN bus communication
+#include <mqtt_client.h> // MQTT client for publishing sensor data
 
 void setup() {
     Serial.begin(115200);   // Initialize serial communication for debugging
@@ -56,16 +57,20 @@ void setup() {
     
     // Initialize Modbus RTU master/client communication
     setup_modbus_master(); // This sets up communication with sensors like the SHT20 temp/humidity sensor or other devices
-    setup_modbus_client(); // This sets up the Modbus server with SunSpec compliance
+    setup_modbus_client(); // This sets up the Modbus server
     setup_can(); // Initialize CAN bus communication
+    
+    // Initialize MQTT client if enabled
+    setup_mqtt();
 
     setup_buttons();
     _console.addLine(" EMS In-service Ready!");
-    _console.addLine("  SunSpec Enabled");
-    _console.addLine("  Sol-Ark -> SunSpec");
-    _console.addLine("  Model 701 Active");
     _console.addLine("  Push a button?");
-
+#if ENABLE_MQTT
+    _console.addLine(" MQTT publishing enabled");
+#else
+    _console.addLine(" MQTT publishing disabled");
+#endif
 }
 
 /**
@@ -77,6 +82,7 @@ void setup() {
  * - Process CAN bus messages
  * - Handle Modbus master polling
  * - Handle Modbus client requests
+ * - Maintain MQTT connection and publish data (if enabled)
  * 
  */
 void loop() {
@@ -85,4 +91,5 @@ void loop() {
     loop_modbus_client();
     loop_display();
     loop_can();
+    loop_mqtt(); // Will do nothing if MQTT is disabled
 }

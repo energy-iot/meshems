@@ -19,6 +19,7 @@ float Modbus_SHT20::getTemperature() { return temperature/10.0; }
 float Modbus_SHT20::getHumidity() { return humidity/10.0; }
 float Modbus_SHT20::getRawTemperature() { return temperature; }
 float Modbus_SHT20::getRawHumidity() { return humidity; }
+
 void Modbus_SHT20::route_poll_response(uint16_t reg, uint16_t response) {
     switch (reg) {
         case rTEMPERATURE :

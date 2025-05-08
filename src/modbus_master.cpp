@@ -8,6 +8,7 @@
  #include <pins.h>
  #include <data_model.h>
  #include <console.h>
+ #include <mqtt_client.h>
 
  // Declare the scanner function
 void scanModbusDevices(SoftwareSerial &serialPort);
@@ -24,48 +25,44 @@ void scanModbusDevices(SoftwareSerial &serialPort);
 #define ku8MBInvalidSlaveID 0xE2
 #endif
  
- // Poll every 10 seconds (300000ms = 5 mins for production)
- #define POLL_INTERVAL 10000 
+ // Poll every 5 seconds for SHT20 sensor
+ #define SHT20_POLL_INTERVAL 5000 
  #define EVSE_POLL_INTERVAL 5000 // 5 seconds
- #define SOLARK_POLL_INTERVAL 5000  // Poll every 5 seconds
 
 // ==================== Modbus Device Addresses ====================
  #define THERMOSTAT_1_ADDR 0x01
  #define EVSE_ADDR 0x06
- #define SOLARK_ADDR 0x01  // Adjust this to match your SolArk device address
  
  // ==================== Serial Interface Setup ====================
  // RS485 serial connections
  SoftwareSerial _modbus1(RS485_RX_1, RS485_TX_1); // HW519 module pinout
- //SoftwareSerial *modbus2(RS485_RX_2, RS485_TX_2); // Client in EMS ModCan
+ //SoftwareSerial _modbus2(RS485_RX_2, RS485_TX_2); // Client in EMS ModCan
  
  // Temperature/humidity sensor
  Modbus_SHT20 sht20;
-
- //the EVSE controller
-Modbus_SolArkLV solark;
  
  // Timing variables
- unsigned long lastMillis, lastEVSEMillis, lastEVSEChargingMillis, lastSolArkMillis = 0;
+ unsigned long lastMillis, lastSHT20Millis, lastEVSEMillis, lastEVSEChargingMillis = 0;
  
  // Since _console is defined in main.cpp, we need to declare it as external here
-//extern Console _console;
+extern Console _console;
 
-// Add this function to initialize the SolArk device
-void setup_solark() {
-  Serial.printf("SETUP: MODBUS: SolArk #1: address:%d\n", SOLARK_ADDR);
-  solark.set_modbus_address(SOLARK_ADDR);
-  solark.begin(SOLARK_ADDR, _modbus1);
+/**
+  * Initialize SHT20 temperature/humidity sensor
+  */
+ void setup_sht20() {
+    Serial.printf("SETUP: MODBUS: SHT20 #1: address:%d\n", THERMOSTAT_1_ADDR);
+    sht20.set_modbus_address(THERMOSTAT_1_ADDR);
+    sht20.begin(THERMOSTAT_1_ADDR, _modbus1);
 }
- 
+
  /**
   * Initialize all Modbus clients
   */
  void setup_modbus_clients() {
-     //setup_thermostats();  // Future expansion
-     //setup_dtm();          // Future expansion
-     //setup_sht20();          // Initialize SHT20
-     setup_solark();           // Initialize EKEPC2 EVSE
+     
+     // Initialize SHT20 sensor
+     setup_sht20();
  }
  
  /**
@@ -90,107 +87,37 @@ void setup_solark() {
     // scanModbusDevices(_modbus1);
  }
 
- void printBatteryStatus() {
-    Serial.println("BATTERY STATUS:");
-    Serial.printf("  Power:       %.1f W\n", solark.getBatteryPower());
-    Serial.printf("  Current:     %.2f A\n", solark.getBatteryCurrent());
-    Serial.printf("  Voltage:     %.2f V\n", solark.getBatteryVoltage());
-    Serial.printf("  SOC:         %.0f%%\n", solark.getBatterySOC());
-    Serial.printf("  Temperature: %.1f°C (%.1f°F)\n", 
-                  solark.getBatteryTemperature(), 
-                  solark.getBatteryTemperatureF());
-    
-    // Show charging/discharging status
-    Serial.print("  Status:      ");
-    if (solark.isBatteryCharging()) {
-      Serial.println("CHARGING");
-    } else if (solark.isBatteryDischarging()) {
-      Serial.println("DISCHARGING");
-    } else {
-      Serial.println("IDLE");
-    }
-  }
-  
-  void printGridStatus() {
-    Serial.println("GRID STATUS:");
-    Serial.printf("  Power:       %.1f W\n", solark.getGridPower());
-    Serial.printf("  Voltage:     %.1f V\n", solark.getGridVoltage());
-    Serial.printf("  Current L1:  %.2f A\n", solark.getGridCurrentL1());
-    Serial.printf("  Current L2:  %.2f A\n", solark.getGridCurrentL2());
-    Serial.printf("  Grid CT Current L1:  %.2f A\n", solark.getGridCurrentL1());
-    Serial.printf("  Grid CT Current L2:  %.2f A\n", solark.getGridCurrentL2());
-    Serial.printf("  Frequency:   %.2f Hz\n", solark.getGridFrequency());
-    
-    // Show grid connection status
-    Serial.print("  Connection:  ");
-    if (solark.isGridConnected()) {
-      Serial.println("CONNECTED");
-      
-      // Show buying/selling status
-      Serial.print("  Flow:        ");
-      if (solark.isSellingToGrid()) {
-        Serial.println("SELLING TO GRID");
-      } else if (solark.isBuyingFromGrid()) {
-        Serial.println("BUYING FROM GRID");
-      } else {
-        Serial.println("NO POWER FLOW");
-      }
-    } else {
-      Serial.println("DISCONNECTED");
-    }
-  }
-  
-  void printPVStatus() {
-    Serial.println("SOLAR PV STATUS:");
-    Serial.printf("  PV1 Power:   %.1f W\n", solark.getPV1Power());
-    Serial.printf("  PV2 Power:   %.1f W\n", solark.getPV2Power());
-    Serial.printf("  Total Power: %.1f W\n", solark.getPV1Power() + solark.getPV2Power());
-    Serial.printf("  Total Power: %.3f kW\n", solark.getPVPowerTotal());
-  }
-  
-  void printLoadStatus() {
-    Serial.println("LOAD STATUS:");
-    Serial.printf("  Load L1:     %.1f W\n", solark.getLoadPowerL1());
-    Serial.printf("  Load L2:     %.1f W\n", solark.getLoadPowerL2());
-    Serial.printf("  Total Load:  %.1f W\n", solark.getLoadPowerTotal());
-    Serial.printf("  Smart Load:  %.1f W\n", solark.getSmartLoadPower());
-    Serial.printf("  Frequency:   %.2f Hz\n", solark.getLoadFrequency());
-  }
-  
-  void printEnergyMeters() {
-    Serial.println("ENERGY METERS (kWh):");
-    Serial.printf("  Battery Charge:    %.1f kWh\n", solark.getBatteryChargeEnergy());
-    Serial.printf("  Battery Discharge: %.1f kWh\n", solark.getBatteryDischargeEnergy());
-    Serial.printf("  Grid Buy:          %.1f kWh\n", solark.getGridBuyEnergy());
-    Serial.printf("  Grid Sell:         %.1f kWh\n", solark.getGridSellEnergy());
-    Serial.printf("  Load:              %.1f kWh\n", solark.getLoadEnergy());
-    Serial.printf("  PV Generation:     %.1f kWh\n", solark.getPVEnergy());
-  }
-
- void loop_solark() {
-    if (millis() - lastSolArkMillis > SOLARK_POLL_INTERVAL) {
-        Serial.println("Poll SolArk inverter");
-        uint8_t result = solark.poll();
-        if (result == 0) { // 0 = ku8MBSuccess
-            // Display the decoded values
-            printBatteryStatus();
-            printGridStatus();
-            printPVStatus();
-            printLoadStatus();
-            printEnergyMeters();
-          } else {
-            Serial.println("Error polling SolArk inverter");
-          }
-          
-        Serial.println("-------------------------------------");
-        lastSolArkMillis = millis();
-    }
-}
-
  /**
   * Main polling loop for Modbus communication
   */
  void loop_modbus_master() {
-     // Poll EVSE at its own interval
-     loop_solark();
+     unsigned long currentMillis = millis();
+     
+     // Poll SHT20 sensor every 5 seconds
+     if (currentMillis - lastSHT20Millis >= SHT20_POLL_INTERVAL) {
+         lastSHT20Millis = currentMillis;
+         
+         // Poll the SHT20 sensor
+         uint8_t result = sht20.poll();
+         
+         if (result == ku8MBSuccess) {
+             // Get temperature and humidity values
+             float temperature = sht20.getTemperature();
+             float humidity = sht20.getHumidity();
+
+             Serial.println(temperature);
+             Serial.println(humidity);
+             
+             // Publish to MQTT (if enabled)
+             mqtt_publish_temperature(temperature);
+             mqtt_publish_humidity(humidity);
+             
+             // Add to console display
+             char buffer[50];
+             snprintf(buffer, sizeof(buffer), "Temp: %.1fC  Humidity: %.1f%%", temperature, humidity);
+             _console.addLine(buffer);
+         } else {
+             Serial.println("Failed to poll SHT20 sensor");
+         }
+     }
  }

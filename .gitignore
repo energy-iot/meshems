@@ -4,3 +4,7 @@
 .vscode/launch.json
 .vscode/ipch
 .vscode/extensions.json
+
+# Environment variables
+.env
+include/env_config.h

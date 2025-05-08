@@ -3,6 +3,48 @@
 ## Overview
 A development kit based on the ESP32S3 N16R8 DEV KIT C1 for energy management systems (EMS) with support for various communication protocols and peripherals.
 
+## Environment Configuration
+
+This project uses environment variables stored in a `.env` file for configuration. This allows sensitive information like WiFi credentials and MQTT broker details to be kept out of version control.
+
+### Setup
+
+1. Copy the `.env.example` file to `.env`:
+   ```bash
+   cp .env.example .env
+   ```
+
+2. Edit the `.env` file with your own settings:
+   ```
+   # WiFi Configuration
+   WIFI_SSID=YourWiFiSSID
+   WIFI_PASSWORD=YourWiFiPassword
+
+   # MQTT Configuration
+   MQTT_SERVER=mqtt.example.com
+   MQTT_PORT=1883
+   MQTT_CLIENT_ID=EMS_DEV
+   MQTT_USERNAME=
+   MQTT_PASSWORD=
+
+   # MQTT Topics
+   MQTT_TOPIC_TEMPERATURE=ems/sensor/sht20/temperature
+   MQTT_TOPIC_HUMIDITY=ems/sensor/sht20/humidity
+
+   # Enable/Disable MQTT (1=enabled, 0=disabled)
+   ENABLE_MQTT=1
+   ```
+
+3. The `.env` file is automatically processed during build to generate the necessary configuration.
+
+### Disabling MQTT
+
+If you don't want to use MQTT, you can set `ENABLE_MQTT=0` in your `.env` file. This will disable all MQTT functionality, and the device will only log sensor data to the serial console.
+
+### Using MQTT Without Authentication
+
+If your MQTT broker doesn't require authentication, simply leave the `MQTT_USERNAME` and `MQTT_PASSWORD` fields empty in your `.env` file.
+
 ## Features
 This development kit supports multiple peripherals using the Arduino framework:
 - RS-485 MODBUS RTU communication
