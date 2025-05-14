@@ -35,7 +35,7 @@
 #include <ArduinoJson.h>
 #include <modbus_master.h>
 #include <sunspec_model_213.h>
-#include "modbus_devices.h"
+//#include "modbus_devices.h"
 #include "data_model.h"
 
 WiFiClient transportClient;                 // the network client for MQTT (also works with EthernetLarge)
@@ -117,14 +117,14 @@ void mqtt_publish_meter(String meterId, const PowerData& meterData) {
 
   // For now assume phase A. This can be extended to put the meter readings in the
   // correct phase using configuration data about which meter is on which phase.
-  sunSpecData.PhV_phA = meterData.voltage;
-  sunSpecData.A_phA = meterData.current;
-  sunSpecData.W_phA = meterData.active_power * 1000;
+  sunSpecData.PhVphA = meterData.voltage;
+  sunSpecData.AphA = meterData.current;
+  sunSpecData.WphA = meterData.active_power * 1000;
   sunSpecData.TotWhImport = meterData.import_energy * 1000;
   sunSpecData.TotWhExport = meterData.export_energy * 1000;
   sunSpecData.Hz = meterData.frequency;
-  sunSpecData.PF_phA = meterData.power_factor;
-  sunSpecData.VAR_phA = meterData.reactive_power * 1000;
+  sunSpecData.PFphA = meterData.power_factor;
+  sunSpecData.VarphA = meterData.reactive_power * 1000;
 
   long timestamp = meterData.timestamp_last_report;
   String topicBuf = "meter/" + meterId;
