@@ -73,14 +73,14 @@ This development kit includes a connection for AC power input. When working with
 **⚠️ Failure to follow these safety guidelines could result in severe electrical shock, fire, serious injury, or death. ⚠️**
 
 ### Physical Specifications
-- PCB Dimensions: 100mm x 75mm (main board)
+- PCB Dimensions: 150mm x 90mm (main board) includes DIY peripherals expansion area 50mm x 40mm
 - Mounting: 4x M3 mounting holes (3.2mm diameter)
 
 ## Dev Environment Installation Guide
 ### Prerequisites
 - A computer with internet connection
 - EMS Dev kit hardware
-- USB-C cable for connecting the development board to your computer
+- USB-C data cable for connecting the development board to your computer
 
 ### Step 1: Install Visual Studio Code
 1. Download Visual Studio Code from https://code.visualstudio.com/
@@ -113,8 +113,9 @@ This development kit includes a connection for AC power input. When working with
 1. Wait for PlatformIO to download all required dependencies (libraries)
   **IMPORTANT:** Set the environment to ESP32S3 N16R8 DEV KIT C
   - Open the platformio.ini file in the project root
-  - Make sure the environment section contains [env:esp32s3_n16r8] or similar
+  - Make sure the environment section contains [env:esp32-s3-devkitc-1 , esp32s3_n16r8] or similar
   - If not, add or modify the environment section to match the ESP32S3 N16R8 DEV KIT C
+  - select a latest working branch of project for example visualize vs openami 3phase mqtt vs future others (leakage, diagnostics, etc)
 
 ### Step 6: Build and Flash the Firmware
 1. Connect your ESP32S3 DEV KIT to your computer via USB-C

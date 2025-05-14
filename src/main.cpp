@@ -157,7 +157,7 @@ void setup() {
     delay(1000);
 
     setup_wifi();
-    //setup_mqtt_client();
+    setup_mqtt_client();
     
     // Initialize Modbus RTU master/client communication
     setup_modbus_master(); // This sets up communication with sensors like the SHT20 temp/humidity sensor or other devices

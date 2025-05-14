@@ -41,7 +41,7 @@
 #define RS485_TX_2             GPIO_NUM_16  // TX here maps to RS485 HW-519 module's silk screen "TXD"
 
 // ==================== RELAY ==========================
-#define RELAY_1_PIN 38  //Pin to toggle the onboard SSR
+#define RELAY_1_PIN 38  //Pin to toggle the onboard SSR, solid state relay - 5 vdc TTL TBD for larger ssr
 
 // ==================== CAN INTERFACE ==================
 #define CAN0_CS     2   //SPI chip select

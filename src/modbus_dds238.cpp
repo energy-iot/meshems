@@ -19,6 +19,7 @@ float Modbus_DDS238::read_modbus_value(uint16_t registerAddress) {
     uint8_t result = readHoldingRegisters(registerAddress, 1);
     if (result != ku8MBSuccess) {
         Serial.printf("MODBUS DDS238: Error reading register %d\n", registerAddress);
+        // TODO print out DDS238 modbus node num and esp32 expected pinout pin.h
         throw std::runtime_error("Modbus read error");
     }
     return getResponseBuffer(0);
