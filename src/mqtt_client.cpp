@@ -35,7 +35,7 @@
 #include <ArduinoJson.h>
 #include <modbus_master.h>
 #include <sunspec_model_213.h>
-//#include "modbus_devices.h"
+//#include "modbus_devices.h" // added by Kevin - future use
 #include "data_model.h"
 
 WiFiClient transportClient;                 // the network client for MQTT (also works with EthernetLarge)

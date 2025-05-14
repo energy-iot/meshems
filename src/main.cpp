@@ -69,7 +69,7 @@ void setup() {
 
     setup_buttons();
     _console.addLine(" EMS In-service Ready!");
-    _console.addLine("  Check MQTT @");
+    _console.addLine("  OPENAMI MQTT @");
     _console.addLine("  public.cloud.shiftr.io");
     _console.addLine("  filter EMS/#");
     _console.addLine("  Push a button?");
