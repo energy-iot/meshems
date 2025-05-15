@@ -30,7 +30,7 @@ enum CAN_OPERATION_MODE {
 // Message transmission interval (milliseconds)
 #define CAN_TX_INTERVAL 1000   // 1 second between transmitted messages
 // Debug level
-#define CAN_DEBUG_LEVEL 1      // 0=Off, 1=Basic, 2=Detailed
+#define CAN_DEBUG_LEVEL 0      // 0=Off, 1=Basic, 2=Detailed
 // Crystal frequency of your MCP2515 in this case 8MHZ for our dev board (Typical values: 8MHz, 16MHz)
 #define MCP_CRYSTAL_FREQ MCP_8MHZ
 // CAN bus data baud rate, in this case 500kbps (Typical values: 125kbps, 250kbps, 500kbps, 1Mbps)

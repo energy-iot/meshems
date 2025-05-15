@@ -26,7 +26,7 @@ void scanModbusDevices(SoftwareSerial &serialPort);
 #endif
  
  // Poll every 5 seconds for SHT20 sensor
- #define SHT20_POLL_INTERVAL 5000 
+ #define SHT20_POLL_INTERVAL 10000 
  #define EVSE_POLL_INTERVAL 5000 // 5 seconds
 
 // ==================== Modbus Device Addresses ====================
@@ -105,9 +105,6 @@ extern Console _console;
              float temperature = sht20.getTemperature();
              float humidity = sht20.getHumidity();
 
-             Serial.println(temperature);
-             Serial.println(humidity);
-             
              // Publish to MQTT (if enabled)
              mqtt_publish_temperature(temperature);
              mqtt_publish_humidity(humidity);
