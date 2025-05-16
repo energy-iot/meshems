@@ -5,6 +5,11 @@
 
 Modbus_SolArkLV::Modbus_SolArkLV() {
     // Initialize class variables
+    
+    // Diagnostic variables
+    igbt_temp = 0;
+    dcdc_xfrmr_temp = 0;
+
     // Status variables
     battery_power = 0;
     battery_current = 0;
@@ -88,6 +93,18 @@ uint8_t Modbus_SolArkLV::poll() {
         Serial.println("INFO - SolArk: PV energy poll success");
     } else {
         Serial.println("INFO - SolArk: PV energy poll FAIL");
+    }
+    
+    // Poll temperature data - registers 90-91
+    result = readHoldingRegisters(SolArkRegisterMap::DCDC_XFRMR_TEMP, 2);
+    if (result == ku8MBSuccess) {
+        // Process temperature data
+        dcdc_xfrmr_temp = (getResponseBuffer(0) - SolArkScalingFactors::TEMPERATURE_OFFSET) / SolArkScalingFactors::TEMPERATURE_SCALE; // Reg 90
+        igbt_temp = (getResponseBuffer(1) - SolArkScalingFactors::TEMPERATURE_OFFSET) / SolArkScalingFactors::TEMPERATURE_SCALE; // Reg 91
+        
+        Serial.println("INFO - SolArk: Temperature data poll success");
+    } else {
+        Serial.println("INFO - SolArk: Temperature data poll FAIL");
     }
     
     // Poll grid and inverter data - registers 150-170
@@ -345,10 +362,30 @@ void Modbus_SolArkLV::route_poll_response(uint16_t reg, uint16_t response) {
             Serial.printf("SolArk: Generator relay status: %d\n", generator_relay_status);
             break;
             
+        // Temperature registers (90-91)
+        case SolArkRegisterMap::DCDC_XFRMR_TEMP:
+            dcdc_xfrmr_temp = (response - SolArkScalingFactors::TEMPERATURE_OFFSET) / SolArkScalingFactors::TEMPERATURE_SCALE;
+            Serial.printf("SolArk: DCDC transformer temperature: %.1f C\n", dcdc_xfrmr_temp);
+            break;
+        case SolArkRegisterMap::IGBT_HEATSINK_TEMP:
+            igbt_temp = (response - SolArkScalingFactors::TEMPERATURE_OFFSET) / SolArkScalingFactors::TEMPERATURE_SCALE;
+            Serial.printf("SolArk: IGBT heatsink temperature: %.1f C\n", igbt_temp);
+            break;
+            
         default:
             Serial.printf("SolArk: Unknown register: 0x%04X, value: 0x%04X\n", reg, response);
             break;
     }
+}
+
+
+// Diagnostic Status Getters
+float Modbus_SolArkLV::getIGBTTemp() {
+    return igbt_temp;
+}
+
+float Modbus_SolArkLV::getDCDCTemp() {
+    return dcdc_xfrmr_temp;
 }
 
 // Battery Status Getters

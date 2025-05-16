@@ -24,29 +24,23 @@ void scanModbusDevices(SoftwareSerial &serialPort);
 #define ku8MBInvalidSlaveID 0xE2
 #endif
  
- // Poll every 10 seconds (300000ms = 5 mins for production)
  #define POLL_INTERVAL 10000 
- #define EVSE_POLL_INTERVAL 5000 // 5 seconds
- #define SOLARK_POLL_INTERVAL 5000  // Poll every 5 seconds
+ 
+ #define SOLARK_POLL_INTERVAL 1000  // Poll every 5 seconds
 
 // ==================== Modbus Device Addresses ====================
- #define THERMOSTAT_1_ADDR 0x01
- #define EVSE_ADDR 0x06
  #define SOLARK_ADDR 0x01  // Adjust this to match your SolArk device address
  
  // ==================== Serial Interface Setup ====================
  // RS485 serial connections
  SoftwareSerial _modbus1(RS485_RX_1, RS485_TX_1); // HW519 module pinout
  //SoftwareSerial *modbus2(RS485_RX_2, RS485_TX_2); // Client in EMS ModCan
- 
- // Temperature/humidity sensor
- Modbus_SHT20 sht20;
 
- //the EVSE controller
+ //the Sol-Ark Low Voltage Inverter
 Modbus_SolArkLV solark;
  
  // Timing variables
- unsigned long lastMillis, lastEVSEMillis, lastEVSEChargingMillis, lastSolArkMillis = 0;
+ unsigned long lastMillis, lastSolArkMillis = 0;
  
  // Since _console is defined in main.cpp, we need to declare it as external here
 //extern Console _console;
@@ -62,10 +56,7 @@ void setup_solark() {
   * Initialize all Modbus clients
   */
  void setup_modbus_clients() {
-     //setup_thermostats();  // Future expansion
-     //setup_dtm();          // Future expansion
-     //setup_sht20();          // Initialize SHT20
-     setup_solark();           // Initialize EKEPC2 EVSE
+     setup_solark();           // Initialize Sol-Ark LV device
  }
  
  /**
@@ -191,6 +182,6 @@ void setup_solark() {
   * Main polling loop for Modbus communication
   */
  void loop_modbus_master() {
-     // Poll EVSE at its own interval
+     // Poll Sol-Ark at its own interval
      loop_solark();
  }

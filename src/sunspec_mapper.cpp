@@ -5,18 +5,6 @@
 // External reference to the Sol-Ark instance
 extern Modbus_SolArkLV solark;
 
-// WORKING ONE
-// void set_sunspec_string(uint16_t* registers, const char* str, uint8_t max_len) {
-//     uint8_t i;
-//     for (i = 0; i < max_len && str[i] != '\0'; i += 2) {
-//         uint16_t val = str[i];
-//         if (i + 1 < max_len && str[i + 1] != '\0') {
-//             val |= (str[i + 1] << 8);
-//         }
-//         registers[i / 2] = val;
-//     }
-// }
-
 // Helper function to set a string in the register map
 void set_sunspec_string(uint16_t* registers, const char* str, uint8_t max_len) {
     uint8_t i;
@@ -51,9 +39,9 @@ void setup_sunspec_models() {
     holdingRegisters[common_offset + COMMON_MODEL_LENGTH] = 66;  // Length of model block in 16-bit registers
     
     // Set Common Model data
-    set_sunspec_string(&holdingRegisters[common_offset + COMMON_MANUFACTURER], "SolArk", 32);
-    set_sunspec_string(&holdingRegisters[common_offset + COMMON_MODEL], "SOLARK-LV-MODBUS", 32);
-    set_sunspec_string(&holdingRegisters[common_offset + COMMON_OPTIONS], "NA", 16);
+    set_sunspec_string(&holdingRegisters[common_offset + COMMON_MANUFACTURER], "Sol-Ark", 32);
+    set_sunspec_string(&holdingRegisters[common_offset + COMMON_MODEL], "Sol-Ark-12K-P", 32);
+    set_sunspec_string(&holdingRegisters[common_offset + COMMON_OPTIONS], "None", 16);
     set_sunspec_string(&holdingRegisters[common_offset + COMMON_VERSION], "130", 16);
     set_sunspec_string(&holdingRegisters[common_offset + COMMON_SERIAL], "123456", 32);
     holdingRegisters[common_offset + COMMON_DEVICE_ADDR] = 1;
@@ -142,6 +130,8 @@ void update_sunspec_from_solark() {
     
     // Set temperature measurements
     holdingRegisters[inverter_offset + INV_TEMP_CABINET] = solark.getBatteryTemperature() * 10;  // Scale by 10 for 0.1 scale factor
+    holdingRegisters[inverter_offset + INV_TEMP_TRANSFORMER] = solark.getDCDCTemp() * 10;  // Scale by 10 for 0.1 scale factor
+    holdingRegisters[inverter_offset + INV_TEMP_IGBT] = solark.getIGBTTemp() * 10;  // Scale by 10 for 0.1 scale factor
     
     // Set phase L1 measurements
     holdingRegisters[inverter_offset + INV_AC_POWER_L1] = solark.getLoadPowerL1();
@@ -160,8 +150,43 @@ void update_sunspec_from_solark() {
     
     set_sunspec_string(&holdingRegisters[inverter_offset + INV_ALARM_INFO], alarmInfo, 64);
     
+    // Set DER Storage Capacity Model (713) header
+    uint16_t storage_offset = inverter_offset + 153 + 2;  // After Inverter model + 2 for next model header
+    holdingRegisters[storage_offset + STORAGE_MODEL_ID] = SUNSPEC_MODEL_DER_STORAGE;
+    holdingRegisters[storage_offset + STORAGE_MODEL_LENGTH] = 7;  // Length of model block in 16-bit registers
+    
+    // Initialize all storage model values to "not implemented"
+    for (uint16_t i = storage_offset + 2; i < storage_offset + 9; i++) {
+        holdingRegisters[i] = SUNSPEC_NOT_IMPLEMENTED;
+    }
+    
+    // Set scale factors for storage model
+    holdingRegisters[storage_offset + STORAGE_SF_ENERGY] = SCALE_FACTOR_0_001;  // Energy scale factor: -3 (0.001)
+    holdingRegisters[storage_offset + STORAGE_SF_PERCENT] = SCALE_FACTOR_0_1;   // Percentage scale factor: -1 (0.1)
+    
+    // Update storage model with Sol-Ark battery data
+    // TODO: The Sol-Ark register for battery energy rating is not known.
+    // This is an estimated value and should be replaced with the actual value from Sol-Ark when available.
+    uint16_t batteryEnergyRating = 5000;  // Example: 5kWh battery
+    holdingRegisters[storage_offset + STORAGE_ENERGY_RATING] = batteryEnergyRating;
+    
+    // Energy available (WHAvail = WHRtg * SoC * SoH)
+    uint16_t batteryEnergyAvailable = batteryEnergyRating * solark.getBatterySOC() / 100.0f;
+    holdingRegisters[storage_offset + STORAGE_ENERGY_AVAILABLE] = batteryEnergyAvailable;
+    
+    // State of charge (%)
+    holdingRegisters[storage_offset + STORAGE_SOC] = solark.getBatterySOC() * 10;  // Scale by 10 for 0.1 scale factor
+    
+    // TODO: The Sol-Ark register for battery state of health is not known.
+    // Using a default value of 100% for now. This should be replaced with the actual value when available.
+    holdingRegisters[storage_offset + STORAGE_SOH] = 1000;  // 100.0% (scaled by 10)
+    
+    // Storage status
+    uint16_t storageStatus = 0;  // 0 = OK
+    holdingRegisters[storage_offset + STORAGE_STATUS] = storageStatus;
+    
     //SunSpec Ending Block
-    uint16_t end_offset = inverter_offset + 153 + 2;  // After Inverter Model + 2 for next model header
+    uint16_t end_offset = storage_offset + 9;  // After Storage Model
     holdingRegisters[end_offset] = 0xFFFF;
     holdingRegisters[end_offset + 1] = 0x0000;
 }

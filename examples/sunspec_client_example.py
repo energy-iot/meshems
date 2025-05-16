@@ -3,19 +3,18 @@
 SunSpec Client Example for Sol-Ark Inverter
 
 This script demonstrates how to use the pysunspec2 library to read data from
-the SunSpec-compliant Modbus RTU server implemented in the EMS-Dev platform
+the SunSpec-compliant Modbus TCP server implemented in the EMS-Dev platform
 for the Sol-Ark inverter.
 
 Requirements:
 - Python 3.6+
 - pysunspec2 (pip install pysunspec2)
-- pyserial (pip install pyserial)
 
 Usage:
-python sunspec_client_example.py [serial_port] [modbus_address]
+python sunspec_client_example.py [ip_address] [port]
 
 Example:
-python sunspec_client_example.py /dev/ttyUSB0 1
+python sunspec_client_example.py 192.168.1.100 8502
 """
 
 import sys
@@ -25,20 +24,19 @@ import sunspec2.modbus.client as client
 def main():
     # Parse command line arguments
     if len(sys.argv) < 2:
-        print("Usage: python sunspec_client_example.py [serial_port] [modbus_address]")
-        print("Example: python sunspec_client_example.py /dev/ttyUSB0 1")
+        print("Usage: python sunspec_client_example.py [ip_address] [port]")
+        print("Example: python sunspec_client_example.py 192.168.1.100 8502")
         sys.exit(1)
     
-    serial_port = sys.argv[1]
-    slave_id = int(sys.argv[2]) if len(sys.argv) > 2 else 1
+    ip_address = sys.argv[1]
+    port = int(sys.argv[2]) if len(sys.argv) > 2 else 8502
     
     try:
-        # Create a Modbus RTU client
-        print(f"Connecting to SunSpec device at {serial_port}, Modbus address {slave_id}...")
-        modbus_device = client.SunSpecModbusClientDeviceRTU(
-            slave_id=slave_id,
-            device=serial_port,
-            baudrate=9600,
+        # Create a Modbus TCP client
+        print(f"Connecting to SunSpec device at {ip_address}:{port}...")
+        modbus_device = client.SunSpecModbusClientDeviceTCP(
+            ipaddr=ip_address,
+            ipport=port,
             timeout=5
         )
         
@@ -48,7 +46,7 @@ def main():
         
         # Check if SunSpec device was found
         if not modbus_device.models:
-            print("No SunSpec models found. Check connection and Modbus address.")
+            print("No SunSpec models found. Check connection and IP address.")
             sys.exit(1)
         
         # Print device information from Common Model (1)

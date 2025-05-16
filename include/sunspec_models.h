@@ -9,20 +9,12 @@
 // SunSpec model IDs
 #define SUNSPEC_MODEL_COMMON 1
 #define SUNSPEC_MODEL_INVERTER 701
+#define SUNSPEC_MODEL_DER_STORAGE 713
 
 // Register map base addresses
 #define SUNSPEC_BASE_ADDR 40000
 #define SUNSPEC_COMMON_START (SUNSPEC_BASE_ADDR + 4)
 #define SUNSPEC_INVERTER_START (SUNSPEC_COMMON_START + 66)
-
-// WORKING Common Model (1) register offsets
-// #define COMMON_MODEL_ID 0
-// #define COMMON_MODEL_LENGTH 2
-// #define COMMON_MANUFACTURER 4
-// #define COMMON_MODEL 20
-// #define COMMON_OPTIONS 36
-// #define COMMON_VERSION 52
-// #define COMMON_SERIAL 54
 
 // TEST Common Model (1) register offsets
 #define COMMON_MODEL_ID 0
@@ -111,6 +103,17 @@
 
 // Vendor information
 #define INV_ALARM_INFO 123       // Manufacturer Alarm Info (32 registers)
+
+// DER Storage Capacity Model (713) register offsets
+#define STORAGE_MODEL_ID 0
+#define STORAGE_MODEL_LENGTH 1
+#define STORAGE_ENERGY_RATING 2      // Energy rating of the DER storage
+#define STORAGE_ENERGY_AVAILABLE 3   // Energy available of the DER storage
+#define STORAGE_SOC 4                // State of charge of the DER storage
+#define STORAGE_SOH 5                // State of health of the DER storage
+#define STORAGE_STATUS 6             // Storage status
+#define STORAGE_SF_ENERGY 7          // Scale factor for energy capacity
+#define STORAGE_SF_PERCENT 8         // Scale factor for percentage
 
 // Status flags for INV_STATUS
 #define STAT_OFF 0x0001

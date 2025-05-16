@@ -35,17 +35,24 @@
 #define DISPLAY_CS_PIN 9    //Chip select
 
 // ==================== RS485 INTERFACE ================
+
+// ==================== Correct Boards  ================
+//BLUE Client Modbus
 #define RS485_RX_1             GPIO_NUM_6   // RX here maps to RS485 HW-519 module's silk screen "RXD"
 #define RS485_TX_1             GPIO_NUM_7   // TX here maps to RS485 HW-519 module's silk screen "TXD"
+//GREEN Server Modbus
 #define RS485_RX_2             GPIO_NUM_15  // RX here maps to RS485 HW-519 module's silk screen "RXD"
 #define RS485_TX_2             GPIO_NUM_16  // TX here maps to RS485 HW-519 module's silk screen "TXD"
 
+// ==================== Wrong Boards ================
+//BLUE Client Modbus
+// #define RS485_RX_1             GPIO_NUM_15   // RX here maps to RS485 HW-519 module's silk screen "RXD"
+// #define RS485_TX_1             GPIO_NUM_16   // TX here maps to RS485 HW-519 module's silk screen "TXD"
+
+// //GREEN Server Modbus
+// #define RS485_RX_2             GPIO_NUM_6  // RX here maps to RS485 HW-519 module's silk screen "RXD"
+// #define RS485_TX_2             GPIO_NUM_7  // TX here maps to RS485 HW-519 module's silk screen "TXD"
+
+
 // ==================== RELAY ==========================
 #define RELAY_1_PIN 38  //Pin to toggle the onboard SSR
-
-// ==================== CAN INTERFACE ==================
-#define CAN0_CS     2   //SPI chip select
-#define CAN0_SO     42  //SPI MISO
-#define CAN0_SI     41  //SPI MOSI
-#define CAN0_SCK    8   //SPI clock
-#define CAN0_INT    17  //Message interrupt output

@@ -4,6 +4,15 @@
 
 // Register mapping structure for Sol-Ark
 struct SolArkRegisterMap {
+    // Diagnostic registers
+    static const uint16_t COMM_VERSION = 2; //NOT FULLY IMPLEMENTED
+
+    static const uint16_t SN_BYTE_01 = 3; //NOT FULLY IMPLEMENTED
+    static const uint16_t SN_BYTE_02 = 4; //NOT FULLY IMPLEMENTED
+    static const uint16_t SN_BYTE_03 = 5; //NOT FULLY IMPLEMENTED
+    static const uint16_t SN_BYTE_04 = 6; //NOT FULLY IMPLEMENTED
+    static const uint16_t SN_BYTE_05 = 7; //NOT FULLY IMPLEMENTED
+
     // Energy registers
     static const uint16_t BATTERY_CHARGE_ENERGY = 70;
     static const uint16_t BATTERY_DISCHARGE_ENERGY = 71;
@@ -24,6 +33,10 @@ struct SolArkRegisterMap {
     static const uint16_t INVERTER_CURRENT_L2 = 165;
     static const uint16_t SMART_LOAD_POWER = 166;
     static const uint16_t GRID_POWER = 169;
+
+    // Inverter temperature registers
+    static const uint16_t DCDC_XFRMR_TEMP = 90;
+    static const uint16_t IGBT_HEATSINK_TEMP = 91;
     
     // Power and battery registers
     static const uint16_t INVERTER_OUTPUT_POWER = 175;
@@ -68,6 +81,10 @@ class Modbus_SolArkLV : public ModbusMaster {
         uint8_t get_modbus_address();
         void set_modbus_address(uint8_t addr);
         uint8_t query_register(uint16_t reg);
+
+        // Diagnostic Status Getters
+        float getIGBTTemp();
+        float getDCDCTemp();
 
         // Battery Status Getters
         float getBatteryPower();
@@ -138,6 +155,10 @@ class Modbus_SolArkLV : public ModbusMaster {
         unsigned long timestamp_last_report;
         unsigned long timestamp_last_failure;
         
+        // Diagnostic variables
+        float igbt_temp = 0;
+        float dcdc_xfrmr_temp = 0;
+
         // Battery variables
         float battery_power;       // Register 190
         float battery_current;     // Register 191

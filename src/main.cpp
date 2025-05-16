@@ -38,7 +38,7 @@
 #include <display.h>    // SH1106 OLED display
 #include <console.h>    // Console UI for the display
 #include <SPI.h>        // SPI communication for display/CAN
-#include <can.h>        // Implementation of CAN bus communication
+#include <WiFi.h>       // WiFi functionality for TCP/IP
 
 void setup() {
     Serial.begin(115200);   // Initialize serial communication for debugging
@@ -57,15 +57,20 @@ void setup() {
     // Initialize Modbus RTU master/client communication
     setup_modbus_master(); // This sets up communication with sensors like the SHT20 temp/humidity sensor or other devices
     setup_modbus_client(); // This sets up the Modbus server with SunSpec compliance
-    setup_can(); // Initialize CAN bus communication
 
     setup_buttons();
     _console.addLine(" EMS In-service Ready!");
     _console.addLine("  SunSpec Enabled");
     _console.addLine("  Sol-Ark -> SunSpec");
     _console.addLine("  Model 701 Active");
-    _console.addLine("  Push a button?");
-
+    
+    // Display TCP/IP information
+    if (WiFi.status() == WL_CONNECTED) {
+        String ipInfo = "  TCP/IP: " + WiFi.localIP().toString() + ":8502";
+        _console.addLine(ipInfo);
+    } else {
+        _console.addLine("  WiFi not connected");
+    }
 }
 
 /**
@@ -84,5 +89,4 @@ void loop() {
     loop_modbus_master();
     loop_modbus_client();
     loop_display();
-    loop_can();
 }
