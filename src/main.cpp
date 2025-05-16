@@ -69,9 +69,9 @@ void setup() {
 
     setup_buttons();
     _console.addLine(" EMS In-service Ready!");
-    _console.addLine("  OPENAMI MQTT @");
-    _console.addLine("  public.cloud.shiftr.io");
-    _console.addLine("  filter EMS/#");
+    _console.addLine("  CHECK MQTT @");
+    _console.addLine("  public.cloud.shiftr.io"); //TODO grab the setup strings from the config file
+    _console.addLine("  filter OPENAMI/#");       //TODO grab the setup strings from the config file
     _console.addLine("  Push a button?");
 
 }
@@ -100,7 +100,7 @@ void loop() {
         loop_mqtt(last_reading);
    }
     loop_modbus_client();
-   loop_buttons(); 
+    loop_buttons(); 
     loop_display();
     loop_can();
 }

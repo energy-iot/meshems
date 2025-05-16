@@ -51,13 +51,15 @@ String topic_cmd;             // command topic (for 'southbound' commands)
 void mqtt_publish_json(const char* subtopic, const JsonDocument* payload);
 
 void generateTopics() {
-  //the top-level device topic string, eg: NESLE8D3ECAE3D98
+  //the top-level device topic string, eg: OPENAMI_<streetpoleEMSid>
   topic_device = MQTT_TOPIC;
   topic_device.concat("/");
   topic_device.concat(getDeviceID());
+  //TODO remove the first 4 OUI static characters from the MAC as the device ID
   topic_device.concat("/");
 
-  //the command topic we subscribe to, eg: NESLE8D3ECAE3D98/cmd
+  //the command topic we subscribe to, eg: OPENAMI_ECAE3D98/cmd
+  
   topic_cmd = topic_device;
   topic_cmd.concat("cmd");
 }
@@ -127,8 +129,32 @@ void mqtt_publish_meter(String meterId, const PowerData& meterData) {
   sunSpecData.VarphA = meterData.reactive_power * 1000;
 
   long timestamp = meterData.timestamp_last_report;
-  String topicBuf = "meter/" + meterId;
-  topicBuf.concat("meter");
+  String topicBuf = "meter_" + meterId;
+ // topicBuf.concat("meter");
+
+  JsonDocument jsonDoc;
+  sunSpecData.toJson(jsonDoc);
+  jsonDoc["timestamp"] = timestamp;
+
+  mqtt_publish_json(topicBuf.c_str(), &jsonDoc);
+}
+void mqtt_publish_openami(String meterId, const PowerData& meterData) {
+  SunSpecModel213 sunSpecData;
+
+  // For now assume phase A. This can be extended to put the meter readings in the
+  // correct phase using configuration data about which meter is on which phase.
+  sunSpecData.PhVphA = meterData.voltage;
+  sunSpecData.AphA = meterData.current;
+  sunSpecData.WphA = meterData.active_power * 1000;
+  sunSpecData.TotWhImport = meterData.import_energy * 1000;
+  sunSpecData.TotWhExport = meterData.export_energy * 1000;
+  sunSpecData.Hz = meterData.frequency;
+  sunSpecData.PFphA = meterData.power_factor;
+  sunSpecData.VarphA = meterData.reactive_power * 1000;
+
+  long timestamp = meterData.timestamp_last_report;
+  String topicBuf = "openami/" + meterId;
+  //topicBuf.concat("meter");
 
   JsonDocument jsonDoc;
   sunSpecData.toJson(jsonDoc);
@@ -252,8 +278,9 @@ void loop_mqtt(PowerData last_reading) {
         mqtt_connected = mqtt_connect();
       }
       //mqtt_publish(input);
-      if (mqtt_connected) {
-        mqtt_publish_meter("MyMeter", last_reading);
+      if (mqtt_connected) {  
+        //TODO publish 3 phase OPENAMI per RTU meter/tenant plus the Subpanel id energy totals per phase ;
+        mqtt_publish_meter("", last_reading);
         Serial.println("Publishing!");
       } else {
         Serial.println("MQTT not connected!");
