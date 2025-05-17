@@ -35,6 +35,7 @@
 #include <ArduinoJson.h>
 #include <modbus_master.h>
 #include <sunspec_model_213.h>
+#include <leakage_model_ivy41a.h>
 //#include "modbus_devices.h" // added by Kevin - future use
 #include "data_model.h"
 
@@ -129,7 +130,7 @@ void mqtt_publish_meter(String meterId, const PowerData& meterData) {
   sunSpecData.VarphA = meterData.reactive_power * 1000;
 
   long timestamp = meterData.timestamp_last_report;
-  String topicBuf = "meter_" + meterId;
+  String topicBuf = "meter_id" + meterId;
  // topicBuf.concat("meter");
 
   JsonDocument jsonDoc;
@@ -138,26 +139,19 @@ void mqtt_publish_meter(String meterId, const PowerData& meterData) {
 
   mqtt_publish_json(topicBuf.c_str(), &jsonDoc);
 }
-void mqtt_publish_openami(String meterId, const PowerData& meterData) {
-  SunSpecModel213 sunSpecData;
+void mqtt_publish_leakage(String meterId, const PowerData& meterData) {
+  LeakageModel leakageData;
 
-  // For now assume phase A. This can be extended to put the meter readings in the
-  // correct phase using configuration data about which meter is on which phase.
-  sunSpecData.PhVphA = meterData.voltage;
-  sunSpecData.AphA = meterData.current;
-  sunSpecData.WphA = meterData.active_power * 1000;
-  sunSpecData.TotWhImport = meterData.import_energy * 1000;
-  sunSpecData.TotWhExport = meterData.export_energy * 1000;
-  sunSpecData.Hz = meterData.frequency;
-  sunSpecData.PFphA = meterData.power_factor;
-  sunSpecData.VarphA = meterData.reactive_power * 1000;
-
+  // TODO prepare actionable DC and AC leakage measurments, patterns and stats, and faults, and outages
+  // TODO add adaptive publish rate as leakage grows from none to 
+  // TODO see modbus register suite from IVY Metering RCD, RVD, differentiator for AC leakage is to include phase angle of leakage current vs phase 
+  // leakage can be powerflow direction sensitive  and dependant
   long timestamp = meterData.timestamp_last_report;
-  String topicBuf = "openami/" + meterId;
+  String topicBuf = "leakage"; //TODO + phaseId; and/OR + meterid;
   //topicBuf.concat("meter");
 
   JsonDocument jsonDoc;
-  sunSpecData.toJson(jsonDoc);
+  leakageData.toJson(jsonDoc);
   jsonDoc["timestamp"] = timestamp;
 
   mqtt_publish_json(topicBuf.c_str(), &jsonDoc);
@@ -279,9 +273,23 @@ void loop_mqtt(PowerData last_reading) {
       }
       //mqtt_publish(input);
       if (mqtt_connected) {  
-        //TODO publish 3 phase OPENAMI per RTU meter/tenant plus the Subpanel id energy totals per phase ;
+      // TODO not all telemetry has to publish on same iteration, different rates of publish , including adaptive meaningful rate is a good thing
+       // TODO publish streetpoleEMS actionable telemetry
+       // mqtt_publish_EMS("", last_reading);
+       // Serial.println("Publishing EMS device stats!");
+       // TODO publish per phase per streetpoleEMS actionable telemetry 
+       // mqtt_publish_phase("", last_reading);
+       // Serial.println("Publishing Phase stats!");
+
+        //TODO publish 3 phase OPENAMI per meter/tenant energy totals per phase ;
         mqtt_publish_meter("", last_reading);
-        Serial.println("Publishing!");
+        Serial.println("Publishing meter!");
+        mqtt_publish_leakage("", last_reading);
+        Serial.println("Publishing leakage!");
+       // mqtt_publish_phase("", last_reading);
+       // Serial.println("Publishing Phase stats!");
+       // mqtt_publish_EMS("", last_reading);
+       // Serial.println("Publishing EMS device stats!");
       } else {
         Serial.println("MQTT not connected!");
       }

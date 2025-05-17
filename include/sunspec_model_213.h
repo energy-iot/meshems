@@ -52,6 +52,8 @@ struct SunSpecModel213 {
     float WhphB = 0.0;
     float WhphC = 0.0;
 
+    //TODO add harmonics - see wmac.cloud DTM
+
     float Hz = 0.0;
 
     float Tot15mWhAImport = 0.0;
@@ -137,4 +139,5 @@ struct SunSpecModel213 {
         doc["TotWhExport"] = TotWhExport;
 
     }
+
 };
