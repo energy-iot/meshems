@@ -306,7 +306,7 @@ void loop_mqtt(PowerData last_reading) {
 
         //TODO publish 3 phase OPENAMI per meter/tenant energy totals per phase ;
         mqtt_publish_StreetPoleEMS("", last_reading);
-        Serial.println("Publishing meter!");
+        Serial.println("Publishing ems!");
         mqtt_publish_Leakage("", last_reading);
         Serial.println("Publishing leakage!");
         mqtt_publish_Meter("1", last_reading);

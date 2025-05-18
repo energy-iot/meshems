@@ -3,17 +3,17 @@
 
 #include <ArduinoJson.h>
 
-struct SunSpecModel1_SPEMS {
+struct SunSpecModel1_SPEMS { // Street Pole EMS as a cookie cutter prebuilt, wired, software QA tested 
     uint16_t model_id = 1;   // SunSpec Common Model ID
     uint16_t length = 66;    // Default length for Model 1 (can adjust per device)
 
     // Device Identification Fields
-    char Mn[33] = "";    // Manufacturer
-    char Md[33] = "";    // Model
-    char Opt[17] = "";   // Options
-    char Vr[17] = "";    // Version
-    char SN[17] = "";    // Serial Number
-    char DA[17] = "";    // Device Address (or other ID)
+    char Mn[33] = "NESL EIOT Prototype";    // Manufacturer
+    char Md[33] = "IP65_5KVA_LeakageperPhase";    // Model
+    char Opt[64] = "3Tenant_Meter_Hiking_DDS328_ZN/S";   // Options
+    char Vr[17] = "01.1";    // Version
+    char SN[17] = "";    // TODO Serial Number - put EMS full macid
+    char DA[17] = "";    // TODO Device Address (or other ID) - put shortenend unique MACID
 
     void clear() {
         strcpy(Mn, "");
