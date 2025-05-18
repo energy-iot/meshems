@@ -11,7 +11,16 @@ extern uint16_t holdingRegisters[MODUBS_NUM_HOLDING_REGISTERS];
 extern uint16_t inputRegisters[MODBUS_NUM_INPUT_REGISTERS];
 
 // Struct for current, voltage, and power factor
-struct PowerData {
+//EMS as a 3 phase subpanel with N  meters and x meters per phase SO has multiple dimensions of powerdata to totalize and publish
+// 1. all 3 phases totalized powerdata usage per StreetPoleSubpanel
+// 2. each Phase powerdata summary per subpanel
+// 3. each singlephase meter powerdata including which phase - TODO o\is qr code all subpanel networked items
+// powerdata has leakage and harmonic transients that are key to track for periodic engineering Operations and maintenance and rebalancing alerts
+// for a future staging/installer app, all networking device shall have meaningful QR codes
+// Staging or install or at maintenance time  scan the subpanel and all active networking parts installed to the subpanel
+// are auto provisoned in a backend Db addressable to the MS subpanel globally unique QR code
+
+struct PowerData {  // TODO expand this struct for all powerdata OR have different structs
     unsigned long timestamp_last_report = 0;
     float total_energy = 0;  // kWh
     float export_energy = 0; // kWh

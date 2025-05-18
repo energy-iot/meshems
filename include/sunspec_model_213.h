@@ -16,46 +16,53 @@ Reactive power (Var, VarphA, VarphB, VarphC)
 Apparent power (VA, VaphA, VaphB, VaphC)
 Power factor (PF, PFphA, PFphB, PFphC)
 Frequency (Hz)
-Energy accumulations (Wh, WhphA, WhphB, WhphC, etc.
+Energy accumulations (Wh, WhphA, WhphB, WhphC, etc.)
+THD and 1st to 15th voltage harmonics integrated
+
+Notes:
+    THD_VphX and THD_IphX represent Total Harmonic Distortion for voltage and current per phase.
+
+    Harmonics arrays (Harmonics_VphX, Harmonics_IphX) are indexed from 0–14 to represent the 1st–15th harmonics.
+
+    The .toJson() function now includes arrays serialized to JSON using createNestedArray.
+
+OPTIONAL TODO:
+
+    Per-order harmonics labeled explicitly (e.g., "H1":, "H2":, …).
+
+    RMS or % harmonics instead of absolute.
+
+    This broken out per MQTT topic structure.
 */
 
 struct SunSpecModel213 {
     uint16_t model_id = 213;
     uint16_t length = 85;
 
-    float AphA = 0.0;
-    float AphB = 0.0;
-    float AphC = 0.0;
+    float AphA = 0.0, AphB = 0.0, AphC = 0.0;
+    float PhVphA = 0.0, PhVphB = 0.0, PhVphC = 0.0;
+    float PFphA = 0.0, PFphB = 0.0, PFphC = 0.0;
+    float VarphA = 0.0, VarphB = 0.0, VarphC = 0.0;
+    float VAphA = 0.0, VAphB = 0.0, VAphC = 0.0;
+    float WphA = 0.0, WphB = 0.0, WphC = 0.0;
 
-    float PhVphA = 0.0;
-    float PhVphB = 0.0;
-    float PhVphC = 0.0;
-
-    float PFphA = 0.0;
-    float PFphB = 0.0;
-    float PFphC = 0.0;
-
-    float VarphA = 0.0;
-    float VarphB = 0.0;
-    float VarphC = 0.0;
-
-    float VAphA = 0.0;
-    float VAphB = 0.0;
-    float VAphC = 0.0;
-
-    float WphA = 0.0;
-    float WphB = 0.0;
-    float WphC = 0.0;
-
-    float Wh = 0.0;
-    float WhphA = 0.0;
-    float WhphB = 0.0;
-    float WhphC = 0.0;
-
-    //TODO add harmonics - see wmac.cloud DTM
+    float Wh = 0.0, WhphA = 0.0, WhphB = 0.0, WhphC = 0.0;
 
     float Hz = 0.0;
 
+    // Harmonic distortion per phase (1st–15th order + THD)
+    float THD_VphA = 0.0, THD_VphB = 0.0, THD_VphC = 0.0;
+    float THD_IphA = 0.0, THD_IphB = 0.0, THD_IphC = 0.0;
+
+    float Harmonics_VphA[15] = {0};  // 1st to 15th voltage harmonics, phase A
+    float Harmonics_VphB[15] = {0};  // phase B
+    float Harmonics_VphC[15] = {0};  // phase C
+
+    float Harmonics_IphA[15] = {0};  // 1st to 15th current harmonics, phase A
+    float Harmonics_IphB[15] = {0};  // phase B
+    float Harmonics_IphC[15] = {0};  // phase C
+
+    // 3 phase Energy totalizers
     float Tot15mWhAImport = 0.0;
     float Tot15mWhAExport = 0.0;
     float TotHrWhAImport = 0.0;
@@ -108,27 +115,41 @@ struct SunSpecModel213 {
     float TotWhImport = 0.0;
     float TotWhExport = 0.0;
 
-    //TODO 3Ph Harmonics reports
-
-    //include 3phases unbalanced useage per hr pr day per wk
-
-    //TODO Leakage report RCD min, max, avg, mean variance each for DC milliamp, AC milliamp, leakage wattage
-
-    //TODO stats of reports, faults, devops
-
-    void toJson(JsonDocument& doc) const {
+    //TODO include new novel fields of transient grid energy excess supply, store, transform, and demand load import and export "potentials"
+    //This offers the GroupLead EMS policy decision point to make much more meaningful load  shave, shift, balance, policy serving schedules
+    //  that include a well balanced grid excess supply and excess load demand response transient reponse by distributing these
+    // transient condition handling schedules to StreetPoleEMS edges
+void toJson(JsonDocument& doc) const {
         doc["model_id"] = model_id;
         doc["length"] = length;
-
         doc["Hz"] = Hz;
+
         doc["AphA"] = AphA; doc["AphB"] = AphB; doc["AphC"] = AphC;
         doc["PhVphA"] = PhVphA; doc["PhVphB"] = PhVphB; doc["PhVphC"] = PhVphC;
         doc["PFphA"] = PFphA; doc["PFphB"] = PFphB; doc["PFphC"] = PFphC;
         doc["VarphA"] = VarphA; doc["VarphB"] = VarphB; doc["VarphC"] = VarphC;
         doc["VAphA"] = VAphA; doc["VAphB"] = VAphB; doc["VAphC"] = VAphC;
         doc["WphA"] = WphA; doc["WphB"] = WphB; doc["WphC"] = WphC;
-        
-    // TODO need to have per phase reports and total all 3 phases
+
+        doc["THD_VphA"] = THD_VphA; doc["THD_VphB"] = THD_VphB; doc["THD_VphC"] = THD_VphC;
+        doc["THD_IphA"] = THD_IphA; doc["THD_IphB"] = THD_IphB; doc["THD_IphC"] = THD_IphC;
+
+        JsonArray hVA = doc["Harmonics_VphA"].to<JsonArray>();
+        JsonArray hVB = doc["Harmonics_VphB"].to<JsonArray>();
+        JsonArray hVC = doc["Harmonics_VphC"].to<JsonArray>();
+        JsonArray hIA = doc["Harmonics_IphA"].to<JsonArray>();
+        JsonArray hIB = doc["Harmonics_IphB"].to<JsonArray>();
+        JsonArray hIC = doc["Harmonics_IphC"].to<JsonArray>();
+
+        for (int i = 0; i < 15; ++i) {
+            hVA.add(Harmonics_VphA[i]);
+            hVB.add(Harmonics_VphB[i]);
+            hVC.add(Harmonics_VphC[i]);
+            hIA.add(Harmonics_IphA[i]);
+            hIB.add(Harmonics_IphB[i]);
+            hIC.add(Harmonics_IphC[i]);
+        }
+
         doc["TotHrWhImport"] = TotHrWhImport;
         doc["TotHrWhExport"] = TotHrWhExport;
         doc["TotTOUCWhImport"] = TotTOUCWhImport;
@@ -137,7 +158,6 @@ struct SunSpecModel213 {
         doc["TotDayExport"] = TotDayWhExport;
         doc["TotWhImport"] = TotWhImport;
         doc["TotWhExport"] = TotWhExport;
-
     }
 
 };

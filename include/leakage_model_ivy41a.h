@@ -13,7 +13,10 @@ t\These leakage sensors report when leakage is removed and each StreetPoleEMS in
     
 struct LeakageChannel {
     float value_mA = 0.0f;
-    float threshold_mA = 30.0f;
+    // TODO AC lifesafety threshold is defaulted here to 30 milli amp - internal logic ensure less than 300 msec on fault line hi/lo trigger
+    // TODO DC lifesafety threshold is to be defaulted to  6 milli amp less than x00 msec.  TBD 100 msec?
+    // TODO use updateall to init the thresholds - ivy rcm rs485 modbus rtu meters have some programmability on thresholds before the lifesafety fault line is triggered
+    float threshold_mA = 30.0f;  
     float lastFaultValue_mA = 0.0f;
     uint32_t lastFaultTimeMs = 0;
     bool inFault = false;
@@ -55,7 +58,7 @@ struct LeakageChannel {
 
 struct LeakageModel { // TODO  review leakage specs and consult with SME's
     uint16_t model_id = 999;
-    uint16_t length = 10;
+    uint16_t length = 30;
     LeakageChannel acSinusoidal;   // Type A AC sinusoidal
     LeakageChannel acPulsating;    // Type A AC pulsating (rectified)
     LeakageChannel dc;             // Type B DC residual
@@ -84,12 +87,13 @@ struct LeakageModel { // TODO  review leakage specs and consult with SME's
     doc["length"] = length;
     doc["lastUpdateMs"] = lastUpdateMs;
 
-    // Modern way to create nested objects
+    // Modern way to create nested objects - compiler friendly
     JsonObject acSin = doc["acSinusoidal"].to<JsonObject>();
     acSinusoidal.toJson(acSin);
     JsonObject acPulse = doc["acPulsating"].to<JsonObject>();
     acPulsating.toJson(acPulse);
     JsonObject dcObj = doc["dc"].to<JsonObject>();
+    //TODO DC default needs to init to 6 milli amp as the threshold_mA
     dc.toJson(dcObj);
     }
 };

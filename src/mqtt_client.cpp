@@ -45,7 +45,7 @@ PubSubClient mqttclient(transportClient);   // the MQTT client
 unsigned long mqtt_interval_ts = 0;
 static char mqtt_data[128] = "";
 static int mqtt_connection_error_count = 0;
-String topic_device;          // device topic (publish/subscribe under here)
+String topic_device;          // StreetPoleEMS globally unique device topic (publish/subscribe under here)
 String topic_cmd;             // command topic (for 'southbound' commands)
 
 // Function prototype for mqtt_publish_json
@@ -56,7 +56,6 @@ void generateTopics() {
   topic_device = MQTT_TOPIC;
   topic_device.concat("/");
   topic_device.concat(getDeviceID());
-  //TODO remove the first 4 OUI static characters from the MAC as the device ID
   topic_device.concat("/");
 
   //the command topic we subscribe to, eg: OPENAMI_ECAE3D98/cmd
@@ -115,7 +114,7 @@ boolean mqtt_connect()
   return (1);
 }
 
-void mqtt_publish_meter(String meterId, const PowerData& meterData) {
+void mqtt_publish_StreetPoleEMS(String meterId, const PowerData& meterData) {
   SunSpecModel213 sunSpecData;
 
   // For now assume phase A. This can be extended to put the meter readings in the
@@ -130,8 +129,7 @@ void mqtt_publish_meter(String meterId, const PowerData& meterData) {
   sunSpecData.VarphA = meterData.reactive_power * 1000;
 
   long timestamp = meterData.timestamp_last_report;
-  String topicBuf = "meter_id" + meterId;
- // topicBuf.concat("meter");
+  String topicBuf = "subpanel_3Ph";
 
   JsonDocument jsonDoc;
   sunSpecData.toJson(jsonDoc);
@@ -139,7 +137,33 @@ void mqtt_publish_meter(String meterId, const PowerData& meterData) {
 
   mqtt_publish_json(topicBuf.c_str(), &jsonDoc);
 }
-void mqtt_publish_leakage(String meterId, const PowerData& meterData) {
+
+void mqtt_publish_Meter(String meterId, const PowerData& meterData) {
+  SunSpecModel213 sunSpecData;
+
+  // For now assume phase A. This can be extended to put the meter readings in the
+  // correct phase using configuration data about which meter is on which phase.
+  sunSpecData.PhVphA = meterData.voltage;
+  sunSpecData.AphA = meterData.current;
+  sunSpecData.WphA = meterData.active_power * 1000;
+  sunSpecData.TotWhImport = meterData.import_energy * 1000;
+  sunSpecData.TotWhExport = meterData.export_energy * 1000;
+  sunSpecData.Hz = meterData.frequency;
+  sunSpecData.PFphA = meterData.power_factor;
+  sunSpecData.VarphA = meterData.reactive_power * 1000;
+
+  long timestamp = meterData.timestamp_last_report;
+  String topicBuf = "meter_";
+  topicBuf.concat(meterId);
+
+  JsonDocument jsonDoc;
+  sunSpecData.toJson(jsonDoc);
+  jsonDoc["timestamp"] = timestamp;
+
+  mqtt_publish_json(topicBuf.c_str(), &jsonDoc);
+}
+
+void mqtt_publish_Leakage(String meterId, const PowerData& meterData) {
   LeakageModel leakageData;
 
   // TODO prepare actionable DC and AC leakage measurments, patterns and stats, and faults, and outages
@@ -148,7 +172,6 @@ void mqtt_publish_leakage(String meterId, const PowerData& meterData) {
   // leakage can be powerflow direction sensitive  and dependant
   long timestamp = meterData.timestamp_last_report;
   String topicBuf = "leakage"; //TODO + phaseId; and/OR + meterid;
-  //topicBuf.concat("meter");
 
   JsonDocument jsonDoc;
   leakageData.toJson(jsonDoc);
@@ -282,10 +305,12 @@ void loop_mqtt(PowerData last_reading) {
        // Serial.println("Publishing Phase stats!");
 
         //TODO publish 3 phase OPENAMI per meter/tenant energy totals per phase ;
-        mqtt_publish_meter("", last_reading);
+        mqtt_publish_StreetPoleEMS("", last_reading);
         Serial.println("Publishing meter!");
-        mqtt_publish_leakage("", last_reading);
+        mqtt_publish_Leakage("", last_reading);
         Serial.println("Publishing leakage!");
+        mqtt_publish_Meter("1", last_reading);
+        Serial.println("Publishing meter!");
        // mqtt_publish_phase("", last_reading);
        // Serial.println("Publishing Phase stats!");
        // mqtt_publish_EMS("", last_reading);
