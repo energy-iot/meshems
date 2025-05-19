@@ -15,10 +15,8 @@ void generatefullDeviceID() {// includes OUI vendorid of the ethernet MAC inside
 }
 
 void generateDeviceID() {
-  uint64_t mac = ESP.getEfuseMac();  // 48-bit MAC address
-  //uint32_t uniquePart = mac & 0xFFFFFF;  // Keep only the lower 3 bytes is enough for global uniqueness
-  uint32_t uniquePart = mac & 0xFFFFFFFF;  // Keep only the lower 4 bytes
-  sprintf(device_id, "%s%08X", DEVICE_ID_PREFIX, uniquePart);
+  uint32_t uniquePart = (ESP.getEfuseMac() >> 32) % 0xFFFFFFFF;  // Keep only the lower 4 bytes
+  sprintf(device_id, "%s%X", DEVICE_ID_PREFIX, uniquePart);
 }
 
 const char* getDeviceID() {
