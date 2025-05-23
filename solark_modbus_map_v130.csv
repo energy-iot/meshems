@@ -1,0 +1,440 @@
+Address,Register Description,R/W,Data Range,Unit,Note
+0,Device type,R,"0X0200: Other; 0X0300: Energy Storage Inverter; 0X0400: Microinverter; 0X0500 and above: Other",,
+2,Communication protocol version,R,"'0'~'9'; 'A'~'Z'",,"The version of this protocol that the firmware complies with. 0x0102 means Version 1.2"
+3,SN byte 01,R,"'0'~'9'; 'A'~'Z'",,"The serial number is ten ASCII characters, If ""AH12345678"", Byte 01 is 0x41 (A), The 02nd byte is 0x48 (H), …… The 09th byte is 0x37 (7), The tenth byte is 0x38 (8)."
+4,SN byte 03,R,"'0'~'9'; 'A'~'Z'",,
+5,SN byte 05,R,"'0'~'9'; 'A'~'Z'",,
+6,SN byte 07,R,"'0'~'9'; 'A'~'Z'",,
+7,SN byte 09,R,"'0'~'9'; 'A'~'Z'",,
+11,Control Board FW version 1,R,,,Will report COMM version
+13,Firmware version of control board,R,,,Will report MCU version
+14,Firmware version of communication board,R,,,Will report COMM version; Only accessible via Batt port.
+18,MPPT number and phases,R,,,0x0503: five-mppts three-phase
+22,System time byte 01,R/W,[0,255],Year,Time starts at 1/1/2000 00:00:00
+22,System time byte 02,R/W,[1,12],Month,
+23,System time byte 03,R/W,[1,31],Day,
+23,System time byte 04,R/W,[0,23],Hour,
+24,System time byte 05,R/W,[0,59],Minute,
+24,System time byte 06,R/W,[0,59],Sec,
+26,Load Limit Power,R/W,[2000,14000],W,Limits amount of DC Power used to backup loads.
+34,Low Noise Mode,R/W,,"0: disable – 15 KHz switching speed; 1: enable – 20 KHz switching speed"
+37,Communication Address,R/W,[0,63],1,Used for external comms. Should match the Parallel Modbus SN.
+38,Apparent Power reading,R/W,,VA,Available with version XX26
+39,Power Factor Regulation,R/W,,,"Signed int. The value after the true value is offset by +1000. For example -0.852 is 148, 0 is 1000, 0.982 is 1982"
+40,Active Power Regulation,R/W,[0,1200],0.1%,800 is 80.0%
+41,Reactive Power Regulation,R/W,[0,1200],0.1%,800 is 80.0%
+42,Apparent Power Regulation,R/W,[0,1200],0.1%,800 is 80.0%
+44,Factory reset enable,R/W,[0,1],,0: disable 1: enable
+46,Absorption V charge time,R/W,[0,240],min,"Available after COMM 1446 and XX26. For lead acid control only. If using Lithium, keep at 10 min default."
+50,Inverter Rated Output Power Low Word,R/W,[0,36000],,
+51,Inverter Rated Output Power high Word,R/W,[0,36000],,
+53,Max solar Power,R/W,[0,16500],W,"Maximum amount of PV inverter will limit to. Limit depends on inverter model."
+54,AC power ratio,R,[0,2],,"Changes the scale of the following registers: 5-12K inverters use 1W resolution. 15K model uses 1W on SW prior to 7226/1446. 10W on SW after to 7226/1446. 10: 167, 168, 169, 170, 171, 172, 176, 177, 178, 179, 180, 190 Scale is 10W. 1: 167, 168 ,169, 170, 171, 172, 176, 177, 178, 179, 180, 190. Scale is 1W"
+59,Inverter Status,R,[0,5],,"1: Self-test; 2:Normal; 3:Alarm; 4: Fault"
+60,Day Active Power Wh,R,[-32768,32767],0.1kWh,Signed int. Inverter Grid port energy
+61,Day Reactive Power Wh,R,[-32768,32767],0.1kVarh,Signed int. Inverter Grid port energy.
+62,Today_Gen_PowerWh,R,[-32768,32767],0.1kVarh,Signed int. Inverter GEN port energy.
+63,Total Active Power low word,R,[0,0xFFFFFFFF],0.1kWh,Signed int. Inverter Grid port energy
+64,Total Active Power high word,R,,0.1kWh,
+65,Hybrid Month PV Power,R,[0,0xFFFF],1kwh,
+66,Hybrid Month Load Power,R,[0,0xFFFF],1kwh,
+67,Hybrid Month Grid Power,R,[0,0xFFFF],1kwh,
+68,Hybrid Year PV Power Low word,R,[0,0xFFFF],0.1kwh,"LCD statistics, DLN high status reversed."
+69,Hybrid Year PV Power high word,R,[0,999],0.1kwh,
+70,Hybrid Day Batt Charge Power,R,[0,9999],0.1kwh,
+71,Hybrid Day Batt Discharge Power,R,[0,9999],0.1kwh,
+72,Hybrid Total Batt charge Power low word,R,[0,9999],0.1kwh,
+73,Hybrid Total Batt charge Power high word,R,[0,9999],0.1kwh,
+74,Hybrid Total Batt Discharge Power low word,R,[0,9999],0.1kwh,
+75,Hybrid Total Batt Discharge Power high word,R,[0,9999],0.1kwh,
+76,Hybrid Day Grid Buy Power,R,[0,65535],0.1kwh,
+77,Hybrid Day Grid Sell Power,R,[0,65535],0.1kwh,
+78,Hybrid Total Grid Buy Power low word,R,[0,65535],0.1kwh,
+79,Grid frequency,R,[0,9999],0.01Hz,
+80,Hybrid Total Grid Buy Power high word,R,[0,65535],0.1kwh,
+81,Hybrid Total Grid Sell Power low word,R,[0,0xFFFFFFFF],0.1kwh,
+82,Hybrid Total Grid Sell Power high word,R,,0.1kwh,
+83,Hybrid Generator daily operating time,R,,0.1,240 means 24 hours. Not used now.
+84,Hybrid SG: Day Load Power,R,[0,0xFFFF],0.1kwh,
+85,Hybrid Total Load Power low word,R,[0,0xFFFF],0.1kwh,
+86,Hybrid Total Load Power high word,R,[0,0xFFFF],0.1kwh,
+87,Hybrid Year Load Power low word,R,[0,0xFFFF],0.1kwh,
+88,Grid Reactive Power,R,[0,15000],0.1 kVA,Available after version XX24
+89,Grid Real Power Factor,R,[-800,1200],,Available after version XX24; 1200 is 800; 1000 is 1
+90,DC/DC Transformer temperature,R,[0,3000],0.1℃,"Same offset as register 91. Not used in 15K."
+91,IGBT Heat Sink temperature,R,[0,3000],0.1℃,"-56.2℃ indicated as 438; 0℃ indicated as 1000; 50.5 ℃ indicated as 1505"
+96,Historic Total PV Power low word,R,[0,0xFFFFFFFF],0.1kWh,
+97,Historic PV Power high word,R,,,
+98,Hybrid Year grid sell Power Low word,R,[0,65535],0.1kWh,
+99,Hybrid Year grid sell Power High word,R,,0.1kWh,
+101,Warning Message word 1,R,,,"See ""Fault Table"" at the end of the document for values; Uses bit flags, 64 separate bits; One bit for each fault"
+102,Warning Message word 2,R,,,
+103,Fault information word 1,R,[0,65535],,"See ""Fault Table"" at the end of the document for values; Uses bit flags, 64 separate bits; One bit for each fault"
+104,Fault information word 2,R,[0,65535],,
+105,Fault information word 3,R,[0,65535],,
+106,Fault information word 4,R,[0,65535],,
+107,Corrected Batt Capacity,R,[0,1000],AH,100 is 100AH
+108,Daily PV Power (Wh),R,[0,65535],0.1kWh,
+109,Dc voltage 1,R,[0,65535],0.1V,MPPT1
+110,Dc current 1,R,[0,65535],0.1A,
+111,Dc voltage 2,R,[0,65535],0.1V,MPPT2
+112,Dc current 2,R,[0,65535],0.1A,
+113,Dc voltage 3,R,[0,65535],0.1V,MPPT3 (For 15K only)
+114,Dc current 3,R,[0,65535],0.1A,
+115,Dc voltage 4,R,[0,65535],0.1V,MPPT4 (Not in use)
+116,Dc current 4,R,[0,65535],0.1A,
+150,Grid side voltage L1-N,R,,0.1V,
+151,Grid side voltage L2-N,R,,0.1V,
+152,Grid side voltage L1-L2,R,,0.1V,
+153,Voltage at middle side of relay L1-L2,R,,0.1V,
+154,Inverter output voltage L1-N,R,,0.1V,
+155,Inverter output voltage L2-N,R,,0.1V,
+156,Inverter output voltage L1-L2,R,,0.1V,
+157,Load voltage L1,R,,0.1V,
+158,Load voltage L2,R,,0.1V,
+160,Grid side current L1,R,,0.01A,Signed int
+161,Grid side current L2,R,,0.01A,Signed int
+162,Grid external Limiter current L1,R,,0.01A,Signed int
+163,Grid external Limiter current L2,R,,0.01A,Signed int
+164,Inverter output current L1,R,,0.01A,Signed int
+165,Inverter output current L2,R,,0.01A,Signed int
+166,Gen or AC Coupled power P,R,,1W,"As load out: Output P is positive; As AC in : Input P is negative"
+167,Grid side L1 power,R,,1W or 10W Reg 54,Signed int
+168,Grid side L2 power,R,,1W or 10W Reg 54,Signed int
+169,Total power of grid side L1L2,R,,1W or 10W Reg 54,"Signed int; > 0 BUY; < 0 SELL"
+170,Grid external Limter1 power,R,,1W or 10W Reg 54,Signed int
+171,Grid external Limter2 power,R,,1W or 10W Reg 54,Signed int
+172,Grid external Total Power,R,,1W or 10W Reg 54,Signed int
+173,Inverter outputs L1 power,R,,1W or 10W Reg 54,Signed int
+174,Inverter outputs L2 power,R,,1W or 10W Reg 54,Signed int
+175,Inverter output Total power,R,,1W or 10W Reg 54,Signed int
+176,Load side L1 power,R,,1W or 10W Reg 54,Signed int
+177,Load side L2 power,R,,1W or 10W Reg 54,Signed int
+178,Load side Total power,R,,1W or 10W Reg 54,Signed int
+179,Load current L1,R,,0.01A,Signed int
+180,Load current L2,R,,0.01A,Signed int
+181,Gen Port Voltage,R,,0.1V,
+182,Battery temperature,R,[0,3000],0.1℃,"Real value of offset + 1000; 1200 is 20.0 ℃"
+183,Battery voltage,R,,0.01V,4100 mark of 41.0 V
+184,Battery SOC,R,[0,100],1%,
+185,UPS L-L Power,R,,,Will show the critical loads reading.
+186,PV1 input power,R,,1W,
+187,PV2 input power,R,,1W,
+188,PV3 input power,R,,1W,Applies to 15K only
+189,PV4 input power,R,,1W,Not in use
+190,Battery output power,R,,1W,Signed int
+191,Battery output current,R,,0.01A,Signed int
+192,Load frequency,R,,0.01Hz,
+193,Inverter output frequency,R,,0.01Hz,
+194,Grid side relay status,R,,"1 is Open(Disconnect); 2 is Closed"
+195,Generator side relay status,R,,,"Shows 2-wire start status. Low 4 indicates the state of generator relay: 0 Open, 1 Closed, 2 vacancy, 3 Closed when Generator is on. The high 4 bits indicate the switch signal Bit 4-7: 0 power off, 1 power on. Bit 8-11 Generate Signal."
+196,Generator relay Frequency,R,,0.01Hz,
+200,Control Mode,R/W,-,-,"0x0000 Lead-Battery, four-stage charging method. 0x0001 Lithium battery"
+201,Equalization V,R/W,"[3800,6100] PV 40-60",0.01V,1480 means 14.8v
+202,Absorption V,R/W,"[3800,6100] PV 40-60",0.01V,1440 means 14.4v
+203,Float V,R/W,"[3800,6100] PV 40-60",0.01V,1440 means 14.4v
+204,Batt Capacity,R/W,[0,2000],1 Ah,200 means 200AH
+205,Batt Empty V,R/W,41-63,0.01V,Empty Voltage for Battery= 0%
+206,Zero Export Power,R/W,[0,500],0.1℃,
+207,Equalization day cycle,R/W,[0 90],Day,
+208,Equalization time,R/W,"[0 20] PV 0-10",0.5 hr.,Resolution 0.5 h
+209,TEMPCO,R/W,[0,20],1mV/℃,Signed int
+210,Max A Charge from PV or Grid,R/W,[0,275],1A,0-185A (0-275A for 15K)
+211,Max A discharge from Batt,R/W,[0,275],1A,0-185A (0-275A for 15K)
+213,Battery operation mode Voltage OR % Mode,R/W,,,"0: Voltage mode; 1: % or SOC mode; 2: No battery"
+214,Lithium battery wake up sign bit "Activate Batt",R/W,,,"1 enabled; 0 Disable. Every 10 min from Grid or PV."
+215,Battery resistance value,R/W,[0,6000],mΩ,
+216,Battery charging efficiency,R/W,[0-1000],0.1%,983 is 98.3%
+217,Battery Shut Down %,R/W,[0,100],1%,Low capacity cutoff point
+218,Battery Restart %,R/W,[0,100],1%,Protection recovery point
+219,Battery Low Batt %,R/W,[0,100],1%,
+220,Battery Shut Down V,R/W,"[3800,6100] PV 40-60",0.01V,Low protection point cutoff 41V
+221,Battery Restart V,R/W,"[3800,6100] PV 40-60",0.01V,Reboot/recover 52V
+222,Battery Low Batt V,R/W,"[3800,6100] PV 40-60",0.01V,Discharge depth 46V
+225,Generator charging Starting voltage point,R/W,[0000 6300],0.01V,"The battery V must be less than this value for charging to start. Must have the following register values/settings: 231=1, 200=0, 213=0"
+226,Generator charging starting capacity point,R/W,[0000 6300],1%,"The battery SOC must be less than this value for charging to start. Must have: PV visible when 231=1, 213=1, 200 = 0|1 (OR)"
+227,Battery gen charging max current,R/W,"[0000 185] or [0000 275]",1A,"Must have 231=1; Battery current from generator port"
+228,Grid charging Start voltage point,R/W,[0000 6300],0.01v,"The battery V must be less than this value for charging to start. Must have: 232=1, 213=0, 200 = 0|1"
+229,Grid charging start capacity point,R/W,[0000 6300],1%,"The battery SOC must be less than this value for charging to start. Must have: 232=1, 213 =1, 200 = 0|1"
+230,Battery grid charging max current,R/W,"[0000 185] or [0000 275]",1A,"Battery current from grid port; Must have 232=1."
+231,Generator charging enable,R/W,[0,1],,0 is Disable
+232,Grid charging enable,R/W,[0,1],,0 is Disable
+234,Force Smart load ON,R/W,,,"Register 235 must be enabled for this to work. 0 Do not force, 1 force"
+235,Generator input is enabled as Smart load output,R/W,,,"0 Disable generator input, 1 Enable generator input as load output, 2 Enable as inverter input"
+236,Smart Load OFF batt Voltage,R/W,[3800 6300],0.01V,
+237,Smart Load OFF batt,R/W,[0000 100],1%,
+238,Smart Load ON batt Voltage,R/W,[3800 6300],0.01V,
+239,Smart Load ON batt,R/W,[0000 100],1%,
+241,Minimum solar power required to start Smart load when connected to Grid,R/W,"[0,8000] [0,18000] (15K)",1W,
+242,Gen Grid Signal On,R/W,0x0[0-3],,"Two wire start; 0x00 Disable; 0x01 Grid; 0x02 Gen; 0x03 Enable"
+243,Energy management model,R/W,,,"0: Battery First (default now); 1: Load First"
+244,Limited to Load/Home Control,R/W,[0-2],,"0x00 Disabled; 0x01 Limited to Load; 0x02 Limited to Home"
+245,Grid sell limiter,R/W,"[0,8000] [0,11000] (12K) [0,34000] (15K)",1W,Represents total power exporting to the grid
+247,Grid sell,R/W,,,"0x00 Grid sell off; 0x01 Grid sell on; 244 MUST be 0x01 or 0x02 to disable Grid sell."
+248,Time of Use Selling enabled,R/W,,,"0 Disable; 0xFF enabled (248bit0 =1); Bit 1 Monday; …… Bit 7 Sunday; 0: Disable; 1: Enable"
+250,Sell mode time point 1,R/W,[0000 2359],,2359 means time 23:59
+251,Sell mode time point 2,R/W,[0000 2359],,2359 means time 23:59
+252,Sell mode time point 3,R/W,[0000 2359],,"Times must form a contiguous 24-hour block together and should be set in chronological order from Time 1 to Time 6."
+253,Sell mode time point 4,R/W,[0000 2359],,
+254,Sell mode time point 5,R/W,[0000 2359],,
+255,Sell mode time point 6,R/W,[0000 2359],,
+256,Sell mode time point 1 power,R/W,[0000 9000],1W,Affected by the maximum discharge power of the battery/ Limited by Max A discharge.
+257,Sell mode time point 2 power,R/W,[0000 9000],1W,
+258,Sell mode time point 3 power,R/W,[0000 9000],1W,
+259,Sell mode time point 4 power,R/W,[0000 9000],1W,
+260,Sell mode time point 5 power,R/W,[0000 9000],1W,
+261,Sell mode time point 6 power,R/W,[0000 9000],1W,
+262,Sell mode time point 1 voltage,R/W,[0000 6300],0.01V,"Only applies in V mode. If % mode is selected, only registers 268-273 will apply."
+263,Sell mode time point 2 voltage,R/W,[0000 6300],0.01V,
+264,Sell mode time point 3 voltage,R/W,[0000 6300],0.01V,
+265,Sell mode time point 4 voltage,R/W,[0000 6300],0.01V,
+266,Sell mode time point 5 voltage,R/W,[0000 6300],0.01V,
+267,Sell mode time point 6 voltage,R/W,[0000 6300],0.01V,
+268,Time point 1 capacity,R/W,[0,100],1%,"Only applies in V mode. If % mode is selected, only registers 268-273 will apply."
+269,Time point 2 capacity,R/W,[0,100],1%,
+270,Time point 3 capacity,R/W,[0,100],1%,
+271,Time point 4 capacity,R/W,[0,100],1%,
+272,Time point 5 capacity,R/W,[0,100],1%,
+273,Time point 6 capacity,R/W,[0,100],1%,
+274,Time point 1 charge enable,R/W,"[0,1, 2, 3]",,"0 = no charging, 1 = Charge, 2 = Sell, 3 = Charge and Sell. Bit 0-1 represent operation modes: 00: None, 01: Grid charge, 10: Grid Sell, 11: Both. 0 disable 1 enable. Bit 5 Local Peak Shaving"
+275,Time point 2 charge enable,R/W,"[0,1, 2, 3]",,
+276,Time point 3 charge enable,R/W,"[0,1, 2, 3]",,
+277,Time point 4 charge enable,R/W,"[0,1, 2, 3]",,
+278,Time point 5 charge enable,R/W,"[0,1, 2, 3]",,
+279,Time point 6 charge enable,R/W,"[0,1, 2, 3]",,
+280,Grid Interaction options. AC Coupling/ Smart Load and Peak Shaving options,R/W,,"Bit0-3 Dependent on inverter output voltage. If (286==0): 0: 230V, 1: 220V, 2: 240V, 3: 200V. If (286==1): 0: 120/240V, 1: 110/220V, 2:120/240V, 3:110/200V. If (286==2): 0: 120/208V, 1: 127/220V. Bit4-7: 0: Gen peak-shaving disable, 1: Gen peak-shaving enable. Bit8-11: 0: Grid peak-shaving disable, 1: Grid peak-shaving enable. Bit12-15 On Grid always on: 0: Disable, 1: Enable"
+281,External CT sensor directional detection,R/W,[0,1],,"This is Auto learn CT function; 0 Disabled; 1 Enabled"
+282,Grid connection restoration time,R/W,[10 300],1 S,
+283,Solar Arc Fault Mode turned on,R/W,[0 1],,"0x00 Disabled; 0x01 Enabled; 0x02 Arc fault reset. Inverter sends the 02 value to LCD where it clears the fault and returns value back to 0x01."
+284,Grid Mode,R/W,[0, 3],,"0= general standard; 1= UL1741&IEE1547; 2= CPUC RULE21 (not used); 3= SRD-UL1741SB"
+285,Grid Frequency Setting,R/W,[0 1],,"0x00 50 Hz; 0x01 60 Hz"
+286,Grid Type,R/W,[0 3],,"0x00 Single-phase 240 v / 230 v / 220 v; 0x01 Stands for two-phase 120V/240V; 0x02 Represents the three-phase system 208V/120V"
+287,Grid Vol High,R/W,[1800 2700],0.1V,
+288,Grid Vol Low,R/W,[1800 2700],0.1V,
+289,Grid Hz High,R/W,[4500 6500],0.01Hz,
+290,Grid Hz Low,R/W,[4500 6500],0.01Hz,
+291,Generator connected to GRID input,R/W,[1 0],,"0 disable; 1 enabled"
+292,GEN peak shaving Power,R/W,[0 16000],1w,
+293,GRID peak shaving Power,R/W,[0 16000],1w,
+295,Output Power Factor setting (adjustable),R/W,"[-999 -800], [800 1000]",0.1%,"800 for 80% (lagging), -800 for 80% (leading)"
+297,ARC_factory_B high word,R/W,[0,65535],,High and low status combination displayed as numeric value.
+298,ARC_factory_B low word,R/W,[0,65535],,DO NOT CHANGE WITHOUT CONSULTING SOL-ARK
+299,ARC_factory_I high word,R/W,[0,65535],,
+300,ARC_factory_I low word,R/W,[0,65535],,
+301,ARC_factory_F high word,R/W,[0,65535],,
+302,ARC_factory_F low word,R/W,[0,65535],,
+303,ARC_factory_D high word,R/W,[0,65535],,
+304,ARC_factory_D low word,R/W,[0,65535],,
+305,ARC_factory_T high word,R/W,[0,65535],,
+306,ARC_factory_T low word,R/W,[0,65535],,
+307,ARC_factory_C high word,R/W,[0,65535],,
+308,ARC_factory_C low word,R/W,[0,65535],,
+309,ARC_factory_Frz high word,R/W,[0,65535],,
+310,ARC_factory_Frz low word,R/W,[0,65535],,
+311,Ups_time,R/W,[0,30000],1 ms,0: Default UPS time
+312,Charging voltage,R/W,,0.01V,Enabled by Li-Batt only.
+313,Discharge voltage,R/W,,0.01V,Enabled by Li-Batt only.
+314,Charging current limit,R/W,,1A,Enabled by Li-Batt only.
+315,Discharge current limit,R/W,,1A,Enabled by Li-Batt only.
+316,Real time SOC,R/W,,1%,Enabled by Li-Batt only.
+317,Real time voltage,R/W,,0.01V,Enabled by Li-Batt only.
+318,Real time current,R/W,,1A,Enabled by Li-Batt only.
+319,Real time temp,R/W,,0.1C,"Enabled by Li-Batt only. 1000 corresponds to 0 degrees, 1200 means 20.0 degrees, 800 means -20.0C"
+322,BMS Lithium battery warning,R/W,,,
+323,BMS Lithium battery fault,R/W,[0,65535],,
+325,Lithium battery communication type,R/W,,,"0x0000 Universal CAN protocol; 0x0001 – 0x00A RS485 custom protocols. Consult battery integration guide."
+326,External Meter CT options,R/W,,,"Bit 0: Enables meter usage in any terminal; Bit 1: Enables phase A CT; Bit 2: Enables phase B CT; Bit 3: Enables phase C CT; Bit 6: Enables AC couple to Grid.; Bit 7: Enables AC couple to Load.; Bit8-11: Meter Model Selection; Bit 8: SDM630; Bit 9: DTSU666; Bit 10: SDM230; Bit 11: DDSU666; Bit 12: Enables Load Side Meter (Meter2); Bit 13: Enables Gen open"
+327,CT Ratio,R/W,200-8000,,"For external CTs; 0: Disabled; 1: Enabled"
+329,AC Coupling Freq High,R/W,,0.01 Hz,Frequency to shut off AC coupling
+330,Basic settings,R/W,,,"Bit 1 Time Sync 0 off 1 on; Bit 3 beep 0 off 1 on; Bit 5 AM/PM 0 off 1 one; Bit 7 Auto Dim 0 off 1 on"
+331,California low /high voltage ride through CA_LHVRT enable,R/W,[0,1],,0: disable 1: enable
+332,CA_HV2,R/W,[1000,3000],0.1V,
+333,CA_HV1,R/W,,,
+334,CA_LV1,R/W,,,
+335,CA_LV2,R/W,,,
+336,CA_LV3,R/W,,,
+337,CA_HV2_Time,R/W,[0,300],,0 is 0.16S
+338,CA_HV1_Time,R/W,,,
+339,CA_LV1_Time,R/W,,,
+340,CA_LV2_Time,R/W,,,
+341,CA_LV3_Time,R/W,,,
+342,California low /high frequency ride through CA_LHFRT enable,R/W,[0,1],,0: disable 1: enable
+343,CA_HF2,R/W,[4500,6500],0.01Hz,
+344,CA_HF1,R/W,,,
+345,CA_LF1,R/W,,,
+346,CA_LF2,R/W,,,
+347,CA_HF2_Time,R/W,[0,300],,
+348,CA_HF1_Time,R/W,,,
+349,CA_LF1_Time,R/W,,,
+350,CA_LF2_Time,R/W,,,
+351,California CA_QV enable,R/W,,,"0: OFF; 1: ON"
+352,CA_QV_V1,R/W,[1000,3000],,
+353,CA_QV_V2,R/W,,,
+354,CA_QV_V3,R/W,,,
+355,CA_QV_V4,R/W,[-44, +44],0.01,
+356,CA_QV_Q1,R/W,,,
+357,CA_QV_Q2,R/W,,,
+358,CA_QV_Q3,R/W,,,
+359,CA_QV_Q4,R/W,,,
+360,California CA_FW enable,R/W,,,
+361,CA_Fstart,R/W,,,
+362,CA_Fstop,R/W,,,
+363,California CA_VW enable,R/W,,,
+364,CA_Vstart,R/W,,,
+365,CA_Vstop,R/W,,,
+366,Normal ramp rate,R/W,[1 100],1%,
+367,Soft start ramp rate,R/W,[1 100],1%,default 100%
+368,Q(V) response time,R/W,,,
+369,VW response time,R/W,,,
+370,FW response time,R/W,,,
+390,DC Input 1 as Wind Input,R/W,[0,1],,"0: Disable 1: Enable; 15K functionality added after XX26 and COMM 1446."
+391,DC Input 2 as Wind Input,R/W,[0,1],,
+392,Wind Turbine Voltage 1,R/W,[500, 5000],0.1 V,
+393,Wind Turbine Voltage 2,R/W,,0.1 V,
+394,Wind Turbine Voltage 3,R/W,,0.1 V,
+395,Wind Turbine Voltage 4,R/W,,0.1 V,
+396,Wind Turbine Voltage 5,R/W,,0.1 V,
+397,Wind Turbine Voltage 6,R/W,,0.1 V,
+398,Wind Turbine Voltage 7,R/W,,0.1 V,
+399,Wind Turbine Voltage 8,R/W,,0.1 V,
+400,Wind Turbine Voltage 9,R/W,,0.1 V,
+401,Wind Turbine Voltage 10,R/W,,0.1 V,
+402,Wind Turbine Voltage 11,R/W,,0.1 V,
+403,Wind Turbine Voltage 12,R/W,,0.1 V,
+404,Wind Turbine Current 1,R/W,[0, 200],0.1 A,
+405,Wind Turbine Current 2,R/W,,0.1 A,
+406,Wind Turbine Current 3,R/W,,0.1 A,
+407,Wind Turbine Current 4,R/W,,0.1 A,
+408,Wind Turbine Current 5,R/W,,0.1 A,
+409,Wind Turbine Current 6,R/W,,0.1 A,
+410,Wind Turbine Current 7,R/W,,0.1 A,
+411,Wind Turbine Current 8,R/W,,0.1 A,
+412,Wind Turbine Current 9,R/W,,0.1 A,
+413,Wind Turbine Current 10,R/W,,0.1 A,
+414,Wind Turbine Current 11,R/W,,0.1 A,
+415,Wind Turbine Current 12,R/W,,0.1 A,
+416,Grid Connect Enable,R/W,[0,1],,"0: Grid connection enabled; 1: Grid connection disabled"
+417,Parallel register 1,R/W,--,--,"Bit0 : Parallel Enabled, 0: Disabled; Bit1: 1 Master, 0: Slave; Bit2-7: Void; Bit8-9: Phase (00: A, 01: B, 10:C,11:void); Bit10-15: Parallel Address (0-63)"
+418,Parallel register 2,R/W,,,"Bit0-4 A Phase inverter Num; Bit5-9 B Phase inverter Num; Bit10-14 C Phase inverter Num; Bit15 Void"
+421,system time byte 01 and 02,R/W,,,
+422,system time byte 03 and 04,R/W,,,
+423,system time byte 05 and 06,R/W,,,
+433,Grid Reconnect Max V,R/W,[800, 3000],0.1 V,
+434,Grid Reconnect Min V,R/W,[800, 3000],0.1 V,
+435,Grid Reconnect Max Frq,R/W,[4500, 6510],0.01 A,
+436,Grid Reconnect Min Frq,R/W,[4500, 6510],0.01 A,
+437,Overvoltage U,R/W,[800, 3000],0.1 V,10-minute Grid Voltage Average for Overvoltage
+439,Voltage-Watt Ramp Rate,R/W,,,
+440,Voltage-Watt Enable,R/W,,,"0: disabled 1: enabled"
+441,V(W) Voltage Point 1,R/W,,,
+442,V(W) Power 1,R/W,,,
+443,V(W) Voltage Point 2,R/W,,,
+444,V(W) Power 2,R/W,,,
+445,V(W) Voltage Point 3,R/W,,,
+446,V(W) Power 3,R/W,,,
+447,V(W) Voltage Point 4,R/W,,,
+448,V(W) Power 4,R/W,,,
+449,Frequency-Watt Enable,R/W,[0,7],,"Bit 0: Enable Under-frequency Load Reduction; Bit 1: Enable Over-frequency Load Reduction"
+450,Under-frequency Limit,R/W,[0,200],0.1%,200: 20% frequency limit under nominal frequency
+451,F(W) Low Frequency Point 1,R/W,,,"200: 20% frequency limit under nominal frequency"
+452,F(W) Under-frequency Droop Rate,R/W,[0,10000],0.001 Hz,10000 is 10 Hz
+453,F(W) Low Frequency Point 1 Start Delay,R/W,[0,65535],0.1 s,
+454,F(W) Low Freq Stop Delay,R/W,[0,65535],0.1 s,
+455,F(W) Under-frequency Recovery Rate,R/W,,,
+456,F(W) High Frequency Limit,R/W,[4500,6500],0.01 Hz,
+457,F(W) Over-frequency Derating Rate,R/W,[0,30000],0.1 %,Units are 0.1 % reduction in rated power per minute
+458,F(W) Over-freq Sag Rate 1,R/W,,,
+459,F(W) High Frequency Point 1 Start Delay,R/W,[0,65535],0.1 s,
+460,F(W) High Frequency Point 1 Stop Delay,R/W,[0,65535],0.1 s,
+461,F(W) Over-frequency Recovery Rate,R/W,,,
+462,Fixed Active Power,R/W,,,
+463,Active Power-Reactive Control Enable,R/W,[0,1],,"0: Disable; 1: Enable"
+464,P(Q) Power Setpoint 1,R/W,[-10000,10000],0.01%,"Active power as % of rated power. (Must be less than setpoint 2)"
+465,P(Q) Reactive Power 1,R/W,[-7000,7000],0.01%,"Reactive Power produced as % of rated power, from -70% to 70%"
+466,P(Q) Power Setpoint 2,R/W,[-10000,10000],0.01%,(Must be less than setpoint 3)
+467,P(Q) Reactive Power 2,R/W,[-7000,7000],0.01%,
+468,P(Q) Power Setpoint 3,R/W,[-10000,10000],0.01%,(Must be less than setpoint 4)
+469,P(Q) Reactive Power 3,R/W,[-7000,7000],0.01%,
+470,P(Q) Power Setpoint 4,R/W,[-10000,10000],0.01%,(Must be the highest setpoint)
+471,P(Q) Reactive Power 4,R/W,[-7000,7000],0.01%,
+472,Active Power-Power Factor Control Enable,R/W,[0,1],,"0: Disable; 1: Enable"
+473,P(F) Power Setpoint 1,R/W,[-10000,10000],0.01%,"Active power as % of rated power. (Must be less than setpoint 2)"
+474,P(F) Power Factor Setpoint 1,R/W,"[8000,10000], [-8000,10000]",0.0001,
+475,P(F) Power Setpoint 2,R/W,[-10000,10000],0.01%,"Active power as % of rated power. (Must be less than setpoint 3)"
+476,P(F) Power Factor Setpoint 2,R/W,"[8000,10000], [-8000,10000]",0.0001,
+477,P(F) Power Setpoint 3,R/W,[-10000,10000],0.01%,"Active power as % of rated power. (Must be less than setpoint 4)"
+478,P(F) Power Factor Setpoint 3,R/W,"[8000,10000], [-8000,10000]",0.0001,
+479,P(F) Power Setpoint 4,R/W,[-10000,10000],0.01%,"Active power as % of rated power. (Must be less the highest setpoint)"
+480,P(F) Power FactorSetpoint,R/W,"[8000,10000], [-8000,10000]",0.0001,
+481,V(Q) Lockin,R/W,,,
+482,V(Q) Lockout,R/W,,,
+483,P(F) Lockin,R/W,,,
+484,P(F) Lockout,R/W,,,
+488,Fixed Reactive Power Q,R/W,[-100,100],1%,Reactive Power Produced as compared to rated power
+
+# Fault Table
+Bit,Fault Code,Fault,Description
+0,F01,DC_Inversed Failure,
+1,F02,DC_Insulation_Failure,
+2,F03,GFDI_Failure,
+3,F04,GFDI_Ground_Failure,
+4,F05,EEPROM_Read_Failure,
+5,F06,EEPROM_Write_Failure,
+6,F07,DC/DC_Softsart_Fault,"Contact Sol-Ark.com, DC/DC SoftStart Fault, Check Battery Fuse"
+7,F08,GFDI_Relay_Failure,
+8,F09,IGBT_Failure,
+9,F10,AuxPowerBoard_Failure,"Contact Sol-Ark.com, Remove Wifi Dongle"
+10,F11,AC_MainContactor_Failure,
+11,F12,AC_SlaveContactor_Failure,
+12,F13,Working_Mode_changed,"Can happen when not using batteries or if Grid Input settings are changed. This is a notification, NOT a fault."
+13,F14,DC_OverCurr_Fault,
+14,F15,SW_AC_OverCurr_Fault,"Usually caused by Loads being too large for the inverter. If off-grid, the battery discharge amps programmed too low. Overloads can result in F15, F18, F20, or F26."
+15,F16,GFCI_Failure,"Ground fault. Check PV+ or PV- wiring (which must be ungrounded). Exposed PV conductors + rain can also cause. Check that neutral line and Ground is not double bonded (which is common with portable generators)."
+16,F17,Active_Battery_Hold,
+17,F18,HW_Ac_OverCurr_Fault,"Overloaded the Load Output, reduce loads. Wiring Short on the AC Side can also cause this error. Overloads can result in F15, F18, F20, or F26."
+18,F19,Tz_Integ_Fault,
+19,F20,Tz_Dc_OverCurr_Fault,"Usually caused by DC current from battery that are too large (ex: 4 Ton AC Unit). Overloads can result in F15, F18, F20, or F26."
+20,F21,Tz_GFDI_OC_Fault,
+21,F22,Tz_EmergStop_Fault,"Contact Sol-Ark.com, Emergency Stop Error"
+22,F23,Tz_GFCI_OC_Fault,"PV Ground fault. Check PV+ or PV- wiring (which must be ungrounded or damage can occur). Typically caused by pinched PV wire grounding the PV+ or PV-. Grounded PV wire can cause F20, F23 or F26."
+23,F24,DC_Insulation_ISO_Fault,"Exposed PV conductor combined with moisture is faulting (can cause F16, F24, F26)."
+24,F25,DC_Feedback_Fault,
+25,F26,BusUnbalance_Fault,"Too much load one leg (L1 or L2) Vs the other leg or DC loads on the AC output when off-grid. Grounded PV wire can cause F20, F23 or F26."
+26,F27,DC_Insulation_Fault,
+27,F28,DCIOver_M1_Fault,
+28,F29,Parallel_Fault,"One or more Paralleled systems have error"
+29,F30,AC_MainContactor_Fault,"Contact Sol-Ark.com"
+30,F31,Soft_Start_Failed,
+31,F32,DCIOver_M2_Fault,
+32,F33,AC_OverCurr_Fault,
+33,F34,AC_Overload_Fault,
+34,F35,AC_NoUtility_Fault,"Contact Sol-Ark.com, No Grid"
+35,F36,AC_GridPhaseSeque_Fault,
+36,F37,AC_Volt_Unbalance_Fault,
+37,F38,AC_Curr_Unbalance_Fault,
+38,F39,INT_AC_OverCurr_Fault,
+39,F40,INT_DC_OverCurr_Fault,
+40,F41,AC_WU_OverVolt_Fault,"Parallel System Stop, Contact Sol-Ark.com, System shutdown due to other system in parallel faulted out"
+41,F42,AC_WU_UnderVolt_Fault,"Check Grid side connection; under volt"
+42,F43,AC_VW_OverVolt_Fault,
+43,F44,AC_VW_UnderVolt_Fault,
+44,F45,AC_UV_OverVolt_Fault,"Grid under voltage causes disconnect. This will self-reset when grid stabilizes."
+45,F46,Parallel_Aux_Fault,"Cannot communicate with other parallel systems. Check Master = 1, Slaves are 2-9, ethernet cables are connected."
+46,F47,AC_OverFreq_Fault,"Grid over Frequency (common in power outages) causes disconnect. Will self-reset when grid stabilizes."
+47,F48,AC_UnderFreq_Fault,"Grid under Frequency (common in power outages) causes disconnect. Will self-reset when grid stabilizes."
+48,F49,AC_U_GridCurr_DcHigh_Fault,"Contact Sol-Ark.com, Backup Battery Fault, Capacity of the battery might be too low"
+49,F50,AC_V_GridCurr_DcHigh_Fault,
+50,F51,AC_W_GridCurr_DcHigh_Fault,
+51,F52,AC_A_InductCurr_DcHigh_Fault,
+52,F53,AC_B_InductCurr_DcHigh_Fault,
+53,F54,AC_C_InductCurr_DcHigh_Fault,
+54,F55,DC_VoltHigh_Fault,"PV maybe higher than 500V. Battery voltage should not be above 59V or 63V (depending on model)."
+55,F56,DC_VoltLow_Fault,"Batteries are overly discharged or Lithium BMS has shutdown."
+56,F57,AC_BackFeed_Fault,
+57,F58,AC_U_GridCurr_High_Fault,"BMS error, BMS not able to establish between battery and inverter."
+58,F59,AC_V_GridCurr_High_Fault,
+59,F60,AC_W_GridCurr_High_Fault,
+60,F61,Button_Manual_OFF,
+61,F62,AC_B_InductCurr_High_Fault,
+62,F63,Arc_Fault,"Can be a bad PV connector/connection. And sometimes a false alarm due to powerful lightning storms."
+63,F64,Heatsink_HighTemp_Fault,"Check the built-in fans are running, ambient temp may be to high"
