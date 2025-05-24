@@ -35,9 +35,8 @@
   * This array stores the values of all holding registers in the system.
   * Holding registers are 16-bit values that can be read and written by Modbus masters.
   * They typically store configuration parameters or setpoints for the device.
-  * Note: There appears to be a typo in the array name (MODUBS instead of MODBUS)
   */
- uint16_t holdingRegisters[MODUBS_NUM_HOLDING_REGISTERS];
+ uint16_t holdingRegisters[MODBUS_NUM_HOLDING_REGISTERS];
  
  /**
   * Input Registers (read-only 16-bit registers)

@@ -11,7 +11,7 @@
 // Modbus Register Array Sizes
 #define MODBUS_NUM_COILS                2
 #define MODBUS_NUM_DISCRETE_INPUTS      2
-#define MODUBS_NUM_HOLDING_REGISTERS    2  // Note: Typo preserved for compatibility
+#define MODBUS_NUM_HOLDING_REGISTERS    2
 #define MODBUS_NUM_INPUT_REGISTERS      4
 
 /**
@@ -38,5 +38,5 @@ struct PowerData {
 // Modbus Register Arrays
 extern bool coils[MODBUS_NUM_COILS];
 extern bool discreteInputs[MODBUS_NUM_DISCRETE_INPUTS];
-extern uint16_t holdingRegisters[MODUBS_NUM_HOLDING_REGISTERS];
+extern uint16_t holdingRegisters[MODBUS_NUM_HOLDING_REGISTERS];
 extern uint16_t inputRegisters[MODBUS_NUM_INPUT_REGISTERS];
