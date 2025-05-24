@@ -33,12 +33,16 @@
  */
 
 #include <Arduino.h>
-#include <modbus.h>     // Modbus communication protocols
-#include <buttons.h>    // Button input handling
-#include <display.h>    // SH1106 OLED display
-#include <console.h>    // Console UI for the display
-#include <SPI.h>        // SPI communication for display/CAN
-#include <can.h>        // Implementation of CAN bus communication
+#include <modbus.h>         // Modbus communication protocols
+#include <buttons.h>        // Button input handling
+#include <display.h>        // SH1106 OLED display
+#include <console.h>        // Console UI for the display
+#include <SPI.h>            // SPI communication for display/CAN
+#include <can.h>            // Implementation of CAN bus communication
+#include <wifi.h>           // Implement basic WiFi connection
+// #include <mqtt_client.h>    // Implement mqtt client 
+#include <config.h>         // Define required variables for device ID, mqtt connection 
+
 
 void setup() {
     Serial.begin(115200);   // Initialize serial communication for debugging
@@ -54,8 +58,11 @@ void setup() {
     drawBitmap(0, 0, LOGO_WIDTH, LOGO_HEIGHT, eIOT_logo); // Render Logo
     delay(1000);
     
+    // Initialize WiFi Connection to the network defined in wifi.cpp
+    setup_wifi();
+
     // Initialize Modbus RTU master/client communication
-    setup_modbus_master(); // This sets up communication with sensors like the SHT20 temp/humidity sensor or other devices
+    setup_modbus_master(); // This sets up communication with the EVSE controller and other devices
     setup_modbus_client();
     setup_can(); // Initialize CAN bus communication
 
