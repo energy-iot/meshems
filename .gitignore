@@ -8,3 +8,5 @@
 # Environment variables
 .env
 include/env_config.h
+.env.example
+include/env_config.h

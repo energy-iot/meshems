@@ -40,6 +40,7 @@
 #include <SPI.h>        // SPI communication for display/CAN
 #include <can.h>        // Implementation of CAN bus communication
 #include <mqtt_client.h> // MQTT client for publishing sensor data
+#include <rs422.h>      // RS422 serial communication
 
 void setup() {
     Serial.begin(115200);   // Initialize serial communication for debugging
@@ -55,17 +56,20 @@ void setup() {
     drawBitmap(0, 0, LOGO_WIDTH, LOGO_HEIGHT, eIOT_logo); // Render Logo
     delay(1000);
     
-    // Initialize Modbus RTU master/client communication
-    setup_modbus_master(); // This sets up communication with sensors like the SHT20 temp/humidity sensor or other devices
-    setup_modbus_client(); // This sets up the Modbus server
-    setup_can(); // Initialize CAN bus communication
+    // Initialize console and display
+    _console.addLine(" EMS Dev Kit Starting...");
+    
+    // Initialize RS422 serial communication
+    setup_rs422();
     
     // Initialize MQTT client if enabled
     setup_mqtt();
-
+    
+    // Initialize buttons
     setup_buttons();
+    
     _console.addLine(" EMS In-service Ready!");
-    _console.addLine("  Push a button?");
+    _console.addLine(" RS422 Monitoring Active");
 #if ENABLE_MQTT
     _console.addLine(" MQTT publishing enabled");
 #else
@@ -77,19 +81,22 @@ void setup() {
  * @brief Main program loop that runs continuously
  * 
  * Handles periodic tasks and polling:
- * - Check button inputs
  * - Update display
- * - Process CAN bus messages
- * - Handle Modbus master polling
- * - Handle Modbus client requests
+ * - Process RS422 serial data
  * - Maintain MQTT connection and publish data (if enabled)
- * 
+ * - Check button inputs
  */
 void loop() {
-    loop_buttons();
-    loop_modbus_master();
-    loop_modbus_client();
+    // Update the display
     loop_display();
-    loop_can();
-    loop_mqtt(); // Will do nothing if MQTT is disabled
+    
+    // Process RS422 data first to ensure we don't miss any incoming data
+    loop_rs422();
+    
+    
+    // Handle MQTT if enabled
+    loop_mqtt();
+    
+    // Process button inputs
+    loop_buttons();
 }

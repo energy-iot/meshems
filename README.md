@@ -48,6 +48,7 @@ If your MQTT broker doesn't require authentication, simply leave the `MQTT_USERN
 ## Features
 This development kit supports multiple peripherals using the Arduino framework:
 - RS-485 MODBUS RTU communication
+- RS-422 serial communication
 - CANBUS V2.0 interface via SPI
 - Input buttons (using voltage divider array on analog GPIO)
 - 1.3in OLED Dispay over SPI (SH1106)
@@ -74,6 +75,13 @@ This development kit supports multiple peripherals using the Arduino framework:
 - Supports baud rates up to 115200 bps
 - **Operating voltage:** 5V (level-shifted from ESP32-S3 at 3.3V)
 - **Module Datasheet:** [RS-485 Transceiver Datasheet](https://www.analog.com/media/en/technical-documentation/data-sheets/MAX1487-MAX491.pdf)
+
+### QYF-998 RS422 to TTL Serial Module
+- RS422 interface for serial communication
+- Supports full-duplex communication
+- 4-pin connection (TX+, TX-, RX+, RX-)
+- Supports baud rates up to 115200 bps
+- **Operating voltage:** 3.3V-5V (compatible with ESP32-S3 at 3.3V)
 
 ### MCP2515 Breakout - CANBUS V2.0 Interface
 - CAN 2.0B compliant controller and transceiver

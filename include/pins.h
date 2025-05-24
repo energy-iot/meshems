@@ -51,3 +51,10 @@
 #define CAN0_SI     41  //SPI MOSI
 #define CAN0_SCK    8   //SPI clock
 #define CAN0_INT    17  //Message interrupt output
+
+// ==================== RS422 INTERFACE ==================
+#define RS422_RX_1     21   //RX here maps to RS422 QYF-998 module's silk screen "RXD"
+#define RS422_TX_1     47  //RX here maps to RS422 QYF-998 module's silk screen "TXD"
+
+//#define RS422_RX_1     47   //RX here maps to RS422 QYF-998 module's silk screen "RXD"
+//#define RS422_TX_1     21  //RX here maps to RS422 QYF-998 module's silk screen "TXD"
