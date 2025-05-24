@@ -1,8 +1,6 @@
 #include <modbus_evse.h>
 #include <TimeLib.h>
 
-#define EVSE_POLL_INTERVAL 5000 // 5 seconds
-
 Modbus_EVSE::Modbus_EVSE() {
     // Initialize all register cache variables to 0
     // Configuration registers (R/W) - Register IDs 86-139

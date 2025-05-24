@@ -197,6 +197,18 @@ void drawFrame_NetworkInfo(String ssid, String ip_addr, String mac_addr, String 
   ui.render();
 }
 
+void drawFrame_FiveLines(String one, String two, String three, String four, String five) {
+  ui.getDisplay()->clear();
+  ui.getDisplay()->setTextAlignment(TEXT_ALIGN_LEFT);
+  ui.getDisplay()->setFont(ArialMT_Plain_10);  
+  ui.getDisplay()->drawStringMaxWidth(0, 0, 128, one);  
+  ui.getDisplay()->drawStringMaxWidth(0, 10, 128, two);  
+  ui.getDisplay()->drawStringMaxWidth(0, 20, 128, three);  
+  ui.getDisplay()->drawStringMaxWidth(0, 30, 128, four);  
+  ui.getDisplay()->drawStringMaxWidth(0, 40, 128, five);  
+  ui.render();
+}
+
 void drawFrame_SixLines(String one, String two, String three, String four, String five, String six) {
   ui.getDisplay()->clear();
   ui.getDisplay()->setTextAlignment(TEXT_ALIGN_LEFT);

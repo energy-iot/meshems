@@ -117,9 +117,10 @@ Modbus_EVSE evse;
   * Main polling loop for Modbus communication
   */
  void loop_modbus_master() {
-     if (millis() - lastMillis > POLL_INTERVAL) {
-         Serial.println("INFO - Poll Devices");
-         Serial.println("INFO - No other devices to poll at this time");
+     
+  if (millis() - lastMillis > POLL_INTERVAL) {
+         // Serial.println("INFO - Poll Devices");
+         //Serial.println("INFO - No other devices to poll at this time");
          lastMillis = millis();
      }
      

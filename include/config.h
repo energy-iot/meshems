@@ -17,12 +17,12 @@
 
 // MQTT Communication Configuration
 #define MQTT_TOPIC              "evse"                      //< Base MQTT topic for publishing
-#define MQTT_PUBLISH_INTERVAL   30000                       //< MQTT publish interval in milliseconds (30 seconds)
+#define MQTT_PUBLISH_INTERVAL   3000                       //< MQTT publish interval in milliseconds (30 seconds)
 
 // MQTT Broker Settings
-#define MQTT_SERVER             "public.cloud.shiftr.io"    //< MQTT broker hostname
-#define MQTT_USER               "public"                    //< MQTT broker username
-#define MQTT_PW                 "public"                    //< MQTT broker password
+#define MQTT_SERVER             "192.168.94.177"    //< MQTT broker hostname
+#define MQTT_USER               "mqttuser"                    //< MQTT broker username
+#define MQTT_PW                 "sunspec2025"                    //< MQTT broker password
 
 /**
  * @brief Generate a unique device ID based on WiFi MAC address

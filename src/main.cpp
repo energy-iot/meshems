@@ -40,7 +40,7 @@
 #include <SPI.h>            // SPI communication for display/CAN
 #include <can.h>            // Implementation of CAN bus communication
 #include <wifi.h>           // Implement basic WiFi connection
-// #include <mqtt_client.h>    // Implement mqtt client 
+#include <mqtt_client.h>    // Implement mqtt client
 #include <config.h>         // Define required variables for device ID, mqtt connection 
 
 
@@ -50,6 +50,7 @@ void setup() {
     delay(3000);
 
     SPI.begin();        // Initialize SPI bus for display only
+
     setup_display();    // Initialize and configure the OLED display
     
     // Display startup splash screen (Rick image)
@@ -58,19 +59,19 @@ void setup() {
     drawBitmap(0, 0, LOGO_WIDTH, LOGO_HEIGHT, eIOT_logo); // Render Logo
     delay(1000);
     
-    // Initialize WiFi Connection to the network defined in wifi.cpp
-    setup_wifi();
+    setup_wifi();           // Initialize WiFi Connection to the network defined in wifi.cpp
+    setup_mqtt_client();    // Initialize MQTT Connection to the network
 
     // Initialize Modbus RTU master/client communication
     setup_modbus_master(); // This sets up communication with the EVSE controller and other devices
     setup_modbus_client();
-    setup_can(); // Initialize CAN bus communication
+    //setup_can(); // Initialize CAN bus communication
 
     setup_buttons();
     _console.addLine(" EMS In-service Ready!");
     _console.addLine("  Check MQTT @");
-    _console.addLine("  test.mosquitto.org");
-    _console.addLine("  filter EMS/#");
+    _console.addLine("  public.cloud.shiftr.io");
+    _console.addLine("  filter evse/#");
     _console.addLine("  Push a button?");
 
 }
@@ -86,10 +87,18 @@ void setup() {
  * - Handle Modbus client requests
  * 
  */
+
+ unsigned long mqttlastMillis = 0;
+
 void loop() {
     loop_buttons();
     loop_modbus_master();
     loop_modbus_client();
+    
+    if (millis() - mqttlastMillis > MQTT_PUBLISH_INTERVAL) {
+        mqttlastMillis = millis();
+        loop_mqtt();
+    }
     loop_display();
-    loop_can();
+    //loop_can();
 }
