@@ -74,33 +74,79 @@ void update_sunspec_from_solark() {
     uint16_t common_offset = 2;
     uint16_t inverter_offset = common_offset + 66 + 2;  // Common model + 2 for next model header
     
-    // Set AC wiring type (split phase for typical residential)
-    holdingRegisters[inverter_offset + INV_AC_TYPE] = 1;  // Split phase
-    
-    // Set operating state
-    holdingRegisters[inverter_offset + INV_OPERATING_STATE] = solark.getInverterPower() > 0 ? 1 : 0;  // 0=Off, 1=On
-    
-    // Set inverter state
-    uint16_t invState = 0;  // OFF
-    if (solark.getInverterPower() > 0) {
-        if (solark.getInverterPower() < 100) {
-            invState = 7;  // STANDBY
-        } else {
-            invState = 3;  // RUNNING
-        }
+    // Set AC wiring type based on Sol-Ark register 286 (Grid Type)
+    // Sol-Ark Grid Type: 0x00=Single-phase, 0x01=Split-phase, 0x02=Three-phase Wye
+    // SunSpec INV_AC_TYPE (enum ACType): 0=Unknown, 1=Split Phase, 2=Single Phase, 3=Three Phase Wye
+    uint8_t solark_grid_type = solark.getGridType();
+    uint16_t sunspec_ac_type = 0; // Default to Unknown
+    switch (solark_grid_type) {
+        case 0x00: // Single-phase
+            sunspec_ac_type = 2; // Single Phase
+            break;
+        case 0x01: // Split-phase
+            sunspec_ac_type = 1; // Split Phase
+            break;
+        case 0x02: // Three-phase Wye
+            sunspec_ac_type = 3; // Three Phase Wye
+            break;
+        default:
+            sunspec_ac_type = 0; // Unknown
+            break;
     }
+    holdingRegisters[inverter_offset + INV_AC_TYPE] = sunspec_ac_type;
+    
+    // Set operating state based on Sol-Ark inverter status (register 59)
+    uint8_t solarkStatus = solark.getInverterStatus();
+    holdingRegisters[inverter_offset + INV_OPERATING_STATE] = (solarkStatus == 2) ? 1 : 0;  // 0=Off, 1=On (only "Normal" is considered "On")
+    
+    // Set inverter state based on Sol-Ark status mapping
+    // Sol-Ark States: 1=Self-test, 2=Normal, 3=Alarm, 4=Fault
+    // SunSpec States: 0=OFF, 1=SLEEPING, 2=STARTING, 3=RUNNING, 4=THROTTLED, 5=SHUTTING_DOWN, 6=FAULT, 7=STANDBY
+    uint16_t invState = 0;  // Default to OFF
+    
+    switch (solarkStatus) {
+        case 1:  // Self-test
+            invState = 2;  // STARTING
+            break;
+        case 2:  // Normal
+            if (solark.getInverterPower() > 100) {
+                invState = 3;  // RUNNING
+            } else {
+                invState = 7;  // STANDBY
+            }
+            break;
+        case 3:  // Alarm
+            invState = 4;  // THROTTLED (closest match for alarm state)
+            break;
+        case 4:  // Fault
+            invState = 6;  // FAULT
+            break;
+        default:
+            invState = 0;  // OFF
+            break;
+    }
+    
     holdingRegisters[inverter_offset + INV_STATUS] = invState;
     
     // Set grid connection state
-    holdingRegisters[inverter_offset + INV_GRID_CONNECTION] = solark.isGridConnected() ? 1 : 0;
+    // Set grid connection state based on Sol-Ark register 194 (Grid side relay status)
+    // Sol-Ark register 194: 1 = Open (Disconnected), 2 = Closed (Connected)
+    // SunSpec INV_GRID_CONNECTION (enum Conn): 0 = Disconnected, 1 = Connected
+    uint8_t raw_grid_relay_status = solark.getGridRelayStatus();
+    holdingRegisters[inverter_offset + INV_GRID_CONNECTION] = (raw_grid_relay_status == 2) ? 1 : 0;
     
     // Set alarm bitfield (not implemented in this example)
     holdingRegisters[inverter_offset + INV_ALARM] = 0;
     holdingRegisters[inverter_offset + INV_ALARM + 1] = 0;
     
     // Set DER operational characteristics
+    // INV_DER_MODE (DERCtl bitmask): Bit 0 = GridFollowing (0x0001), Bit 1 = GridForming (0x0002)
     uint32_t derMode = 0;
-    derMode |= 0x0001;  // Grid following
+    if (raw_grid_relay_status == 2) { // Sol-Ark relay closed (Connected to grid)
+        derMode |= 0x0001; // Set Grid Following
+    } else { // Sol-Ark relay open (Disconnected from grid)
+        derMode |= 0x0002; // Set Grid Forming
+    }
     holdingRegisters[inverter_offset + INV_DER_MODE] = (derMode >> 16) & 0xFFFF;
     holdingRegisters[inverter_offset + INV_DER_MODE + 1] = derMode & 0xFFFF;
     
@@ -164,25 +210,50 @@ void update_sunspec_from_solark() {
     holdingRegisters[storage_offset + STORAGE_SF_ENERGY] = SCALE_FACTOR_0_001;  // Energy scale factor: -3 (0.001)
     holdingRegisters[storage_offset + STORAGE_SF_PERCENT] = SCALE_FACTOR_0_1;   // Percentage scale factor: -1 (0.1)
     
-    // Update storage model with Sol-Ark battery data
-    // TODO: The Sol-Ark register for battery energy rating is not known.
-    // This is an estimated value and should be replaced with the actual value from Sol-Ark when available.
-    uint16_t batteryEnergyRating = 5000;  // Example: 5kWh battery
+    // Update storage model with Sol-Ark battery data using actual registers
+    // Calculate battery energy rating from capacity (Ah) and nominal voltage
+    float batteryCapacityAh = solark.getBatteryCapacity();
+    float nominalVoltage = 51.2f;  // Typical 48V LFP system, could be made configurable
+
+    uint16_t batteryEnergyRating = (batteryCapacityAh * nominalVoltage);  // Wh = Ah * V
     holdingRegisters[storage_offset + STORAGE_ENERGY_RATING] = batteryEnergyRating;
     
     // Energy available (WHAvail = WHRtg * SoC * SoH)
-    uint16_t batteryEnergyAvailable = batteryEnergyRating * solark.getBatterySOC() / 100.0f;
+    // Using actual SOC from Sol-Ark and assuming 100% SoH if not available from BMS
+    float soc = solark.getBatterySOC() / 100.0f;
+    float soh = 1.0f;  // Default to 100% if BMS data not available
+    
+    // Try to get BMS SOC if available (for lithium batteries)
+    float bmsSOC = solark.getBMSRealTimeSOC();
+    if (bmsSOC > 0 && bmsSOC <= 100) {
+        soc = bmsSOC / 100.0f;
+    }
+    
+    uint16_t batteryEnergyAvailable = batteryEnergyRating * soc * soh;
     holdingRegisters[storage_offset + STORAGE_ENERGY_AVAILABLE] = batteryEnergyAvailable;
     
-    // State of charge (%)
-    holdingRegisters[storage_offset + STORAGE_SOC] = solark.getBatterySOC() * 10;  // Scale by 10 for 0.1 scale factor
+    // State of charge (%) - use BMS SOC if available, otherwise use Sol-Ark SOC
+    float socPercent = solark.getBatterySOC();
+    if (bmsSOC > 0 && bmsSOC <= 100) {
+        socPercent = bmsSOC;
+    }
+    holdingRegisters[storage_offset + STORAGE_SOC] = socPercent * 10;  // Scale by 10 for 0.1 scale factor
     
-    // TODO: The Sol-Ark register for battery state of health is not known.
-    // Using a default value of 100% for now. This should be replaced with the actual value when available.
-    holdingRegisters[storage_offset + STORAGE_SOH] = 1000;  // 100.0% (scaled by 10)
+    // State of health (%) - default to 100% since Sol-Ark doesn't provide this directly
+    // In a real implementation, this could be calculated from battery degradation over time
+    //holdingRegisters[storage_offset + STORAGE_SOH] = 1000;  // 100.0% (scaled by 10)
     
-    // Storage status
+    // Storage status - determine from BMS warnings/faults and battery state
     uint16_t storageStatus = 0;  // 0 = OK
+    uint16_t bmsWarning = solark.getBMSWarning();
+    uint16_t bmsFault = solark.getBMSFault();
+    
+    if (bmsFault > 0) {
+        storageStatus = 2;  // Error
+    } else if (bmsWarning > 0) {
+        storageStatus = 1;  // Warning
+    }
+    
     holdingRegisters[storage_offset + STORAGE_STATUS] = storageStatus;
     
     //SunSpec Ending Block

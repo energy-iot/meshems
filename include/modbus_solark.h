@@ -34,6 +34,9 @@ struct SolArkRegisterMap {
     static const uint16_t SMART_LOAD_POWER = 166;
     static const uint16_t GRID_POWER = 169;
 
+    // Inverter status register
+    static const uint16_t INVERTER_STATUS = 59;             // Inverter Status: 1=Self-test, 2=Normal, 3=Alarm, 4=Fault
+    
     // Inverter temperature registers
     static const uint16_t DCDC_XFRMR_TEMP = 90;
     static const uint16_t IGBT_HEATSINK_TEMP = 91;
@@ -58,6 +61,30 @@ struct SolArkRegisterMap {
     static const uint16_t INVERTER_FREQUENCY = 193;
     static const uint16_t GRID_RELAY_STATUS = 194;
     static const uint16_t GENERATOR_RELAY_STATUS = 195;
+    
+    // Battery configuration and capacity registers (for SunSpec model 713)
+    static const uint16_t BATTERY_CAPACITY = 204;           // Battery capacity in Ah
+    static const uint16_t CORRECTED_BATTERY_CAPACITY = 107; // Corrected battery capacity in Ah
+    static const uint16_t BATTERY_EMPTY_VOLTAGE = 205;      // Battery empty voltage (0% SOC)
+    static const uint16_t BATTERY_SHUTDOWN_VOLTAGE = 220;   // Battery shutdown voltage
+    static const uint16_t BATTERY_RESTART_VOLTAGE = 221;    // Battery restart voltage
+    static const uint16_t BATTERY_LOW_VOLTAGE = 222;        // Battery low voltage
+    static const uint16_t BATTERY_SHUTDOWN_PERCENT = 217;   // Battery shutdown percentage
+    static const uint16_t BATTERY_RESTART_PERCENT = 218;    // Battery restart percentage
+    static const uint16_t BATTERY_LOW_PERCENT = 219;        // Battery low percentage
+    
+    // Battery BMS registers (for lithium batteries)
+    static const uint16_t BMS_CHARGING_VOLTAGE = 312;       // BMS charging voltage
+    static const uint16_t BMS_DISCHARGE_VOLTAGE = 313;      // BMS discharge voltage
+    static const uint16_t BMS_CHARGING_CURRENT_LIMIT = 314; // BMS charging current limit
+    static const uint16_t BMS_DISCHARGE_CURRENT_LIMIT = 315; // BMS discharge current limit
+    static const uint16_t BMS_REAL_TIME_SOC = 316;          // BMS real-time SOC
+    static const uint16_t BMS_REAL_TIME_VOLTAGE = 317;      // BMS real-time voltage
+    static const uint16_t BMS_REAL_TIME_CURRENT = 318;      // BMS real-time current
+    static const uint16_t BMS_REAL_TIME_TEMP = 319;         // BMS real-time temperature
+    static const uint16_t BMS_WARNING = 322;                // BMS lithium battery warning
+    static const uint16_t BMS_FAULT = 323;                  // BMS lithium battery fault
+    static const uint16_t GRID_TYPE = 286;                  // Grid Type (0=Single, 1=Split, 2=Three-phase)
 };
 
 // Scaling factors for Sol-Ark values
@@ -125,6 +152,7 @@ class Modbus_SolArkLV : public ModbusMaster {
         float getInverterCurrentL1();
         float getInverterCurrentL2();
         float getInverterFrequency();
+        uint8_t getInverterStatus();
         
         // Load Status Getters
         float getLoadCurrentL1();
@@ -133,6 +161,30 @@ class Modbus_SolArkLV : public ModbusMaster {
         
         // Generator Status Getters
         uint8_t getGeneratorRelayStatus();
+        uint8_t getGridType(); // Getter for Grid Type (Reg 286)
+        
+        // Battery Configuration Getters (for SunSpec model 713)
+        float getBatteryCapacity();
+        float getCorrectedBatteryCapacity();
+        float getBatteryEmptyVoltage();
+        float getBatteryShutdownVoltage();
+        float getBatteryRestartVoltage();
+        float getBatteryLowVoltage();
+        uint8_t getBatteryShutdownPercent();
+        uint8_t getBatteryRestartPercent();
+        uint8_t getBatteryLowPercent();
+        
+        // BMS Getters (for lithium batteries)
+        float getBMSChargingVoltage();
+        float getBMSDischargeVoltage();
+        float getBMSChargingCurrentLimit();
+        float getBMSDischargeCurrentLimit();
+        float getBMSRealTimeSOC();
+        float getBMSRealTimeVoltage();
+        float getBMSRealTimeCurrent();
+        float getBMSRealTimeTemp();
+        uint16_t getBMSWarning();
+        uint16_t getBMSFault();
         
         // Convenience Methods
         bool isGridConnected();
@@ -156,57 +208,82 @@ class Modbus_SolArkLV : public ModbusMaster {
         unsigned long timestamp_last_failure;
         
         // Diagnostic variables
-        float igbt_temp = 0;
-        float dcdc_xfrmr_temp = 0;
+        float igbt_temp = 0;            // Register 91: IGBT Heat Sink temperature
+        float dcdc_xfrmr_temp = 0;      // Register 90: DC/DC Transformer temperature
 
         // Battery variables
-        float battery_power;       // Register 190
-        float battery_current;     // Register 191
-        float battery_voltage;     // Register 183
-        float battery_soc;         // Register 184
-        float battery_temperature; // Register 182
+        float battery_power;            // Register 190: Battery output power
+        float battery_current;          // Register 191: Battery output current
+        float battery_voltage;          // Register 183: Battery voltage
+        float battery_soc;              // Register 184: Battery SOC
+        float battery_temperature;      // Register 182: Battery temperature
         
         // Energy counters
-        float battery_charge_energy;    // Register 70
-        float battery_discharge_energy; // Register 71
-        float grid_buy_energy;          // Register 76
-        float grid_sell_energy;         // Register 77
-        float load_energy;              // Register 84
-        float pv_energy;                // Register 108
+        float battery_charge_energy;    // Register 70: Hybrid Day Batt Charge Power
+        float battery_discharge_energy; // Register 71: Hybrid Day Batt Discharge Power
+        float grid_buy_energy;          // Register 76: Hybrid Day Grid Buy Power
+        float grid_sell_energy;         // Register 77: Hybrid Day Grid Sell Power
+        float load_energy;              // Register 84: Hybrid SG: Day Load Power
+        float pv_energy;                // Register 108: Daily PV Power (Wh)
         
         // Power variables
-        float grid_power;           // Register 169
-        float inverter_output_power; // Register 175
-        float load_power_l1;         // Register 176
-        float load_power_l2;         // Register 177
-        float load_power_total;      // Register 178
-        float pv1_power;             // Register 186
-        float pv2_power;             // Register 187
-        float pv_power_total;        // Calculated
-        float smart_load_power;      // Register 166
+        float grid_power;               // Register 169: Total power of grid side L1L2
+        float inverter_output_power;    // Register 175: Inverter output Total power
+        float load_power_l1;            // Register 176: Load side L1 power
+        float load_power_l2;            // Register 177: Load side L2 power
+        float load_power_total;         // Register 178: Load side Total power
+        float pv1_power;                // Register 186: PV1 input power
+        float pv2_power;                // Register 187: PV2 input power
+        float pv_power_total;           // Calculated: Total PV input power (PV1 + PV2)
+        float smart_load_power;         // Register 166: Gen or AC Coupled power P
         
         // Grid variables
-        float grid_voltage;     // Register 152
-        float grid_current_l1;  // Register 160
-        float grid_current_l2;  // Register 161
+        float grid_voltage;             // Register 152: Grid side voltage L1-L2
+        float grid_current_l1;          // Register 160: Grid side current L1
+        float grid_current_l2;          // Register 161: Grid side current L2
         
-        float grid_CT_current_l1; // 162
-        float grid_CT_current_l2; // 163
+        float grid_CT_current_l1;       // Register 162: Grid external Limiter current L1
+        float grid_CT_current_l2;       // Register 163: Grid external Limiter current L2
 
-        float grid_frequency;   // Register 79
-        uint8_t grid_relay_status; // Register 194
+        float grid_frequency;           // Register 79: Grid frequency
+        uint8_t grid_relay_status;      // Register 194: Grid side relay status
         
         // Inverter variables
-        float inverter_voltage;     // Register 156
-        float inverter_current_l1;  // Register 164
-        float inverter_current_l2;  // Register 165
-        float inverter_frequency;   // Register 193
+        float inverter_voltage;         // Register 156: Inverter output voltage L1-L2
+        float inverter_current_l1;      // Register 164: Inverter output current L1
+        float inverter_current_l2;      // Register 165: Inverter output current L2
+        float inverter_frequency;       // Register 193: Inverter output frequency
+        uint8_t inverter_status;        // Register 59: Inverter Status
         
         // Load variables
-        float load_current_l1;   // Register 179
-        float load_current_l2;   // Register 180
-        float load_frequency;    // Register 192
+        float load_current_l1;          // Register 179: Load current L1
+        float load_current_l2;          // Register 180: Load current L2
+        float load_frequency;           // Register 192: Load frequency
         
         // Generator variables
-        uint8_t generator_relay_status; // Register 195
+        uint8_t generator_relay_status; // Register 195: Generator side relay status
+        uint8_t grid_type;              // Register 286: Grid Type
+        
+        // Battery configuration variables (for SunSpec model 713)
+        float battery_capacity;           // Register 204: Batt Capacity
+        float corrected_battery_capacity; // Register 107: Corrected Batt Capacity
+        float battery_empty_voltage;      // Register 205: Batt Empty V
+        float battery_shutdown_voltage;   // Register 220: Battery Shut Down V
+        float battery_restart_voltage;    // Register 221: Battery Restart V
+        float battery_low_voltage;        // Register 222: Battery Low Batt V
+        uint8_t battery_shutdown_percent; // Register 217: Battery Shut Down %
+        uint8_t battery_restart_percent;  // Register 218: Battery Restart %
+        uint8_t battery_low_percent;      // Register 219: Battery Low Batt %
+        
+        // BMS variables (for lithium batteries)
+        float bms_charging_voltage;       // Register 312: Charging voltage
+        float bms_discharge_voltage;      // Register 313: Discharge voltage
+        float bms_charging_current_limit; // Register 314: Charging current limit
+        float bms_discharge_current_limit; // Register 315: Discharge current limit
+        float bms_real_time_soc;          // Register 316: Real time SOC
+        float bms_real_time_voltage;      // Register 317: Real time voltage
+        float bms_real_time_current;      // Register 318: Real time current
+        float bms_real_time_temp;         // Register 319: Real time temp
+        uint16_t bms_warning;             // Register 322: BMS Lithium battery warning
+        uint16_t bms_fault;               // Register 323: BMS Lithium battery fault
 };

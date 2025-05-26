@@ -42,6 +42,29 @@ Modbus_SolArkLV::Modbus_SolArkLV() {
     battery_voltage = 0;
     battery_soc = 0;
     
+    // Battery configuration variables (for SunSpec model 713)
+    battery_capacity = 0;
+    corrected_battery_capacity = 0;
+    battery_empty_voltage = 0;
+    battery_shutdown_voltage = 0;
+    battery_restart_voltage = 0;
+    battery_low_voltage = 0;
+    battery_shutdown_percent = 0;
+    battery_restart_percent = 0;
+    battery_low_percent = 0;
+    
+    // BMS variables (for lithium batteries)
+    bms_charging_voltage = 0;
+    bms_discharge_voltage = 0;
+    bms_charging_current_limit = 0;
+    bms_discharge_current_limit = 0;
+    bms_real_time_soc = 0;
+    bms_real_time_voltage = 0;
+    bms_real_time_current = 0;
+    bms_real_time_temp = 0;
+    bms_warning = 0;
+    bms_fault = 0;
+    
     // Grid variables
     grid_voltage = 0;
     grid_current_l1 = 0;
@@ -52,10 +75,12 @@ Modbus_SolArkLV::Modbus_SolArkLV() {
     inverter_voltage = 0;
     inverter_current_l1 = 0;
     inverter_current_l2 = 0;
+    inverter_status = 0;
     
     // Load variables
     load_current_l1 = 0;
     load_current_l2 = 0;
+    grid_type = 0; // Initialize grid_type
 }
 
 uint8_t Modbus_SolArkLV::get_modbus_address() {
@@ -93,6 +118,15 @@ uint8_t Modbus_SolArkLV::poll() {
         Serial.println("INFO - SolArk: PV energy poll success");
     } else {
         Serial.println("INFO - SolArk: PV energy poll FAIL");
+    }
+    
+    // Poll inverter status - register 59
+    result = readHoldingRegisters(SolArkRegisterMap::INVERTER_STATUS, 1);
+    if (result == ku8MBSuccess) {
+        inverter_status = getResponseBuffer(0); // Register 59
+        Serial.println("INFO - SolArk: Inverter status poll success");
+    } else {
+        Serial.println("INFO - SolArk: Inverter status poll FAIL");
     }
     
     // Poll temperature data - registers 90-91
@@ -184,6 +218,75 @@ uint8_t Modbus_SolArkLV::poll() {
         Serial.println("INFO - SolArk: Battery status poll success");
     } else {
         Serial.println("INFO - SolArk: Battery status poll FAIL");
+    }
+    
+    // Poll battery configuration data - registers 204, 107, 205, 217-222
+    result = readHoldingRegisters(SolArkRegisterMap::BATTERY_CAPACITY, 1);
+    if (result == ku8MBSuccess) {
+        battery_capacity = getResponseBuffer(0); // Register 204 - Battery capacity in Ah
+        Serial.println("INFO - SolArk: Battery capacity poll success");
+    } else {
+        Serial.println("INFO - SolArk: Battery capacity poll FAIL");
+    }
+    
+    result = readHoldingRegisters(SolArkRegisterMap::CORRECTED_BATTERY_CAPACITY, 1);
+    if (result == ku8MBSuccess) {
+        corrected_battery_capacity = getResponseBuffer(0); // Register 107 - Corrected battery capacity in Ah
+        Serial.println("INFO - SolArk: Corrected battery capacity poll success");
+    } else {
+        Serial.println("INFO - SolArk: Corrected battery capacity poll FAIL");
+    }
+    
+    // Poll battery voltage thresholds - registers 205, 220-222
+    result = readHoldingRegisters(SolArkRegisterMap::BATTERY_EMPTY_VOLTAGE, 1);
+    if (result == ku8MBSuccess) {
+        battery_empty_voltage = getResponseBuffer(0) / SolArkScalingFactors::CURRENT; // Register 205 - scaled like voltage
+        Serial.println("INFO - SolArk: Battery empty voltage poll success");
+    }
+    
+    result = readHoldingRegisters(SolArkRegisterMap::BATTERY_SHUTDOWN_VOLTAGE, 3);
+    if (result == ku8MBSuccess) {
+        battery_shutdown_voltage = getResponseBuffer(0) / SolArkScalingFactors::CURRENT; // Register 220
+        battery_restart_voltage = getResponseBuffer(1) / SolArkScalingFactors::CURRENT;  // Register 221
+        battery_low_voltage = getResponseBuffer(2) / SolArkScalingFactors::CURRENT;      // Register 222
+        Serial.println("INFO - SolArk: Battery voltage thresholds poll success");
+    }
+    
+    // Poll battery percentage thresholds - registers 217-219
+    result = readHoldingRegisters(SolArkRegisterMap::BATTERY_SHUTDOWN_PERCENT, 3);
+    if (result == ku8MBSuccess) {
+        battery_shutdown_percent = getResponseBuffer(0); // Register 217
+        battery_restart_percent = getResponseBuffer(1);  // Register 218
+        battery_low_percent = getResponseBuffer(2);      // Register 219
+        Serial.println("INFO - SolArk: Battery percentage thresholds poll success");
+    }
+    
+    // Poll BMS data for lithium batteries - registers 312-323
+    result = readHoldingRegisters(SolArkRegisterMap::BMS_CHARGING_VOLTAGE, 12);
+    if (result == ku8MBSuccess) {
+        bms_charging_voltage = getResponseBuffer(0) / SolArkScalingFactors::CURRENT;       // Register 312
+        bms_discharge_voltage = getResponseBuffer(1) / SolArkScalingFactors::CURRENT;      // Register 313
+        bms_charging_current_limit = getResponseBuffer(2);                                 // Register 314
+        bms_discharge_current_limit = getResponseBuffer(3);                                // Register 315
+        bms_real_time_soc = getResponseBuffer(4);                                          // Register 316
+        bms_real_time_voltage = getResponseBuffer(5) / SolArkScalingFactors::CURRENT;     // Register 317
+        bms_real_time_current = getResponseBuffer(6);                                      // Register 318
+        bms_real_time_temp = (getResponseBuffer(7) - SolArkScalingFactors::TEMPERATURE_OFFSET) / 
+                            SolArkScalingFactors::TEMPERATURE_SCALE;                       // Register 319
+        bms_warning = getResponseBuffer(10);                                               // Register 322
+        bms_fault = getResponseBuffer(11);                                                 // Register 323
+        Serial.println("INFO - SolArk: BMS data poll success");
+    } else {
+        Serial.println("INFO - SolArk: BMS data poll FAIL");
+    }
+
+    // Poll Grid Type - register 286
+    result = readHoldingRegisters(SolArkRegisterMap::GRID_TYPE, 1);
+    if (result == ku8MBSuccess) {
+        grid_type = getResponseBuffer(0); // Register 286
+        Serial.println("INFO - SolArk: Grid Type poll success");
+    } else {
+        Serial.println("INFO - SolArk: Grid Type poll FAIL");
     }
     
     // Report timestamp of successful poll
@@ -362,6 +465,12 @@ void Modbus_SolArkLV::route_poll_response(uint16_t reg, uint16_t response) {
             Serial.printf("SolArk: Generator relay status: %d\n", generator_relay_status);
             break;
             
+        // Inverter status register (59)
+        case SolArkRegisterMap::INVERTER_STATUS:
+            inverter_status = response;
+            Serial.printf("SolArk: Inverter status: %d (1=Self-test, 2=Normal, 3=Alarm, 4=Fault)\n", inverter_status);
+            break;
+            
         // Temperature registers (90-91)
         case SolArkRegisterMap::DCDC_XFRMR_TEMP:
             dcdc_xfrmr_temp = (response - SolArkScalingFactors::TEMPERATURE_OFFSET) / SolArkScalingFactors::TEMPERATURE_SCALE;
@@ -386,6 +495,15 @@ float Modbus_SolArkLV::getIGBTTemp() {
 
 float Modbus_SolArkLV::getDCDCTemp() {
     return dcdc_xfrmr_temp;
+}
+
+// Generator Status Getters
+uint8_t Modbus_SolArkLV::getGeneratorRelayStatus() {
+    return generator_relay_status;
+}
+
+uint8_t Modbus_SolArkLV::getGridType() {
+    return grid_type;
 }
 
 // Battery Status Getters
@@ -515,6 +633,10 @@ float Modbus_SolArkLV::getInverterFrequency() {
     return inverter_frequency;
 }
 
+uint8_t Modbus_SolArkLV::getInverterStatus() {
+    return inverter_status;
+}
+
 // Load Status Getters
 float Modbus_SolArkLV::getLoadCurrentL1() {
     return load_current_l1;
@@ -556,4 +678,82 @@ bool Modbus_SolArkLV::isSellingToGrid() {
 
 bool Modbus_SolArkLV::isBuyingFromGrid() {
     return grid_power > 0;
+}
+
+// Battery Configuration Getters (for SunSpec model 713)
+float Modbus_SolArkLV::getBatteryCapacity() {
+    return battery_capacity;
+}
+
+float Modbus_SolArkLV::getCorrectedBatteryCapacity() {
+    return corrected_battery_capacity;
+}
+
+float Modbus_SolArkLV::getBatteryEmptyVoltage() {
+    return battery_empty_voltage;
+}
+
+float Modbus_SolArkLV::getBatteryShutdownVoltage() {
+    return battery_shutdown_voltage;
+}
+
+float Modbus_SolArkLV::getBatteryRestartVoltage() {
+    return battery_restart_voltage;
+}
+
+float Modbus_SolArkLV::getBatteryLowVoltage() {
+    return battery_low_voltage;
+}
+
+uint8_t Modbus_SolArkLV::getBatteryShutdownPercent() {
+    return battery_shutdown_percent;
+}
+
+uint8_t Modbus_SolArkLV::getBatteryRestartPercent() {
+    return battery_restart_percent;
+}
+
+uint8_t Modbus_SolArkLV::getBatteryLowPercent() {
+    return battery_low_percent;
+}
+
+// BMS Getters (for lithium batteries)
+float Modbus_SolArkLV::getBMSChargingVoltage() {
+    return bms_charging_voltage;
+}
+
+float Modbus_SolArkLV::getBMSDischargeVoltage() {
+    return bms_discharge_voltage;
+}
+
+float Modbus_SolArkLV::getBMSChargingCurrentLimit() {
+    return bms_charging_current_limit;
+}
+
+float Modbus_SolArkLV::getBMSDischargeCurrentLimit() {
+    return bms_discharge_current_limit;
+}
+
+float Modbus_SolArkLV::getBMSRealTimeSOC() {
+    return bms_real_time_soc;
+}
+
+float Modbus_SolArkLV::getBMSRealTimeVoltage() {
+    return bms_real_time_voltage;
+}
+
+float Modbus_SolArkLV::getBMSRealTimeCurrent() {
+    return bms_real_time_current;
+}
+
+float Modbus_SolArkLV::getBMSRealTimeTemp() {
+    return bms_real_time_temp;
+}
+
+uint16_t Modbus_SolArkLV::getBMSWarning() {
+    return bms_warning;
+}
+
+uint16_t Modbus_SolArkLV::getBMSFault() {
+    return bms_fault;
 }
