@@ -1,15 +1,16 @@
 #pragma once
-#include <ModbusIP_ESP8266.h>
 
-// WiFi credentials - these should be defined in a separate header file in practice
-// #define WIFI_SSID "Eris"
-// #define WIFI_PASSWORD "LimaOscarAlpha28!"
+#include <ModbusMaster.h>
 
-#define WIFI_SSID "Port Labs Members"
-#define WIFI_PASSWORD "lesstalkmorewifi"
+/*
+Watch out for MAX485 DO VS D1 unloaded SERIAL SIDE AFFECTS - SEE TECH DETAILS AT  https://www.analog.com/en/products/max485.html#part-details
+BIAS RESISTORS DETAILED TECH SPECS HERE https://control.com/forums/threads/modbus-standard-termination.20389/
+***** must use 620-150 OHM TERMINATION RESISTOR AT A-B FAR END TERMINATIO TO MINIMIZE REFLECTIONS ******
 
-// #define WIFI_SSID "SSID"
-// #define WIFI_PASSWORD "PASSWORD"
+TESTING WITH 150 OHM RESISTOR ACROSS LAST FURTHEST A-B MODBUS RTU ENDPOINT THIS CAN BE 620 OHM ALTERNATIVELY - FURTHER SCOPE TESTING REQUIRED ON CAT5E VS STP RS485 CBLE 
+*/
 
-void setup_modbus_client();
+void setup_modbus_clients();
+void setup_modbus_client_interface();
 void loop_modbus_client();
+void update();

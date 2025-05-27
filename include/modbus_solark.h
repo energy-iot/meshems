@@ -1,6 +1,6 @@
 #pragma once
 
-#include <modbus_master.h>
+#include <modbus_client.h>
 
 // Register mapping structure for Sol-Ark
 struct SolArkRegisterMap {
@@ -97,6 +97,33 @@ struct SolArkScalingFactors {
     static constexpr float TEMPERATURE_SCALE = 10.0f;
 };
 
+// Enum to identify different logical blocks of Sol-Ark registers
+enum class SolArkBlockType {
+    ENERGY,                     // Registers 70-84
+    PV_ENERGY,                  // Register 108
+    INVERTER_STATUS,            // Register 59
+    TEMPERATURES,               // Registers 90-91
+    GRID_INVERTER_150,          // Registers 150-169 (covers 152, 156, 160-166, 169)
+    POWER_BATTERY_170,          // Registers 170-189 (covers 175-180, 182-184, 186-187)
+    BATTERY_STATUS_190,         // Registers 190-199 (covers 190-195)
+    BATTERY_CAPACITY_204,       // Register 204
+    CORRECTED_BATTERY_CAPACITY_107, // Register 107
+    BATTERY_EMPTY_VOLTAGE_205,  // Register 205
+    BATTERY_VOLTAGE_THRESHOLDS_220, // Registers 220-222
+    BATTERY_PERCENT_THRESHOLDS_217, // Registers 217-219
+    BMS_DATA_312,               // Registers 312-323 (covers 312-319, 322-323)
+    GRID_TYPE_286,              // Register 286
+    DIAGNOSTICS                 // Registers 2-7 (COMM_VERSION, SN_BYTE_01 to SN_BYTE_05)
+};
+
+// Structure to define a block of Modbus registers to read
+struct ModbusReadBlock {
+    SolArkBlockType type;
+    uint16_t start_register;
+    uint16_t num_registers;
+    const char* description; // For logging purposes
+};
+
 class Modbus_SolArkLV : public ModbusMaster {
     public:
         Modbus_SolArkLV();
@@ -104,12 +131,12 @@ class Modbus_SolArkLV : public ModbusMaster {
 
         // Basic setup and polling functions
         uint8_t poll();
-        void route_poll_response(uint16_t reg, uint16_t response);
         uint8_t get_modbus_address();
         void set_modbus_address(uint8_t addr);
-        uint8_t query_register(uint16_t reg);
 
         // Diagnostic Status Getters
+        uint16_t getCommVersion();
+        uint16_t getSerialNumberPart(uint8_t index); // 0-4 for SN_BYTE_01 to SN_BYTE_05
         float getIGBTTemp();
         float getDCDCTemp();
 
@@ -195,6 +222,9 @@ class Modbus_SolArkLV : public ModbusMaster {
         bool isBuyingFromGrid();
 
     private:
+        // Helper method for processing data from a read block
+        void processBlock(const ModbusReadBlock& block);
+
         // Helper method for sign correction
         int16_t correctSignedValue(uint16_t value) {
             if (value > 32767) {
@@ -208,6 +238,8 @@ class Modbus_SolArkLV : public ModbusMaster {
         unsigned long timestamp_last_failure;
         
         // Diagnostic variables
+        uint16_t comm_version_val = 0;  // Register 2: Communication version
+        uint16_t serial_number_parts[5] = {0}; // Registers 3-7: SN_BYTE_01 to SN_BYTE_05
         float igbt_temp = 0;            // Register 91: IGBT Heat Sink temperature
         float dcdc_xfrmr_temp = 0;      // Register 90: DC/DC Transformer temperature
 

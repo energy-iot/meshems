@@ -8,7 +8,8 @@ This implementation allows the EMS-Dev platform to act as a SunSpec-compliant Mo
 
 The implementation follows the SunSpec Alliance specifications and includes:
 - SunSpec Common Model (1) - Basic device information
-- SunSpec Inverter Model (701) - Inverter data
+- SunSpec Inverter Model (701) - AC Photovoltaic Inverter data
+- SunSpec DER Storage Capacity Model (713) - Battery storage information
 
 ## Architecture
 
@@ -26,18 +27,28 @@ The implementation consists of the following components:
 
 The Common Model provides basic information about the device:
 - Manufacturer: "Sol-Ark"
-- Model: "SolArk-LV"
-- Options: "EMS-Dev"
-- Version: "1.0"
-- Serial Number: "DEMO-1"
+- Model: "Sol-Ark-12K-P" (Dynamically read from inverter if possible, otherwise this placeholder)
+- Options: "None" (As per current implementation)
+- Version: Dynamically read from Sol-Ark COMM_VERSION
+- Serial Number: Dynamically read from Sol-Ark SN_BYTE parts
 
-### Inverter Model (701)
+### Inverter Model (701) - AC Photovoltaic Inverter
 
 The Inverter Model provides real-time data from the Sol-Ark inverter:
-- AC measurements (current, voltage, power, frequency, energy)
-- DC measurements (current, voltage, power)
-- Temperature
-- Status information
+- AC measurements (current, voltage, power, frequency, energy, VA, VAR, PF)
+- Operating state, status, and alarm information
+- Grid connection status and DER operational characteristics
+- Temperature (cabinet, transformer, IGBT)
+- Per-phase AC measurements (L1, L2)
+
+### DER Storage Capacity Model (713)
+
+The DER Storage Capacity Model provides information about the connected battery storage:
+- Energy Rating (Wh)
+- Energy Available (Wh)
+- State of Charge (SoC %)
+- State of Health (SoH %) - Currently defaults to 100%
+- Storage Status (OK, Warning, Error) - Based on BMS data
 
 ## Register Map
 
@@ -45,8 +56,10 @@ The SunSpec register map is implemented in the Modbus holding registers:
 
 - Base address: 40000
 - SunSpec ID marker ("SunS"): Registers 40000-40001
-- Common Model (1): Starts at register 40002
-- Inverter Model (701): Starts at register 40069
+- Common Model (1): Starts at register 40002 (Offset 2 from base)
+- Inverter Model (701): Starts at register 40070 (Offset 70 from base)
+- DER Storage Capacity Model (713): Starts at register 40225 (Offset 225 from base)
+- SunSpec End Block: Starts after the last model.
 
 ## Data Mapping
 
@@ -69,7 +82,16 @@ The implementation maps Sol-Ark data to SunSpec registers as follows:
 
 ### Status
 - Inverter status: Derived from inverter power
-- Vendor-specific status: Grid connection, generator connection, battery charging/discharging, grid selling/buying
+- Vendor-specific status: Grid connection, battery charging/discharging status (placed in Alarm Info field of Model 701)
+- DER Mode: Grid Following/Forming based on grid relay status.
+- AC Wiring Type: Dynamically set based on Sol-Ark Grid Type.
+
+### DER Storage Capacity (Model 713)
+- Energy Rating: Calculated from Sol-Ark battery capacity (Ah) and nominal voltage.
+- Energy Available: Calculated from Energy Rating, SoC, and SoH.
+- State of Charge (SoC): Uses Sol-Ark Battery SOC, overridden by BMS Real Time SOC if available.
+- State of Health (SoH): Defaults to 100% as Sol-Ark does not directly provide this.
+- Storage Status: Determined from Sol-Ark BMS Warning and Fault registers.
 
 ## Usage
 
@@ -122,5 +144,6 @@ c.close()
 
 - SunSpec Alliance: https://sunspec.org/
 - pysunspec2 library: https://github.com/sunspec/pysunspec2
-- SunSpec Model 701: https://github.com/sunspec/models/tree/dde49cc598def3f179c8db0ec15d4281cb0af3aa
+- SunSpec Model 701: https://sunspec.org/wp-content/uploads/SunSpec-Inverter-Models-7xx-20200707.xlsx
+- SunSpec Model 713: https://sunspec.org/wp-content/uploads/SunSpec-DER-Storage-Models-7xx-20200707.xlsx
 - Modbus-ESP8266 library: https://github.com/emelianov/modbus-esp8266

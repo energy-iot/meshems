@@ -3,10 +3,38 @@
 
 #define SOLARK_POLL_INTERVAL 5000 // 5 seconds
 
+// Define the blocks of registers to be read
+// Max 20 registers per block as requested
+const ModbusReadBlock solark_read_blocks[] = {
+    {SolArkBlockType::ENERGY, SolArkRegisterMap::BATTERY_CHARGE_ENERGY, 15, "Energy Data (70-84)"}, // 70-84 (15 regs)
+    {SolArkBlockType::PV_ENERGY, SolArkRegisterMap::PV_ENERGY, 1, "PV Energy (108)"}, // 108 (1 reg)
+    {SolArkBlockType::INVERTER_STATUS, SolArkRegisterMap::INVERTER_STATUS, 1, "Inverter Status (59)"}, // 59 (1 reg)
+    {SolArkBlockType::TEMPERATURES, SolArkRegisterMap::DCDC_XFRMR_TEMP, 2, "Temperatures (90-91)"}, // 90-91 (2 regs)
+    // Split 150-169 (20 regs) into two blocks if needed, but it's exactly 20.
+    {SolArkBlockType::GRID_INVERTER_150, 150, 20, "Grid/Inverter Data (150-169)"}, // 150-169 (20 regs)
+    // Split 170-189 (20 regs) into two blocks if needed, but it's exactly 20.
+    {SolArkBlockType::POWER_BATTERY_170, 170, 20, "Power/Battery Data (170-189)"}, // 170-189 (20 regs)
+    {SolArkBlockType::BATTERY_STATUS_190, SolArkRegisterMap::BATTERY_POWER, 10, "Battery Status (190-199)"}, // 190-199 (10 regs)
+    {SolArkBlockType::BATTERY_CAPACITY_204, SolArkRegisterMap::BATTERY_CAPACITY, 1, "Battery Capacity (204)"}, // 204 (1 reg)
+    {SolArkBlockType::CORRECTED_BATTERY_CAPACITY_107, SolArkRegisterMap::CORRECTED_BATTERY_CAPACITY, 1, "Corrected Battery Capacity (107)"}, // 107 (1 reg)
+    {SolArkBlockType::BATTERY_EMPTY_VOLTAGE_205, SolArkRegisterMap::BATTERY_EMPTY_VOLTAGE, 1, "Battery Empty Voltage (205)"}, // 205 (1 reg)
+    {SolArkBlockType::BATTERY_VOLTAGE_THRESHOLDS_220, SolArkRegisterMap::BATTERY_SHUTDOWN_VOLTAGE, 3, "Battery Voltage Thresholds (220-222)"}, // 220-222 (3 regs)
+    {SolArkBlockType::BATTERY_PERCENT_THRESHOLDS_217, SolArkRegisterMap::BATTERY_SHUTDOWN_PERCENT, 3, "Battery Percent Thresholds (217-219)"}, // 217-219 (3 regs)
+    {SolArkBlockType::BMS_DATA_312, SolArkRegisterMap::BMS_CHARGING_VOLTAGE, 12, "BMS Data (312-323)"}, // 312-323 (12 regs)
+    {SolArkBlockType::GRID_TYPE_286, SolArkRegisterMap::GRID_TYPE, 1, "Grid Type (286)"}, // 286 (1 reg)
+    {SolArkBlockType::DIAGNOSTICS, SolArkRegisterMap::COMM_VERSION, 6, "Diagnostics (2-7)"} // COMM_VERSION (2) + 5 SN_BYTES (3-7) = 6 regs
+};
+const size_t solark_read_blocks_count = sizeof(solark_read_blocks) / sizeof(solark_read_blocks[0]);
+
+
 Modbus_SolArkLV::Modbus_SolArkLV() {
     // Initialize class variables
     
     // Diagnostic variables
+    comm_version_val = 0;
+    for (int i = 0; i < 5; ++i) {
+        serial_number_parts[i] = 0;
+    }
     igbt_temp = 0;
     dcdc_xfrmr_temp = 0;
 
@@ -92,403 +120,152 @@ void Modbus_SolArkLV::set_modbus_address(uint8_t addr) {
 }
 
 uint8_t Modbus_SolArkLV::poll() {
-    uint8_t result = ku8MBSuccess;
-    
-    // Poll energy data - registers 70-85
-    result = readHoldingRegisters(SolArkRegisterMap::BATTERY_CHARGE_ENERGY, 15);
-    if (result == ku8MBSuccess) {
-        // Process energy data
-        battery_charge_energy = getResponseBuffer(0) / SolArkScalingFactors::ENERGY; // Reg 70
-        battery_discharge_energy = getResponseBuffer(1) / SolArkScalingFactors::ENERGY; // Reg 71
-        grid_buy_energy = getResponseBuffer(6) / SolArkScalingFactors::ENERGY; // Reg 76
-        grid_sell_energy = getResponseBuffer(7) / SolArkScalingFactors::ENERGY; // Reg 77
-        grid_frequency = getResponseBuffer(9) / SolArkScalingFactors::FREQUENCY; // Reg 79
-        load_energy = getResponseBuffer(14) / SolArkScalingFactors::ENERGY; // Reg 84
-        
-        Serial.println("INFO - SolArk: Energy data poll success");
-    } else {
-        Serial.println("INFO - SolArk: Energy data poll FAIL");
-        timestamp_last_failure = now();
-    }
-    
-    // Poll PV energy - register 108
-    result = readHoldingRegisters(SolArkRegisterMap::PV_ENERGY, 1);
-    if (result == ku8MBSuccess) {
-        pv_energy = getResponseBuffer(0) / SolArkScalingFactors::ENERGY; // Reg 108
-        Serial.println("INFO - SolArk: PV energy poll success");
-    } else {
-        Serial.println("INFO - SolArk: PV energy poll FAIL");
-    }
-    
-    // Poll inverter status - register 59
-    result = readHoldingRegisters(SolArkRegisterMap::INVERTER_STATUS, 1);
-    if (result == ku8MBSuccess) {
-        inverter_status = getResponseBuffer(0); // Register 59
-        Serial.println("INFO - SolArk: Inverter status poll success");
-    } else {
-        Serial.println("INFO - SolArk: Inverter status poll FAIL");
-    }
-    
-    // Poll temperature data - registers 90-91
-    result = readHoldingRegisters(SolArkRegisterMap::DCDC_XFRMR_TEMP, 2);
-    if (result == ku8MBSuccess) {
-        // Process temperature data
-        dcdc_xfrmr_temp = (getResponseBuffer(0) - SolArkScalingFactors::TEMPERATURE_OFFSET) / SolArkScalingFactors::TEMPERATURE_SCALE; // Reg 90
-        igbt_temp = (getResponseBuffer(1) - SolArkScalingFactors::TEMPERATURE_OFFSET) / SolArkScalingFactors::TEMPERATURE_SCALE; // Reg 91
-        
-        Serial.println("INFO - SolArk: Temperature data poll success");
-    } else {
-        Serial.println("INFO - SolArk: Temperature data poll FAIL");
-    }
-    
-    // Poll grid and inverter data - registers 150-170
-    result = readHoldingRegisters(150, 20);
-    if (result == ku8MBSuccess) {
-        // Process grid and inverter data
-        grid_voltage = getResponseBuffer(SolArkRegisterMap::GRID_VOLTAGE - 150) / SolArkScalingFactors::VOLTAGE;
-        inverter_voltage = getResponseBuffer(SolArkRegisterMap::INVERTER_VOLTAGE - 150) / SolArkScalingFactors::VOLTAGE;
-        
-        grid_current_l1 = getResponseBuffer(SolArkRegisterMap::GRID_CURRENT_L1 - 150) / SolArkScalingFactors::CURRENT;
-        grid_current_l2 = getResponseBuffer(SolArkRegisterMap::GRID_CURRENT_L2 - 150) / SolArkScalingFactors::CURRENT;
-        
-        grid_CT_current_l1 = getResponseBuffer(SolArkRegisterMap::GRID_CT_CURRENT_L1 - 150) / SolArkScalingFactors::CURRENT;
-        grid_CT_current_l2 = getResponseBuffer(SolArkRegisterMap::GRID_CT_CURRENT_L2 - 150) / SolArkScalingFactors::CURRENT;
+    uint8_t last_result = ku8MBSuccess;
+    bool any_success = false;
 
-        inverter_current_l1 = getResponseBuffer(SolArkRegisterMap::INVERTER_CURRENT_L1 - 150) / SolArkScalingFactors::CURRENT;
-        inverter_current_l2 = getResponseBuffer(SolArkRegisterMap::INVERTER_CURRENT_L2 - 150) / SolArkScalingFactors::CURRENT;
+    for (size_t i = 0; i < solark_read_blocks_count; ++i) {
+        const ModbusReadBlock& block = solark_read_blocks[i];
         
-        smart_load_power = getResponseBuffer(SolArkRegisterMap::SMART_LOAD_POWER - 150);
-        grid_power = getResponseBuffer(SolArkRegisterMap::GRID_POWER - 150);
+        // Make the Modbus call
+        last_result = readHoldingRegisters(block.start_register, block.num_registers);
         
-        // Apply sign correction to grid power
-        grid_power = correctSignedValue(grid_power);
-        
-        Serial.println("INFO - SolArk: Grid/Inverter data poll success");
-    } else {
-        Serial.println("INFO - SolArk: Grid/Inverter data poll FAIL");
+        if (last_result == ku8MBSuccess) {
+            processBlock(block); // Process the data for this specific block
+            Serial.printf("INFO - SolArk: Poll block '%s' (Reg %d, Count %d) success\n", block.description, block.start_register, block.num_registers);
+            any_success = true;
+        } else {
+            Serial.printf("ERROR - SolArk: Poll block '%s' (Reg %d, Count %d) FAIL. Error: %d\n", block.description, block.start_register, block.num_registers, last_result);
+            timestamp_last_failure = now();
+            // Optionally, break or decide if one failure means total failure for the poll cycle
+        }
+        // Add a small delay here if necessary for the device, e.g., delay(10);
     }
     
-    // Poll power and battery data - registers 170-190
-    result = readHoldingRegisters(170, 20);
-    if (result == ku8MBSuccess) {
-        // Process power and battery data
-        inverter_output_power = getResponseBuffer(SolArkRegisterMap::INVERTER_OUTPUT_POWER - 170); 
-        load_power_l1 = getResponseBuffer(SolArkRegisterMap::LOAD_POWER_L1 - 170); 
-        load_power_l2 = getResponseBuffer(SolArkRegisterMap::LOAD_POWER_L2 - 170); 
-        load_power_total = getResponseBuffer(SolArkRegisterMap::LOAD_POWER_TOTAL - 170); 
-        load_current_l1 = getResponseBuffer(SolArkRegisterMap::LOAD_CURRENT_L1 - 170) / SolArkScalingFactors::CURRENT;
-        load_current_l2 = getResponseBuffer(SolArkRegisterMap::LOAD_CURRENT_L2 - 170) / SolArkScalingFactors::CURRENT;
-        
-        battery_temperature = (getResponseBuffer(SolArkRegisterMap::BATTERY_TEMPERATURE - 170) - 
-                              SolArkScalingFactors::TEMPERATURE_OFFSET) / SolArkScalingFactors::TEMPERATURE_SCALE;
-        battery_voltage = getResponseBuffer(SolArkRegisterMap::BATTERY_VOLTAGE - 170) / SolArkScalingFactors::CURRENT;
-        battery_soc = getResponseBuffer(SolArkRegisterMap::BATTERY_SOC - 170);
-        
-        pv1_power = getResponseBuffer(SolArkRegisterMap::PV1_POWER - 170);
-        pv2_power = getResponseBuffer(SolArkRegisterMap::PV2_POWER - 170);
-        pv_power_total = (pv1_power + pv2_power) / 1000.0f; // Total in kW
-        
-        // Apply sign correction to inverter power
-        inverter_output_power = correctSignedValue(inverter_output_power);
-        
-        Serial.println("INFO - SolArk: Power/Battery data poll success");
-    } else {
-        Serial.println("INFO - SolArk: Power/Battery data poll FAIL");
-    }
-    
-    // Poll battery status - registers 190-199
-    result = readHoldingRegisters(SolArkRegisterMap::BATTERY_POWER, 10);
-    if (result == ku8MBSuccess) {
-        // Process battery status
-        battery_power = correctSignedValue(getResponseBuffer(0));
-        
-        // Handle battery current with sign correction and scaling
-        uint16_t battCurrentRaw = getResponseBuffer(SolArkRegisterMap::BATTERY_CURRENT - SolArkRegisterMap::BATTERY_POWER);
-        battery_current = correctSignedValue(battCurrentRaw) / SolArkScalingFactors::CURRENT;
-        
-        load_frequency = getResponseBuffer(SolArkRegisterMap::LOAD_FREQUENCY - SolArkRegisterMap::BATTERY_POWER) / 
-                         SolArkScalingFactors::FREQUENCY;
-        
-        inverter_frequency = getResponseBuffer(SolArkRegisterMap::INVERTER_FREQUENCY - SolArkRegisterMap::BATTERY_POWER) / 
-                            SolArkScalingFactors::FREQUENCY;
-        
-        grid_relay_status = getResponseBuffer(SolArkRegisterMap::GRID_RELAY_STATUS - SolArkRegisterMap::BATTERY_POWER);
-        generator_relay_status = getResponseBuffer(SolArkRegisterMap::GENERATOR_RELAY_STATUS - SolArkRegisterMap::BATTERY_POWER);
-        
-        Serial.println("INFO - SolArk: Battery status poll success");
-    } else {
-        Serial.println("INFO - SolArk: Battery status poll FAIL");
-    }
-    
-    // Poll battery configuration data - registers 204, 107, 205, 217-222
-    result = readHoldingRegisters(SolArkRegisterMap::BATTERY_CAPACITY, 1);
-    if (result == ku8MBSuccess) {
-        battery_capacity = getResponseBuffer(0); // Register 204 - Battery capacity in Ah
-        Serial.println("INFO - SolArk: Battery capacity poll success");
-    } else {
-        Serial.println("INFO - SolArk: Battery capacity poll FAIL");
-    }
-    
-    result = readHoldingRegisters(SolArkRegisterMap::CORRECTED_BATTERY_CAPACITY, 1);
-    if (result == ku8MBSuccess) {
-        corrected_battery_capacity = getResponseBuffer(0); // Register 107 - Corrected battery capacity in Ah
-        Serial.println("INFO - SolArk: Corrected battery capacity poll success");
-    } else {
-        Serial.println("INFO - SolArk: Corrected battery capacity poll FAIL");
-    }
-    
-    // Poll battery voltage thresholds - registers 205, 220-222
-    result = readHoldingRegisters(SolArkRegisterMap::BATTERY_EMPTY_VOLTAGE, 1);
-    if (result == ku8MBSuccess) {
-        battery_empty_voltage = getResponseBuffer(0) / SolArkScalingFactors::CURRENT; // Register 205 - scaled like voltage
-        Serial.println("INFO - SolArk: Battery empty voltage poll success");
-    }
-    
-    result = readHoldingRegisters(SolArkRegisterMap::BATTERY_SHUTDOWN_VOLTAGE, 3);
-    if (result == ku8MBSuccess) {
-        battery_shutdown_voltage = getResponseBuffer(0) / SolArkScalingFactors::CURRENT; // Register 220
-        battery_restart_voltage = getResponseBuffer(1) / SolArkScalingFactors::CURRENT;  // Register 221
-        battery_low_voltage = getResponseBuffer(2) / SolArkScalingFactors::CURRENT;      // Register 222
-        Serial.println("INFO - SolArk: Battery voltage thresholds poll success");
-    }
-    
-    // Poll battery percentage thresholds - registers 217-219
-    result = readHoldingRegisters(SolArkRegisterMap::BATTERY_SHUTDOWN_PERCENT, 3);
-    if (result == ku8MBSuccess) {
-        battery_shutdown_percent = getResponseBuffer(0); // Register 217
-        battery_restart_percent = getResponseBuffer(1);  // Register 218
-        battery_low_percent = getResponseBuffer(2);      // Register 219
-        Serial.println("INFO - SolArk: Battery percentage thresholds poll success");
-    }
-    
-    // Poll BMS data for lithium batteries - registers 312-323
-    result = readHoldingRegisters(SolArkRegisterMap::BMS_CHARGING_VOLTAGE, 12);
-    if (result == ku8MBSuccess) {
-        bms_charging_voltage = getResponseBuffer(0) / SolArkScalingFactors::CURRENT;       // Register 312
-        bms_discharge_voltage = getResponseBuffer(1) / SolArkScalingFactors::CURRENT;      // Register 313
-        bms_charging_current_limit = getResponseBuffer(2);                                 // Register 314
-        bms_discharge_current_limit = getResponseBuffer(3);                                // Register 315
-        bms_real_time_soc = getResponseBuffer(4);                                          // Register 316
-        bms_real_time_voltage = getResponseBuffer(5) / SolArkScalingFactors::CURRENT;     // Register 317
-        bms_real_time_current = getResponseBuffer(6);                                      // Register 318
-        bms_real_time_temp = (getResponseBuffer(7) - SolArkScalingFactors::TEMPERATURE_OFFSET) / 
-                            SolArkScalingFactors::TEMPERATURE_SCALE;                       // Register 319
-        bms_warning = getResponseBuffer(10);                                               // Register 322
-        bms_fault = getResponseBuffer(11);                                                 // Register 323
-        Serial.println("INFO - SolArk: BMS data poll success");
-    } else {
-        Serial.println("INFO - SolArk: BMS data poll FAIL");
-    }
-
-    // Poll Grid Type - register 286
-    result = readHoldingRegisters(SolArkRegisterMap::GRID_TYPE, 1);
-    if (result == ku8MBSuccess) {
-        grid_type = getResponseBuffer(0); // Register 286
-        Serial.println("INFO - SolArk: Grid Type poll success");
-    } else {
-        Serial.println("INFO - SolArk: Grid Type poll FAIL");
-    }
-    
-    // Report timestamp of successful poll
-    if (result == ku8MBSuccess) {
+    if (any_success) {
         timestamp_last_report = now();
+        // If all blocks must succeed for an overall success, adjust this logic
+        return ku8MBSuccess;
     }
-    
-    return result;
+    return last_result; // Return the result of the last failed operation or ku8MBSuccess if all were fine
 }
 
-uint8_t Modbus_SolArkLV::query_register(uint16_t reg) {
-    uint8_t result = readHoldingRegisters(reg, 1);
-    
-    if (result == ku8MBSuccess) {
-        route_poll_response(reg, getResponseBuffer(0));
-    } else {
-        timestamp_last_failure = now();
-        Serial.printf("ERROR - SolArk: Query register 0x%04X FAIL\n", reg);
-    }
-    
-    return result;
-}
-
-void Modbus_SolArkLV::route_poll_response(uint16_t reg, uint16_t response) {
-    // Route specific register responses based on register address
-    switch (reg) {
-        // Energy registers (70-108)
-        case SolArkRegisterMap::BATTERY_CHARGE_ENERGY:
-            battery_charge_energy = response / SolArkScalingFactors::ENERGY;
-            Serial.printf("SolArk: Battery charge energy: %.1f kWh\n", battery_charge_energy);
+void Modbus_SolArkLV::processBlock(const ModbusReadBlock& block) {
+    // getResponseBuffer(offset) gets the (offset)th register from the block just read.
+    switch (block.type) {
+        case SolArkBlockType::ENERGY: // Registers 70-84 (15 regs)
+            // Offsets are from block.start_register (70)
+            battery_charge_energy = getResponseBuffer(SolArkRegisterMap::BATTERY_CHARGE_ENERGY - block.start_register) / SolArkScalingFactors::ENERGY;
+            battery_discharge_energy = getResponseBuffer(SolArkRegisterMap::BATTERY_DISCHARGE_ENERGY - block.start_register) / SolArkScalingFactors::ENERGY;
+            grid_buy_energy = getResponseBuffer(SolArkRegisterMap::GRID_BUY_ENERGY - block.start_register) / SolArkScalingFactors::ENERGY;
+            grid_sell_energy = getResponseBuffer(SolArkRegisterMap::GRID_SELL_ENERGY - block.start_register) / SolArkScalingFactors::ENERGY;
+            grid_frequency = getResponseBuffer(SolArkRegisterMap::GRID_FREQUENCY - block.start_register) / SolArkScalingFactors::FREQUENCY;
+            load_energy = getResponseBuffer(SolArkRegisterMap::LOAD_ENERGY - block.start_register) / SolArkScalingFactors::ENERGY;
             break;
-        case SolArkRegisterMap::BATTERY_DISCHARGE_ENERGY:
-            battery_discharge_energy = response / SolArkScalingFactors::ENERGY;
-            Serial.printf("SolArk: Battery discharge energy: %.1f kWh\n", battery_discharge_energy);
+        case SolArkBlockType::PV_ENERGY: // Register 108 (1 reg)
+            pv_energy = getResponseBuffer(0) / SolArkScalingFactors::ENERGY;
             break;
-        case SolArkRegisterMap::GRID_BUY_ENERGY:
-            grid_buy_energy = response / SolArkScalingFactors::ENERGY;
-            Serial.printf("SolArk: Grid buy energy: %.1f kWh\n", grid_buy_energy);
+        case SolArkBlockType::INVERTER_STATUS: // Register 59 (1 reg)
+            inverter_status = getResponseBuffer(0);
             break;
-        case SolArkRegisterMap::GRID_SELL_ENERGY:
-            grid_sell_energy = response / SolArkScalingFactors::ENERGY;
-            Serial.printf("SolArk: Grid sell energy: %.1f kWh\n", grid_sell_energy);
+        case SolArkBlockType::TEMPERATURES: // Registers 90-91 (2 regs)
+            dcdc_xfrmr_temp = (getResponseBuffer(SolArkRegisterMap::DCDC_XFRMR_TEMP - block.start_register) - SolArkScalingFactors::TEMPERATURE_OFFSET) / SolArkScalingFactors::TEMPERATURE_SCALE;
+            igbt_temp = (getResponseBuffer(SolArkRegisterMap::IGBT_HEATSINK_TEMP - block.start_register) - SolArkScalingFactors::TEMPERATURE_OFFSET) / SolArkScalingFactors::TEMPERATURE_SCALE;
             break;
-        case SolArkRegisterMap::GRID_FREQUENCY:
-            grid_frequency = response / SolArkScalingFactors::FREQUENCY;
-            Serial.printf("SolArk: Grid frequency: %.2f Hz\n", grid_frequency);
+        case SolArkBlockType::GRID_INVERTER_150: // Registers 150-169 (20 regs)
+            grid_voltage = getResponseBuffer(SolArkRegisterMap::GRID_VOLTAGE - block.start_register) / SolArkScalingFactors::VOLTAGE;
+            inverter_voltage = getResponseBuffer(SolArkRegisterMap::INVERTER_VOLTAGE - block.start_register) / SolArkScalingFactors::VOLTAGE;
+            grid_current_l1 = getResponseBuffer(SolArkRegisterMap::GRID_CURRENT_L1 - block.start_register) / SolArkScalingFactors::CURRENT;
+            grid_current_l2 = getResponseBuffer(SolArkRegisterMap::GRID_CURRENT_L2 - block.start_register) / SolArkScalingFactors::CURRENT;
+            grid_CT_current_l1 = getResponseBuffer(SolArkRegisterMap::GRID_CT_CURRENT_L1 - block.start_register) / SolArkScalingFactors::CURRENT;
+            grid_CT_current_l2 = getResponseBuffer(SolArkRegisterMap::GRID_CT_CURRENT_L2 - block.start_register) / SolArkScalingFactors::CURRENT;
+            inverter_current_l1 = getResponseBuffer(SolArkRegisterMap::INVERTER_CURRENT_L1 - block.start_register) / SolArkScalingFactors::CURRENT;
+            inverter_current_l2 = getResponseBuffer(SolArkRegisterMap::INVERTER_CURRENT_L2 - block.start_register) / SolArkScalingFactors::CURRENT;
+            smart_load_power = getResponseBuffer(SolArkRegisterMap::SMART_LOAD_POWER - block.start_register);
+            grid_power = correctSignedValue(getResponseBuffer(SolArkRegisterMap::GRID_POWER - block.start_register));
             break;
-        case SolArkRegisterMap::LOAD_ENERGY:
-            load_energy = response / SolArkScalingFactors::ENERGY;
-            Serial.printf("SolArk: Load energy: %.1f kWh\n", load_energy);
+        case SolArkBlockType::POWER_BATTERY_170: // Registers 170-189 (20 regs)
+            inverter_output_power = correctSignedValue(getResponseBuffer(SolArkRegisterMap::INVERTER_OUTPUT_POWER - block.start_register));
+            load_power_l1 = getResponseBuffer(SolArkRegisterMap::LOAD_POWER_L1 - block.start_register);
+            load_power_l2 = getResponseBuffer(SolArkRegisterMap::LOAD_POWER_L2 - block.start_register);
+            load_power_total = getResponseBuffer(SolArkRegisterMap::LOAD_POWER_TOTAL - block.start_register);
+            load_current_l1 = getResponseBuffer(SolArkRegisterMap::LOAD_CURRENT_L1 - block.start_register) / SolArkScalingFactors::CURRENT;
+            load_current_l2 = getResponseBuffer(SolArkRegisterMap::LOAD_CURRENT_L2 - block.start_register) / SolArkScalingFactors::CURRENT;
+            battery_temperature = (getResponseBuffer(SolArkRegisterMap::BATTERY_TEMPERATURE - block.start_register) - SolArkScalingFactors::TEMPERATURE_OFFSET) / SolArkScalingFactors::TEMPERATURE_SCALE;
+            battery_voltage = getResponseBuffer(SolArkRegisterMap::BATTERY_VOLTAGE - block.start_register) / SolArkScalingFactors::CURRENT; // Reverted to original CURRENT scaling
+            battery_soc = getResponseBuffer(SolArkRegisterMap::BATTERY_SOC - block.start_register);
+            pv1_power = getResponseBuffer(SolArkRegisterMap::PV1_POWER - block.start_register);
+            pv2_power = getResponseBuffer(SolArkRegisterMap::PV2_POWER - block.start_register);
+            pv_power_total = (pv1_power + pv2_power) / 1000.0f; // Re-added /1000.0f as in original
             break;
-        case SolArkRegisterMap::PV_ENERGY:
-            pv_energy = response / SolArkScalingFactors::ENERGY;
-            Serial.printf("SolArk: PV energy: %.1f kWh\n", pv_energy);
+        case SolArkBlockType::BATTERY_STATUS_190: // Registers 190-199 (10 regs)
+            battery_power = correctSignedValue(getResponseBuffer(SolArkRegisterMap::BATTERY_POWER - block.start_register));
+            battery_current = correctSignedValue(getResponseBuffer(SolArkRegisterMap::BATTERY_CURRENT - block.start_register)) / SolArkScalingFactors::CURRENT;
+            load_frequency = getResponseBuffer(SolArkRegisterMap::LOAD_FREQUENCY - block.start_register) / SolArkScalingFactors::FREQUENCY;
+            inverter_frequency = getResponseBuffer(SolArkRegisterMap::INVERTER_FREQUENCY - block.start_register) / SolArkScalingFactors::FREQUENCY;
+            grid_relay_status = getResponseBuffer(SolArkRegisterMap::GRID_RELAY_STATUS - block.start_register);
+            generator_relay_status = getResponseBuffer(SolArkRegisterMap::GENERATOR_RELAY_STATUS - block.start_register);
             break;
-            
-        // Voltage registers (150-156)
-        case SolArkRegisterMap::GRID_VOLTAGE:
-            grid_voltage = response / SolArkScalingFactors::VOLTAGE;
-            Serial.printf("SolArk: Grid voltage: %.1f V\n", grid_voltage);
+        case SolArkBlockType::BATTERY_CAPACITY_204: // Register 204
+            battery_capacity = getResponseBuffer(0);
             break;
-        case SolArkRegisterMap::INVERTER_VOLTAGE:
-            inverter_voltage = response / SolArkScalingFactors::VOLTAGE;
-            Serial.printf("SolArk: Inverter voltage: %.1f V\n", inverter_voltage);
+        case SolArkBlockType::CORRECTED_BATTERY_CAPACITY_107: // Register 107
+            corrected_battery_capacity = getResponseBuffer(0);
             break;
-            
-        // Current registers (160-165, 179-180)
-        case SolArkRegisterMap::GRID_CURRENT_L1:
-            grid_current_l1 = response / SolArkScalingFactors::CURRENT;
-            Serial.printf("SolArk: Grid current L1: %.2f A\n", grid_current_l1);
+        case SolArkBlockType::BATTERY_EMPTY_VOLTAGE_205: // Register 205
+            battery_empty_voltage = getResponseBuffer(0) / SolArkScalingFactors::CURRENT; // Reverted to original CURRENT scaling
             break;
-        case SolArkRegisterMap::GRID_CURRENT_L2:
-            grid_current_l2 = response / SolArkScalingFactors::CURRENT;
-            Serial.printf("SolArk: Grid current L2: %.2f A\n", grid_current_l2);
+        case SolArkBlockType::BATTERY_VOLTAGE_THRESHOLDS_220: // Registers 220-222 (3 regs)
+            battery_shutdown_voltage = getResponseBuffer(SolArkRegisterMap::BATTERY_SHUTDOWN_VOLTAGE - block.start_register) / SolArkScalingFactors::CURRENT; // Reverted to original CURRENT scaling
+            battery_restart_voltage = getResponseBuffer(SolArkRegisterMap::BATTERY_RESTART_VOLTAGE - block.start_register) / SolArkScalingFactors::CURRENT;   // Reverted to original CURRENT scaling
+            battery_low_voltage = getResponseBuffer(SolArkRegisterMap::BATTERY_LOW_VOLTAGE - block.start_register) / SolArkScalingFactors::CURRENT;       // Reverted to original CURRENT scaling
             break;
-
-        case SolArkRegisterMap::GRID_CT_CURRENT_L1:
-            grid_CT_current_l1 = response / SolArkScalingFactors::CURRENT;
-            Serial.printf("SolArk: Grid CT current L1: %.2f A\n", grid_CT_current_l1);
+        case SolArkBlockType::BATTERY_PERCENT_THRESHOLDS_217: // Registers 217-219 (3 regs)
+            battery_shutdown_percent = getResponseBuffer(SolArkRegisterMap::BATTERY_SHUTDOWN_PERCENT - block.start_register);
+            battery_restart_percent = getResponseBuffer(SolArkRegisterMap::BATTERY_RESTART_PERCENT - block.start_register);
+            battery_low_percent = getResponseBuffer(SolArkRegisterMap::BATTERY_LOW_PERCENT - block.start_register);
             break;
-        case SolArkRegisterMap::GRID_CT_CURRENT_L2:
-            grid_CT_current_l2 = response / SolArkScalingFactors::CURRENT;
-            Serial.printf("SolArk: Grid CT current L2: %.2f A\n", grid_CT_current_l2);
+        case SolArkBlockType::BMS_DATA_312: // Registers 312-323 (12 regs)
+            bms_charging_voltage = getResponseBuffer(SolArkRegisterMap::BMS_CHARGING_VOLTAGE - block.start_register) / SolArkScalingFactors::CURRENT; // Reverted to original CURRENT scaling
+            bms_discharge_voltage = getResponseBuffer(SolArkRegisterMap::BMS_DISCHARGE_VOLTAGE - block.start_register) / SolArkScalingFactors::CURRENT; // Reverted to original CURRENT scaling
+            bms_charging_current_limit = getResponseBuffer(SolArkRegisterMap::BMS_CHARGING_CURRENT_LIMIT - block.start_register);
+            bms_discharge_current_limit = getResponseBuffer(SolArkRegisterMap::BMS_DISCHARGE_CURRENT_LIMIT - block.start_register);
+            bms_real_time_soc = getResponseBuffer(SolArkRegisterMap::BMS_REAL_TIME_SOC - block.start_register);
+            bms_real_time_voltage = getResponseBuffer(SolArkRegisterMap::BMS_REAL_TIME_VOLTAGE - block.start_register) / SolArkScalingFactors::CURRENT; // Reverted to original CURRENT scaling
+            bms_real_time_current = getResponseBuffer(SolArkRegisterMap::BMS_REAL_TIME_CURRENT - block.start_register); // Assuming raw, needs scaling? Check map.
+            bms_real_time_temp = (getResponseBuffer(SolArkRegisterMap::BMS_REAL_TIME_TEMP - block.start_register) - SolArkScalingFactors::TEMPERATURE_OFFSET) / SolArkScalingFactors::TEMPERATURE_SCALE;
+            bms_warning = getResponseBuffer(SolArkRegisterMap::BMS_WARNING - block.start_register);
+            bms_fault = getResponseBuffer(SolArkRegisterMap::BMS_FAULT - block.start_register);
             break;
-
-        case SolArkRegisterMap::INVERTER_CURRENT_L1:
-            inverter_current_l1 = response / SolArkScalingFactors::CURRENT;
-            Serial.printf("SolArk: Inverter current L1: %.2f A\n", inverter_current_l1);
+        case SolArkBlockType::GRID_TYPE_286: // Register 286
+            grid_type = getResponseBuffer(0);
             break;
-        case SolArkRegisterMap::INVERTER_CURRENT_L2:
-            inverter_current_l2 = response / SolArkScalingFactors::CURRENT;
-            Serial.printf("SolArk: Inverter current L2: %.2f A\n", inverter_current_l2);
+        case SolArkBlockType::DIAGNOSTICS: // Registers 2-7
+            // Offset from block.start_register (SolArkRegisterMap::COMM_VERSION which is 2)
+            comm_version_val = getResponseBuffer(SolArkRegisterMap::COMM_VERSION - block.start_register);
+            serial_number_parts[0] = getResponseBuffer(SolArkRegisterMap::SN_BYTE_01 - block.start_register);
+            serial_number_parts[1] = getResponseBuffer(SolArkRegisterMap::SN_BYTE_02 - block.start_register);
+            serial_number_parts[2] = getResponseBuffer(SolArkRegisterMap::SN_BYTE_03 - block.start_register);
+            serial_number_parts[3] = getResponseBuffer(SolArkRegisterMap::SN_BYTE_04 - block.start_register);
+            serial_number_parts[4] = getResponseBuffer(SolArkRegisterMap::SN_BYTE_05 - block.start_register);
             break;
-        case SolArkRegisterMap::LOAD_CURRENT_L1:
-            load_current_l1 = response / SolArkScalingFactors::CURRENT;
-            Serial.printf("SolArk: Load current L1: %.2f A\n", load_current_l1);
-            break;
-        case SolArkRegisterMap::LOAD_CURRENT_L2:
-            load_current_l2 = response / SolArkScalingFactors::CURRENT;
-            Serial.printf("SolArk: Load current L2: %.2f A\n", load_current_l2);
-            break;
-            
-        // Power registers (166-169, 175-178, 186-187, 190)
-        case SolArkRegisterMap::SMART_LOAD_POWER:
-            smart_load_power = response;
-            Serial.printf("SolArk: Smart load power: %d W\n", smart_load_power);
-            break;
-        case SolArkRegisterMap::GRID_POWER:
-            grid_power = correctSignedValue(response);
-            Serial.printf("SolArk: Grid power: %d W\n", grid_power);
-            break;
-        case SolArkRegisterMap::INVERTER_OUTPUT_POWER:
-            inverter_output_power = correctSignedValue(response);
-            Serial.printf("SolArk: Inverter output power: %d W\n", inverter_output_power);
-            break;
-        case SolArkRegisterMap::LOAD_POWER_L1:
-            load_power_l1 = response;
-            Serial.printf("SolArk: Load power L1: %d W\n", load_power_l1);
-            break;
-        case SolArkRegisterMap::LOAD_POWER_L2:
-            load_power_l2 = response;
-            Serial.printf("SolArk: Load power L2: %d W\n", load_power_l2);
-            break;
-        case SolArkRegisterMap::LOAD_POWER_TOTAL:
-            load_power_total = response;
-            Serial.printf("SolArk: Load power total: %d W\n", load_power_total);
-            break;
-        case SolArkRegisterMap::PV1_POWER:
-            pv1_power = response;
-            Serial.printf("SolArk: PV1 power: %d W\n", pv1_power);
-            pv_power_total = (pv1_power + pv2_power) / 1000.0f;
-            break;
-        case SolArkRegisterMap::PV2_POWER:
-            pv2_power = response;
-            Serial.printf("SolArk: PV2 power: %d W\n", pv2_power);
-            pv_power_total = (pv1_power + pv2_power) / 1000.0f;
-            break;
-        case SolArkRegisterMap::BATTERY_POWER:
-            battery_power = correctSignedValue(response);
-            Serial.printf("SolArk: Battery power: %d W\n", battery_power);
-            break;
-        
-        // Battery data registers (182-184, 191)
-        case SolArkRegisterMap::BATTERY_TEMPERATURE:
-            battery_temperature = (response - SolArkScalingFactors::TEMPERATURE_OFFSET) / SolArkScalingFactors::TEMPERATURE_SCALE;
-            Serial.printf("SolArk: Battery temperature: %.1f C\n", battery_temperature);
-            break;
-        case SolArkRegisterMap::BATTERY_VOLTAGE:
-            battery_voltage = response / SolArkScalingFactors::CURRENT;
-            Serial.printf("SolArk: Battery voltage: %.2f V\n", battery_voltage);
-            break;
-        case SolArkRegisterMap::BATTERY_SOC:
-            battery_soc = response;
-            Serial.printf("SolArk: Battery SOC: %d%%\n", battery_soc);
-            break;
-        case SolArkRegisterMap::BATTERY_CURRENT:
-            battery_current = correctSignedValue(response) / SolArkScalingFactors::CURRENT;
-            Serial.printf("SolArk: Battery current: %.2f A\n", battery_current);
-            break;
-            
-        // Other status registers (192-195)
-        case SolArkRegisterMap::LOAD_FREQUENCY:
-            load_frequency = response / SolArkScalingFactors::FREQUENCY;
-            Serial.printf("SolArk: Load frequency: %.2f Hz\n", load_frequency);
-            break;
-        case SolArkRegisterMap::INVERTER_FREQUENCY:
-            inverter_frequency = response / SolArkScalingFactors::FREQUENCY;
-            Serial.printf("SolArk: Inverter output frequency: %.2f Hz\n", inverter_frequency);
-            break;
-        case SolArkRegisterMap::GRID_RELAY_STATUS:
-            grid_relay_status = response;
-            Serial.printf("SolArk: Grid relay status: %d\n", grid_relay_status);
-            break;
-        case SolArkRegisterMap::GENERATOR_RELAY_STATUS:
-            generator_relay_status = response;
-            Serial.printf("SolArk: Generator relay status: %d\n", generator_relay_status);
-            break;
-            
-        // Inverter status register (59)
-        case SolArkRegisterMap::INVERTER_STATUS:
-            inverter_status = response;
-            Serial.printf("SolArk: Inverter status: %d (1=Self-test, 2=Normal, 3=Alarm, 4=Fault)\n", inverter_status);
-            break;
-            
-        // Temperature registers (90-91)
-        case SolArkRegisterMap::DCDC_XFRMR_TEMP:
-            dcdc_xfrmr_temp = (response - SolArkScalingFactors::TEMPERATURE_OFFSET) / SolArkScalingFactors::TEMPERATURE_SCALE;
-            Serial.printf("SolArk: DCDC transformer temperature: %.1f C\n", dcdc_xfrmr_temp);
-            break;
-        case SolArkRegisterMap::IGBT_HEATSINK_TEMP:
-            igbt_temp = (response - SolArkScalingFactors::TEMPERATURE_OFFSET) / SolArkScalingFactors::TEMPERATURE_SCALE;
-            Serial.printf("SolArk: IGBT heatsink temperature: %.1f C\n", igbt_temp);
-            break;
-            
         default:
-            Serial.printf("SolArk: Unknown register: 0x%04X, value: 0x%04X\n", reg, response);
+            Serial.printf("WARNING - SolArk: Unknown block type %d in processBlock\n", static_cast<int>(block.type));
             break;
     }
 }
-
 
 // Diagnostic Status Getters
+uint16_t Modbus_SolArkLV::getCommVersion() {
+    return comm_version_val;
+}
+
+uint16_t Modbus_SolArkLV::getSerialNumberPart(uint8_t index) {
+    if (index < 5) {
+        return serial_number_parts[index];
+    }
+    return 0; // Or some error indicator
+}
+
 float Modbus_SolArkLV::getIGBTTemp() {
     return igbt_temp;
 }
@@ -648,11 +425,6 @@ float Modbus_SolArkLV::getLoadCurrentL2() {
 
 float Modbus_SolArkLV::getLoadFrequency() {
     return load_frequency;
-}
-
-// Generator Status Getters
-uint8_t Modbus_SolArkLV::getGeneratorRelayStatus() {
-    return generator_relay_status;
 }
 
 // Convenience Methods

@@ -55,8 +55,11 @@ void setup() {
     delay(1000);
     
     // Initialize Modbus RTU master/client communication
-    setup_modbus_master(); // This sets up communication with sensors like the SHT20 temp/humidity sensor or other devices
-    setup_modbus_client(); // This sets up the Modbus server with SunSpec compliance
+    
+    // This sets up the Modbus/RTU client (master) device as well as communication with connected devices
+    setup_modbus_client_interface();
+    // This sets up the Modbus/RTU server (slave) device
+    setup_modbus_server();
 
     setup_buttons();
     _console.addLine(" EMS In-service Ready!");
@@ -86,7 +89,7 @@ void setup() {
  */
 void loop() {
     loop_buttons();
-    loop_modbus_master();
+    loop_modbus_client();
     loop_modbus_client();
     loop_display();
 }

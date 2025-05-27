@@ -42,8 +42,37 @@ void setup_sunspec_models() {
     set_sunspec_string(&holdingRegisters[common_offset + COMMON_MANUFACTURER], "Sol-Ark", 32);
     set_sunspec_string(&holdingRegisters[common_offset + COMMON_MODEL], "Sol-Ark-12K-P", 32);
     set_sunspec_string(&holdingRegisters[common_offset + COMMON_OPTIONS], "None", 16);
-    set_sunspec_string(&holdingRegisters[common_offset + COMMON_VERSION], "130", 16);
-    set_sunspec_string(&holdingRegisters[common_offset + COMMON_SERIAL], "123456", 32);
+
+    // Set Common Model Version from Sol-Ark COMM_VERSION
+    uint16_t comm_version = solark.getCommVersion();
+    char version_str[17]; // Max 16 chars for version + null terminator
+    snprintf(version_str, sizeof(version_str), "%u", comm_version); // Convert uint16_t to string
+    set_sunspec_string(&holdingRegisters[common_offset + COMMON_VERSION], version_str, 16);
+
+    // Set Common Model Serial Number from Sol-Ark SN_BYTE parts
+    // Each SN_BYTE (uint16_t) likely holds two ASCII characters.
+    // Max length for C_SN is 32 bytes (16 registers). We have 5 parts, so 10 characters.
+    char serial_str[33]; // Max 32 chars for serial + null terminator
+    char* p_serial = serial_str;
+    for (int i = 0; i < 5; ++i) {
+        uint16_t sn_part = solark.getSerialNumberPart(i);
+        if (sn_part == 0) break; // Stop if a part is zero, assuming end of SN
+        
+        // Extract two chars from uint16_t (high byte first, then low byte)
+        char char1 = (sn_part >> 8) & 0xFF;
+        char char2 = sn_part & 0xFF;
+
+        if (char1 != 0 && p_serial < serial_str + sizeof(serial_str) -1) {
+            *p_serial++ = char1;
+        } else if (char1 == 0) break; // Null character encountered
+        
+        if (char2 != 0 && p_serial < serial_str + sizeof(serial_str) -1) {
+            *p_serial++ = char2;
+        } else if (char2 == 0) break; // Null character encountered
+    }
+    *p_serial = '\0'; // Null terminate the constructed string
+    set_sunspec_string(&holdingRegisters[common_offset + COMMON_SERIAL], serial_str, 32);
+    
     holdingRegisters[common_offset + COMMON_DEVICE_ADDR] = 1;
     
     // Set Inverter Model (701) header
