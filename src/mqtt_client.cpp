@@ -38,6 +38,7 @@
 #include <leakage_model_ivy41a.h>
 //#include "modbus_devices.h" // added by Kevin - future use
 #include "data_model.h"
+#define ENABLE_DEBUG_MQTT = 1
 
 WiFiClient transportClient;                 // the network client for MQTT (also works with EthernetLarge)
 PubSubClient mqttclient(transportClient);   // the MQTT client
@@ -71,10 +72,11 @@ void generateTopics() {
 boolean mqtt_connect()
 {
   Serial.printf("MQTT Connecting...timeout in:%d\r\n", transportClient.getTimeout());
-
+  // todo ENABLE_DEBUG_MQTT=1;
   if (transportClient.connect(MQTT_SERVER, 1883) != 1) //8883 for TLS
   {
      Serial.println("MQTT connect timeout.");
+     // todo ENABLE_DEBUG_MQTT=0;
      return (0);
   }
 

@@ -1,9 +1,5 @@
 #include <config.h>
 #include <Arduino.h>
-// moved to 
-//String mqtt_server("test.mosquitto.org"); //("public.cloud.shiftr.io"); //note: shiftr requires user:public pw:public
-//String mqtt_user;                         //("public");
-//String mqtt_pass;                         //("public");
 
 char device_id[MAX_DEVICE_ID_CHARS] = {0};
 

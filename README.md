@@ -1,14 +1,14 @@
-# EIOT.Energy EMS Dev Kit
+# EIOT.Energy EMS DER/Site Controller Dev Kit
 
 ## Overview
-A development kit based on the ESP32S3 N16R8 DEV KIT C1 for energy management systems (EMS) with support for various communication protocols and peripherals.
+A development kit based on the ESP32S3 N16R8 DEV KIT C-1 for energy management systems (EMS) with support for various communication protocols and peripherals.
 
 ## Features
-This development kit supports multiple peripherals using the Arduino framework:
+This development kit supports multiple peripherals using the PlatformIO and Arduino framework:
 - RS-485 MODBUS RTU communication
 - CANBUS V2.0 interface via SPI
 - Input buttons (using voltage divider array on analog GPIO)
-- 1.3in OLED Dispay over SPI (SH1106)
+- 1.3in OLED Display over SPI (SH1106)
 
 <img src="/ems_board_pinout_V001.png" alt="board" width="650"/>
 
@@ -48,8 +48,8 @@ This development kit supports multiple peripherals using the Arduino framework:
 ### Input/Output Capabilities
 - **Button Array Interface:** Analog input with voltage divider network
 - **Display:** Optional 1.3" OLED display (SPI interface)
-- **Expansion Headers:** Breakout area is avaible on the perfboard to allow for use of the remaining GPIO pins
-- **Relay:** Single 1A SSR (Solid State Relay) for AC Mains control
+- **Expansion Headers:** Breakout area is available on the perfboard to allow for use of the remaining GPIO pins
+- **Relay:** Single 2amp SSR (Solid State Relay) for AC Mains control
 
 ### Power Supply Options
 - **USB Power:** 5V via USB Type-C connector
@@ -73,14 +73,15 @@ This development kit includes a connection for AC power input. When working with
 **⚠️ Failure to follow these safety guidelines could result in severe electrical shock, fire, serious injury, or death. ⚠️**
 
 ### Physical Specifications
-- PCB Dimensions: 100mm x 75mm (main board)
+- PCB Dimensions: 150mm x 90mm (main board) includes DIY peripherals expansion area 50mm x 40mm
 - Mounting: 4x M3 mounting holes (3.2mm diameter)
+- 50mm x 40mm spare PCB room for BYO periperals, sd card, Ethernet, G3 Alliance dual mac/phy, Lora Meshtastic, etc
 
 ## Dev Environment Installation Guide
 ### Prerequisites
 - A computer with internet connection
 - EMS Dev kit hardware
-- USB-C cable for connecting the development board to your computer
+- USB-C data cable for connecting the development board to your computer
 
 ### Step 1: Install Visual Studio Code
 1. Download Visual Studio Code from https://code.visualstudio.com/
@@ -113,8 +114,9 @@ This development kit includes a connection for AC power input. When working with
 1. Wait for PlatformIO to download all required dependencies (libraries)
   **IMPORTANT:** Set the environment to ESP32S3 N16R8 DEV KIT C
   - Open the platformio.ini file in the project root
-  - Make sure the environment section contains [env:esp32s3_n16r8] or similar
+  - Make sure the environment section contains [env:esp32-s3-devkitc-1 , esp32s3_n16r8] or similar
   - If not, add or modify the environment section to match the ESP32S3 N16R8 DEV KIT C
+  - select a latest working branch of project for example visualize vs openami 3phase mqtt vs future others (leakage, diagnostics, etc)
 
 ### Step 6: Build and Flash the Firmware
 1. Connect your ESP32S3 DEV KIT to your computer via USB-C
@@ -135,7 +137,7 @@ This development kit includes a connection for AC power input. When working with
 ## Development Tracks
 
 ### Lane A: Behind-the-Meter Sunspec Integration
-These challenges focus on Sunspec self-certification readiness for Modbus/Canbus IWF hubcore functions:
+These challenges focus on Sunspec self-certification readiness for Modbus/Canbus IWF hub core functions:
 
 #### Sunspec Protocol Support
 - Sunspec BESS Gridtie Battery Modbus register support
@@ -156,16 +158,17 @@ These challenges focus on Sunspec self-certification readiness for Modbus/Canbus
 
 #### Framework & Networking
 - Front-of-Meter OPENAMI bidirectional monitor and control PUB/SUB framework
+- on board OLED real time energy visualizer graphing and webserver
 - StreetPoleEMS MESH distributed intelligence Pub/Sub networking
-- FLEXMEASURES layering export for ESP32S3
-- EMS MESH networking to N:1 StreetPole Linux Aggregator with distributed AI Energy Policy
+- Linux Aggregation FLEXMEASURES policy layering export policy enforcement schedules to ESP32S3 EMS - see proposed HLD in Google docs
+- EMS MESH networking to N:1 StreetPoleEMS Linux Node Aggregator with distributed AI Energy Policy, N=10~100
 
 #### Metering Plugins
-- IVY Metering Bidirectional AC/DC powerflow RCD and RVD detection
+- IVY Metering Bidirectional AC/DC powerflow RCD and RVD leakage modbus monitoring, alarm lines detection
 - Donsun DLMS/STS prepaid meter integration
 - Donsun postpaid meter integration
 - IVY Metering AC/DC meter prepaid/postpaid integration (DLMS/STS)
-- AC Energy Meter plugins (Single Phase, Split Phase, Three Phase)
+- Modbus RTU AC Energy Meter plugins (Single Phase, Split Phase, Three Phase)
 - Bidirectional AC/DC powerflow RCD and RVD leakage detection
 - EVSE AC/DC Charge/Discharge controller plugins
 - VFD Modbus RTU plugin
@@ -186,8 +189,9 @@ These challenges focus on Sunspec self-certification readiness for Modbus/Canbus
 - LORAWAN WAN connectivity
 - LTE CATM1 global SIM/eSIM radio module
 - Starlink MAC/PHY WWAN radio module integration
+- DRONE passby secure ondemand  BLE/wifi  networking, OTA, config, restoration
 
-## Port Labs Workshop (April 22-23)
+## Oakland CA USA Port Labs Kickoff Workshop (April 22-23 2025)
 The code challenges listed above will be covered during the Port Labs workshop. Participants can choose challenges from either Lane A or Lane B based on their interests and requirements.
 
 ## Contributing

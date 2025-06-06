@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>MODBUS Current Monitor</title>
+  <meta name='viewport' content='width=device-width, initial-scale=1'>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; background-color: #f0f0f0; }
+    h1 { color: #333; text-align: center; }
+    .container { max-width: 800px; margin: 0 auto; background-color: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    #currentValue { font-size: 24px; text-align: center; margin: 20px 0; }
+    canvas { width: 100%; height: 300px; border: 1px solid #ddd; border-radius: 4px; }
+    .controls { margin: 20px 0; padding: 15px; background-color: #f9f9f9; border-radius: 4px; }
+    .form-row { display: flex; align-items: center; margin-bottom: 10px; }
+    .form-row label { flex: 0 0 150px; }
+    .form-row input { flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+    button { background-color: #4CAF50; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; }
+    button:hover { background-color: #45a049; }
+    .status { margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <div class='container'>
+    <h1>MODBUS Current Monitor</h1>
+    <div id='currentValue'>Loading current data...</div>
+    <canvas id='currentChart'></canvas>
+    <div class='controls'>
+      <h3>Polling Settings</h3>
+      <div class='form-row'>
+        <label for='interval'>Polling Interval (ms):</label>
+        <input type='number' id='interval' min='50' max='10000' step='50' value='100'>
+        <button onclick='updateInterval()' style='margin-left: 10px;'>Update</button>
+      </div>
+      <div class='status' id='intervalStatus'></div>
+      <div class='form-row'>
+        <label>Current Interval:</label>
+        <span id='currentInterval'>100 ms</span>
+      </div>
+    </div>
+  </div>
+  <script src='https://cdn.jsdelivr.net/npm/chart.js'></script>
+  <script>
+    // Setup Chart.js
+    const ctx = document.getElementById('currentChart').getContext('2d');
+    const currentChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: [],
+        datasets: [{
+          label: 'Current (A)',
+          data: [],
+          borderColor: 'rgb(75, 192, 192)',
+          tension: 0.1,
+          fill: false
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          y: {
+            beginAtZero: false,
+            title: {
+              display: true,
+              text: 'Current (A)'
+            }
+          },
+          x: {
+            title: {
+              display: true,
+              text: 'Reading #'
+            }
+          }
+        },
+        animation: {
+          duration: 0
+        }
+      }
+    });
+
+    // Function to update the chart with new data
+    function updateChart() {
+      fetch('/data')
+        .then(response => response.json())
+        .then(data => {
+          // Update current value display
+          document.getElementById('currentValue').textContent = 'Current: ' + data.current.toFixed(2) + ' A';
+          document.getElementById('currentInterval').textContent = data.interval + ' ms';
+          document.getElementById('interval').value = data.interval;
+
+          // Update chart
+          currentChart.data.labels = [];
+          currentChart.data.datasets[0].data = data.history;
+
+          // Generate labels based on number of data points
+          for (let i = 0; i < data.history.length; i++) {
+            currentChart.data.labels.push(i + 1);
+          }
+
+          currentChart.update();
+        })
+        .catch(error => console.error('Error fetching data:', error));
+    }
+
+    // Function to update the polling interval
+    function updateInterval() {
+      const interval = document.getElementById('interval').value;
+      fetch('/interval?ms=' + interval)
+        .then(response => response.text())
+        .then(data => {
+          document.getElementById('intervalStatus').textContent = data;
+          setTimeout(() => {
+            document.getElementById('intervalStatus').textContent = '';
+          }, 3000);
+          updateChart(); // Update to get the new interval
+        })
+        .catch(error => {
+          document.getElementById('intervalStatus').textContent = 'Error: ' + error;
+        });
+    }
+
+    // Update initially and then every 100ms
+    updateChart();
+    setInterval(updateChart, 100);
+  </script>
+</body>
+</html> 
