@@ -205,11 +205,13 @@ void loop() {
    loop_buttons();
    
    if (millis() - lastMillis > 1000) {
-        PowerData last_reading = loop_modbus_master();
+        loop_modbus_master();
         lastMillis = millis();
-        loop_mqtt(last_reading);
+        for(int i=0;i<MODBUS_NUM_METERS;i++) {
+            loop_mqtt(dds238_meters[i]->last_reading); //publish to MQTT
+        }
    }
-    loop_buttons();
+    loop_buttons();             //multiple calls to loop_buttons() makes them more responsive
     loop_modbus_client();
     loop_buttons(); 
     loop_display();

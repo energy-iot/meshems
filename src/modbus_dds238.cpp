@@ -37,8 +37,6 @@ float Modbus_DDS238::read_modbus_extended_value(uint16_t registerAddress) {
 
 uint8_t Modbus_DDS238::poll() {
     uint8_t success = ku8MBSuccess;
-    // Create a PowerData struct and populate it by making getResponseBuffer() calls
-    PowerData last_reading;
     try {
         last_reading.total_energy = read_modbus_extended_value(rTOTAL_ENERGY)/100;
         last_reading.export_energy = read_modbus_extended_value(rEXPORT_ENERGY_LOW)/100;

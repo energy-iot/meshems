@@ -28,22 +28,7 @@ class Modbus_DDS238 : public ModbusMaster {
             rPOWER_FACTOR = 0x10,       // 1/1000
             rFREQUENCY = 0x11,           // 1/100 Hz
             rMETADATA = 0x15          // 1-247 (high byte), 1-16 (low byte)
-        };
-
-        // Struct for current, voltage, and power factor
-        struct PowerData {
-            unsigned long timestamp_last_report = 0;
-            float total_energy = 0;  // kWh
-            float export_energy = 0; // kWh
-            float import_energy = 0; // kWh
-            float voltage = 0;       // V
-            float current = 0;       // A
-            float active_power = 0;  // kW
-            float reactive_power = 0; // kVAr
-            float power_factor = 0;  // 0-1
-            float frequency = 0;     // Hz
-            float metadata = 0;      // 1-247 (high byte), 1-16 (low byte)
-        };
+        };        
 
         uint8_t poll();
         PowerData last_reading;
@@ -69,3 +54,7 @@ class Modbus_DDS238 : public ModbusMaster {
         float total_enery;
         float export_energy;
 };
+
+extern Modbus_DDS238 dds238_1;
+extern Modbus_DDS238 dds238_2;
+extern Modbus_DDS238 dds238_3;

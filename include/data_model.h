@@ -11,7 +11,7 @@ extern bool discreteInputs[MODBUS_NUM_DISCRETE_INPUTS];
 extern uint16_t holdingRegisters[MODUBS_NUM_HOLDING_REGISTERS];
 extern uint16_t inputRegisters[MODBUS_NUM_INPUT_REGISTERS];
 
-// Struct for current, voltage, and power factor
+ // Struct for current, voltage, and power factor
 //EMS as a 3 phase subpanel with N  meters and x meters per phase SO has multiple dimensions of powerdata to totalize and publish
 // 1. all 3 phases totalized powerdata usage per StreetPoleSubpanel
 // 2. each Phase powerdata summary per subpanel
@@ -20,8 +20,7 @@ extern uint16_t inputRegisters[MODBUS_NUM_INPUT_REGISTERS];
 // for a future staging/installer app, all networking device shall have meaningful QR codes
 // Staging or install or at maintenance time  scan the subpanel and all active networking parts installed to the subpanel
 // are auto provisoned in a backend Db addressable to the MS subpanel globally unique QR code
-
-struct PowerData {  // TODO expand this struct for all powerdata OR have different structs
+struct PowerData {
     unsigned long timestamp_last_report = 0;
     float total_energy = 0;  // kWh
     float export_energy = 0; // kWh
@@ -35,7 +34,6 @@ struct PowerData {  // TODO expand this struct for all powerdata OR have differe
     float metadata = 0;      // 1-247 (high byte), 1-16 (low byte)
 };
 
-extern PowerData last_reading;
 // Current history data structure for timeline graph
 typedef struct {
     float values[CURRENT_HISTORY_SIZE];  // Circular buffer for current values

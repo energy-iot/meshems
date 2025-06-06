@@ -3,6 +3,8 @@
 #include <ModbusMaster.h>
 #include "data_model.h"
 
+#define MODBUS_NUM_METERS 1
+
 /*
 Watch out for MAX485 DO VS D1 unloaded SERIAL SIDE AFFECTS - SEE TECH DETAILS AT  https://www.analog.com/en/products/max485.html#part-details
 BIAS RESISTORS DETAILED TECH SPECS HERE https://control.com/forums/threads/modbus-standard-termination.20389/
@@ -13,6 +15,6 @@ TESTING WITH 150 OHM RESISTOR ACROSS LAST FURTHEST A-B MODBUS RTU ENDPOINT THIS 
 
 void setup_modbus_clients();
 void setup_modbus_master();
-PowerData loop_modbus_master();
+void loop_modbus_master();
 void update();
 
