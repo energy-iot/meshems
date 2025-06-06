@@ -62,17 +62,16 @@ void setup() {
     setup_modbus_server();
 
     setup_buttons();
-    _console.addLine(" EMS In-service Ready!");
-    _console.addLine("  SunSpec Enabled");
-    _console.addLine("  Sol-Ark -> SunSpec");
-    _console.addLine("  Model 701 Active");
+    _console.addLine("EMS Gatway Ready!");
+    _console.addLine("Sol-Ark -> SunSpec");
+    _console.addLine("Model 1, 701, 713 Active");
     
     // Display TCP/IP information
     if (WiFi.status() == WL_CONNECTED) {
-        String ipInfo = "  TCP/IP: " + WiFi.localIP().toString() + ":8502";
+        String ipInfo = "IP:" + WiFi.localIP().toString() + ":8502";
         _console.addLine(ipInfo);
     } else {
-        _console.addLine("  WiFi not connected");
+        _console.addLine("WiFi not connected");
     }
 }
 
