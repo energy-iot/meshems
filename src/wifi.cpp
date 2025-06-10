@@ -2,10 +2,11 @@
 #include <WiFiMulti.h>
 #include <wifi.h>
 
-//#define WIFI_SSID "E@rthday2025"
-//#define WIFI_PW "EMSWorkshop"
-#define WIFI_SSID "Starlink"
-#define WIFI_PW "tikka2013"
+#define WIFI_PW "E@rthday2025"
+#define WIFI_SSID "EMSLab"
+//#define WIFI_SSID "EMSWorkshop"
+//#define WIFI_SSID "Starlink"
+//#define WIFI_PW "tikka2013"
 int CONNECT_ATTEMPTS = 6;
 WiFiMulti wifiMulti;
 
