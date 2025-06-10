@@ -37,8 +37,6 @@ struct PowerData {
     float metadata = 0;      // 1-247 (high byte), 1-16 (low byte)
 };
 
-PowerData readings[MODBUS_NUM_METERS]; // Array to hold readings for each meter
-
 // Current history data structure for timeline graph
 typedef struct {
     float values[CURRENT_HISTORY_SIZE];  // Circular buffer for current values
@@ -49,6 +47,7 @@ typedef struct {
 } CurrentHistory;
 
 extern CurrentHistory currentHistory;
+extern PowerData readings[]; // Array to hold readings for each meter
 
 // Function to add a new current reading to the history buffer
 void addCurrentReading(float value);

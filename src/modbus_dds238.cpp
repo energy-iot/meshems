@@ -87,3 +87,15 @@ float Modbus_DDS238::getVoltage() {
 float Modbus_DDS238::getCurrent() {
     return last_reading.current;
 }
+
+float Modbus_DDS238::getActivePower() {
+    return last_reading.active_power;
+}
+
+float Modbus_DDS238::getPowerFactor() {
+    return last_reading.power_factor;
+}
+
+float Modbus_DDS238::getFrequency() {
+    return last_reading.frequency;
+}
