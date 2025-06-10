@@ -53,7 +53,7 @@
 // Perform the background MQTT operations. Must be called in the main
 // loop function
 // -------------------------------------------------------------------
-void loop_mqtt(PowerData last_reading);
+void loop_mqtt();
 void setup_mqtt_client();
 void subscriber_callback(char* topic, uint8_t* payload, unsigned int length);
 void mqtt_publish_comma_sep_colon_delim(const char* subtopic, const char * data);

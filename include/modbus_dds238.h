@@ -30,7 +30,7 @@ class Modbus_DDS238 : public ModbusMaster {
             rMETADATA = 0x15          // 1-247 (high byte), 1-16 (low byte)
         };        
 
-        uint8_t poll();
+        void poll();
         PowerData last_reading;
 
         float getTotalEnergy();

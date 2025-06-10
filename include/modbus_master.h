@@ -3,8 +3,6 @@
 #include <ModbusMaster.h>
 #include "data_model.h"
 
-#define MODBUS_NUM_METERS 1
-
 /*
 Watch out for MAX485 DO VS D1 unloaded SERIAL SIDE AFFECTS - SEE TECH DETAILS AT  https://www.analog.com/en/products/max485.html#part-details
 BIAS RESISTORS DETAILED TECH SPECS HERE https://control.com/forums/threads/modbus-standard-termination.20389/

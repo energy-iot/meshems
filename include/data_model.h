@@ -1,5 +1,8 @@
 #pragma once
 
+#define MODBUS_NUM_METERS 1
+#define MODBUS_NUM_THERMOSTATS 1
+
 #define MODBUS_NUM_COILS                2
 #define MODBUS_NUM_DISCRETE_INPUTS      2
 #define MODUBS_NUM_HOLDING_REGISTERS    2
@@ -33,6 +36,8 @@ struct PowerData {
     float frequency = 0;     // Hz
     float metadata = 0;      // 1-247 (high byte), 1-16 (low byte)
 };
+
+PowerData readings[MODBUS_NUM_METERS]; // Array to hold readings for each meter
 
 // Current history data structure for timeline graph
 typedef struct {

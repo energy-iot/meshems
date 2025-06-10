@@ -93,34 +93,41 @@ void update() {
     inputRegisters[0] = sht20.getTemperature();
     inputRegisters[1] = sht20.getHumidity();
     
-    // Get all measurements from DDS238
-    float current = dds238_1.getCurrent();
-    float voltage = dds238_1.getVoltage();
-    float power = dds238_1.getActivePower();
-    float pf = dds238_1.getPowerFactor();
-    float freq = dds238_1.getFrequency();
+    // Get all measurements from meters
+    for(int i=0;i<MODBUS_NUM_METERS;i++) {
+        readings[i].current = dds238_meters[i]->getCurrent(); // Current
+        readings[i].voltage = dds238_meters[i]->getVoltage(); // Voltage
+        readings[i].active_power = dds238_meters[i]->getActivePower(); // Active Power
+        readings[i].power_factor = dds238_meters[i]->getPowerFactor(); // Power Factor
+        readings[i].frequency = dds238_meters[i]->getFrequency(); // Frequency
+        readings[i].total_energy = dds238_meters[i]->getTotalEnergy(); // Total Energy
+        readings[i].export_energy = dds238_meters[i]->getExportEnergy(); // Export Energy
+        readings[i].import_energy = dds238_meters[i]->getImportEnergy(); // Import Energy
+        
+        // If readings are zero or invalid, generate test data
+        /*
+        if (readings[i].current <= 0.001) {
+            // Simulate patterns for testing
+            unsigned long t = millis();
+            readings[i].current = 2.5 + 2.0 * sin(t / 2000.0);
+            readings[i].voltage = 230.0 + 5.0 * sin(t / 1500.0);
+            readings[i].active_power = readings[i].current * readings[i].voltage * 0.95;
+            readings[i].power_factor = 0.95 + 0.05 * sin(t / 3000.0);
+            readings[i].frequency = 50.0 + 0.1 * sin(t / 4000.0);
+            Serial.printf("MODBUS METER using simulated values\n");
+        } else {
+            Serial.printf("MODBUS METER using real values\n");
+        }*/
     
-    // If readings are zero or invalid, generate test data
-    if (current <= 0.001) {
-        // Simulate patterns for testing
-        unsigned long t = millis();
-        current = 2.5 + 2.0 * sin(t / 2000.0);
-        voltage = 230.0 + 5.0 * sin(t / 1500.0);
-        power = current * voltage * 0.95;
-        pf = 0.95 + 0.05 * sin(t / 3000.0);
-        freq = 50.0 + 0.1 * sin(t / 4000.0);
-        Serial.printf("MODBUS METER using simulated values\n");
-    } else {
-        Serial.printf("MODBUS METER using real values\n");
     }
     
     // Add the reading to our history buffer for timeline plotting
-    addCurrentReading(current);
+    //addCurrentReading(current);
     
     // Send CSV formatted data over USB for plotting on computer
     // Format: DATA,timestamp,current,voltage,power,pf,freq
-    Serial.printf("DATA,%lu,%.3f,%.3f,%.3f,%.3f,%.3f\n", 
-                 millis(), current, voltage, power, pf, freq);
+   // Serial.printf("DATA,%lu,%.3f,%.3f,%.3f,%.3f,%.3f\n", 
+   //              millis(), current, voltage, power, pf, freq);
 }
 
 void poll_energy_meters() {
@@ -128,10 +135,19 @@ void poll_energy_meters() {
     for(int i = 0; i < MODBUS_NUM_METERS; i++) {
         dds238_meters[i]->poll();
     }
-    
     // Update data model with latest readings
     update();
 }
+
+void poll_thermostats() {
+    // Poll each DDS238 meter
+    for(int i = 0; i < MODBUS_NUM_THERMOSTATS; i++) {
+        //sht20_thermostats[i]->poll();
+    }
+    // Update data model with latest readings
+    update();
+}
+//sht20.poll();        // Get new readings
 
 /**
  * Main polling loop for Modbus communication
@@ -139,7 +155,7 @@ void poll_energy_meters() {
 void loop_modbus_master() {
     if (millis() - lastPollMillis > POLL_INTERVAL) {
         Serial.println("Starting poll cycle...");
-        //sht20.poll();        // Get new readings
+        //poll_thermostats();
         poll_energy_meters(); // Poll energy meters
         lastPollMillis = millis();
     }

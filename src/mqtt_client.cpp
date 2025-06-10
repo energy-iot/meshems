@@ -290,7 +290,7 @@ void setup_mqtt_client() {
   mqtt_interval_ts = now();
 }
 
-void loop_mqtt(PowerData last_reading) {
+void loop_mqtt() {
 
       bool mqtt_connected = mqttclient.connected();
       if (!mqtt_connected) {
@@ -307,16 +307,18 @@ void loop_mqtt(PowerData last_reading) {
        // Serial.println("Publishing Phase stats!");
 
         //TODO publish 3 phase OPENAMI per meter/tenant energy totals per phase ;
-        mqtt_publish_StreetPoleEMS("", last_reading);
-        Serial.println("Publishing ems!");
-        mqtt_publish_Leakage("", last_reading);
-        Serial.println("Publishing leakage!");
-        mqtt_publish_Meter("1", last_reading);
-        Serial.println("Publishing meter!");
-       // mqtt_publish_phase("", last_reading);
-       // Serial.println("Publishing Phase stats!");
-       // mqtt_publish_EMS("", last_reading);
-       // Serial.println("Publishing EMS device stats!");
+        for(int i=0;i<MODBUS_NUM_METERS;i++) {
+          mqtt_publish_StreetPoleEMS("", readings[i]);
+          Serial.println("Publishing ems");
+          mqtt_publish_Leakage("", readings[i]);
+          Serial.println("Publishing leakage");
+          mqtt_publish_Meter("1", readings[i]);
+          Serial.println("Publishing meter");
+        // mqtt_publish_phase("", last_reading);
+        // Serial.println("Publishing Phase stats!");
+        // mqtt_publish_EMS("", last_reading);
+        // Serial.println("Publishing EMS device stats!");
+        }
       } else {
         Serial.println("MQTT not connected!");
       }
