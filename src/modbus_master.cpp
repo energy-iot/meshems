@@ -122,12 +122,14 @@ void update() {
     }
     
     // Add the reading to our history buffer for timeline plotting
-    //addCurrentReading(current);
+    //TODO plot all meters, not just the first one
+    addCurrentReading(readings[0].current); 
     
     // Send CSV formatted data over USB for plotting on computer
     // Format: DATA,timestamp,current,voltage,power,pf,freq
-   // Serial.printf("DATA,%lu,%.3f,%.3f,%.3f,%.3f,%.3f\n", 
-   //              millis(), current, voltage, power, pf, freq);
+    //TODO plot all meters, not just the first one
+    Serial.printf("DATA,%lu,%.3f,%.3f,%.3f,%.3f,%.3f\n", 
+                 millis(), readings[0].current, readings[0].voltage, readings[0].active_power, readings[0].power_factor, readings[0].frequency);
 }
 
 void poll_energy_meters() {
