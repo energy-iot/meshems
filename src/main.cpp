@@ -42,6 +42,7 @@
 #include <wifi.h>
 #include <mqtt_client.h>
 #include <config.h>
+#include <data_model.h>
 
 void setup() {
     Serial.begin(115200);   // Initialize serial communication for debugging
@@ -61,6 +62,7 @@ void setup() {
 
     setup_wifi();
     setup_mqtt_client();
+    setup_powerData_caches(); //openami to have 4-6 subtopics each with a cahche planned , needs cache data for pattern change  rules and automation
     
     // Initialize Modbus RTU master/client communication
     setup_modbus_master(); // This sets up communication with sensors like the SHT20 temp/humidity sensor or other devices
@@ -95,7 +97,7 @@ void loop() {
    loop_buttons();
    
    if (millis() - lastMillis > 1000) {
-        PowerData last_reading = loop_modbus_master();
+        Power3PhData last_reading = loop_modbus_master();
         lastMillis = millis();
         loop_mqtt(last_reading);
    }

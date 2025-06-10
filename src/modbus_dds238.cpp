@@ -1,8 +1,13 @@
 #include <modbus_dds238.h>
 #include <TimeLib.h>
 #include <data_model.h>
-
+#include <DTMPowerCache.h>
 #define PAUSE_ON_RAMP_LEVELS 30000
+
+/*
+DDS328 is a single phase 240VAC Class 1 meter used per tenant in the streetpoleEMS subpanel
+we read data in a loop every n secs/mins then cache this data including totalizers and stats on working and failed reads
+*/
 
 Modbus_DDS238::Modbus_DDS238() {
 }
@@ -34,9 +39,9 @@ float Modbus_DDS238::read_modbus_extended_value(uint16_t registerAddress) {
     return (float)(getResponseBuffer(0) << 16 + getResponseBuffer(1));
 }
 
-PowerData Modbus_DDS238::poll() {
+Power1PhData Modbus_DDS238::poll() {
     // Create a PowerData struct and populate it by making getResponseBuffer() calls
-    PowerData last_reading;
+    Power1PhData last_reading;
     try {
         last_reading.total_energy = read_modbus_extended_value(rTOTAL_ENERGY)/100;
         last_reading.export_energy = read_modbus_extended_value(rEXPORT_ENERGY_LOW)/100;
@@ -71,16 +76,16 @@ PowerData Modbus_DDS238::poll() {
  }
 
 float Modbus_DDS238::getExportEnergy() {
-    return last_reading.export_energy;
+    return last_power_reading.export_energy;
 }
 float Modbus_DDS238::getImportEnergy() {
-    return last_reading.import_energy;
+    return last_power_reading.import_energy;
 }
 
 float Modbus_DDS238::getVoltage() {
-    return last_reading.voltage;
+    return last_power_reading.voltage;
 }
 
 float Modbus_DDS238::getCurrent() {
-    return last_reading.current;
+    return last_power_reading.current;
 }

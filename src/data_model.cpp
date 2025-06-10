@@ -47,3 +47,6 @@
   * They typically store measured values from sensors or status information.
   */
  uint16_t inputRegisters[MODBUS_NUM_INPUT_REGISTERS];
+
+ // init clear and setup powerdata caches reading  energy devices and caching then later pushing data cache out on mqtt openami
+ void setup_powerData_caches(); 
