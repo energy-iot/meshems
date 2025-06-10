@@ -3,7 +3,7 @@
 #include <wifi.h>
 
 #define WIFI_PW "E@rthday2025"
-#define WIFI_SSID "EMSLab"
+#define WIFI_SSID "EMSLab1"
 //#define WIFI_SSID "EMSWorkshop"
 //#define WIFI_SSID "Starlink"
 //#define WIFI_PW "tikka2013"
