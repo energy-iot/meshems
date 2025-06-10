@@ -7,6 +7,10 @@
 
    Modified to use with the CircuitSetup.us Split Phase Energy Meter by jdeglavina
    Modified to use with EMS Workshop by dmendonca
+   Modified to use with openami over mqtt by galgie - flexible topic and subtopic reporting of 
+        front-of-the-meter StreetPoleEMS and behind-the-meter MDU Building multiEV charge/discharge subpanels
+        generate, store, consume, transform, transport actionable edge telemetry for use by both 
+        distributed GroupLead EMS  and LVfeeder Lead EMS policy decision serving services.
 
    All adaptation GNU General Public License as below.
 
@@ -25,7 +29,46 @@
    along with EmonESP; see the file COPYING.  If not, write to the
    Free Software Foundation, Inc., 59 Temple Place - Suite 330,
    Boston, MA 02111-1307, USA.
-*/
+
+Behind the meter Use cases:
+    MDU BUILDINg MULTI TENANT BUSS mains LeadEMS publishes Mains to Wan cloud and to Building Lan as mqtt energy status source of truth. 
+    other building subsystem EMS subpanels keep their subsystems in profile of Group Lead EMS distributing energy asset transfer policy
+    schedules to the various building enrgy subsystems. At site install/staging time the EMS publish to each other on a well known mqtt discovery channel
+    UPnP like  discovery of Building edges check-in with Mains lead EMS to receive each of their policy schedule bulk and periodically iterated updates
+
+Front of the Meter Use Case
+   IEEE ISV StreetPoleEMS multi tenant bidirectional energy asset transfer Policy Enforcer Edge at the Smartened Village StreetPole. S\Each StreetPoleENS communicates with distributed GroupLead EMS policy serving Java Linux Nodes.
+   Thes lead Java Linux nodes receive periodic usage telemetry from l\discoverred StreetPoleEMS edges and from front of meter and behind the meter DERs
+   that periodically advertise their capabilities and name plate and present utilized capacities - key dimensions of DERs capabilities are  geneerate, transform, store and consume. 
+   THe multiple streetpoleems edges  on a shared LVfeeder also has a single (and backup) declared "LVfeeder Lead EMS" that keeps a totalizer data maodel source of truth of the LVfeeder 
+   energy transport nameplate capacity and present capacity sharing this over mqtt on a well known  published/discovered mqtt too the GroupLead policcy serving EMS ( Java Linix multicore node. 
+   The Java Linux multicore GroupLead EMS policy serving nodes are independant decision makers for one or more designated or learned LVFeeders that it serves the generate, store, transform, and consume time-of-day policies to 
+
+TODO - soon is to breakup this mqtt client as its taking on mqtt higher level separated roles for a designated LVFeeder LeadEMS vs a regular policy enforcing building
+   or streetpoleEMS edge of a building energy subsystem specifc policy enforcer or streetpoleEMS LVfeeder EMS policy enforcer role at multitenant subpanel
+TODO perhaps can decouple the higher level topics telemetry formating of the key "openami" schema framework separate from the basic emchanical operation of 
+establishing and encode and decode json documents and mqtt operations of a 2way mqtt monitor and control plane framework. key openami subtopics
+   o  EMS-3phase energy reports actionable telemetry
+   o  EMS-harmonics energy actionable telemetry
+   o  EMS- leakage energy actioanable telemetry
+   o  per tenant meter single phase energy reports with localized leakage actionable telemetry
+   o  EMS meaningful stats - actionable OAM learning  telemetry
+   o  Tenant per meter stats - for example time stats in active operational edge DER  roles of generate, store, consume, transform
+   add ability to add or remove openami subtopics based on the subpanel SKU and onbaord addressable 
+   edge sensors (meters, leakage RCM) and actuators (normally closed and normally open designated contactors).
+   
+   IN a energy equity village and villager  empowerment business model its important to keep a lean well defined 2way mqtt measure and comman and control
+   "potential" operations of the edge tenant or streetpole site edge ability to perform in all 4 or 5 modes of addressable 
+   session oriented energy asset transfer policy measureable and enforceable energy categories of:
+   o consume
+   o generate
+   o store
+   o transform
+   o transport
+
+   Ideally each meter should have stats published of its powerflow managed energy asset transfer individual sessions performing as a 
+   generate(export), store, consume(import), transform (AC-DC voltage coupled form, voltage level conversion),  transport (as a LVFeeder Lead EMS operational role) managed energy servcice entities  
+  */
 
 #include "mqtt_client.h"
 #include <TimeLib.h>
@@ -34,13 +77,17 @@
 #include <config.h>
 #include <ArduinoJson.h>
 #include <modbus_master.h>
-#include <sunspec_model_213.h>
-#include <leakage_model_ivy41a.h>
-//#include "modbus_devices.h" // added by Kevin - future use
+#include <sunspec_model_213.h>            // TODO breaks up into base and harmonics separated subtopics for openami
+#include <sunspec_model_213_base.h>       // stays true to Sunspec base 213 data model schema
+#include <sunspec_model_213_harmonics.h>  // TODO confirm if there is a harmonics report for Sunspec model and adapt or change to be flexible
+#include <leakage_model_ivy41a.h>         // these are actioanble leakage sensor measurements based on Type B leakage
+//#include "modbus_devices.h"             // added by Kevin - future use
 #include "data_model.h"
 
 WiFiClient transportClient;                 // the network client for MQTT (also works with EthernetLarge)
 PubSubClient mqttclient(transportClient);   // the MQTT client
+
+// TODO is to allow build time control bools here to enable openami schema subtopics to be included or not based on a subpanel model - TBD
 
 unsigned long mqtt_interval_ts = 0;
 static char mqtt_data[128] = "";
@@ -71,7 +118,7 @@ void generateTopics() {
 boolean mqtt_connect()
 {
   Serial.printf("MQTT Connecting...timeout in:%d\r\n", transportClient.getTimeout());
-
+  // allow for 1883 or 8883 encrypted telemetry and command and control
   if (transportClient.connect(MQTT_SERVER, 1883) != 1) //8883 for TLS
   {
      Serial.println("MQTT connect timeout.");
@@ -114,7 +161,7 @@ boolean mqtt_connect()
   return (1);
 }
 
-void mqtt_publish_StreetPoleEMS(String meterId, const PowerData& meterData) {
+void mqtt_publish_StreetPoleEMS(String EMSId, const PowerData& meterData) {  // TODO pass EMSdata structured model
   SunSpecModel213 sunSpecData;
 
   // For now assume phase A. This can be extended to put the meter readings in the
@@ -130,6 +177,7 @@ void mqtt_publish_StreetPoleEMS(String meterId, const PowerData& meterData) {
 
   long timestamp = meterData.timestamp_last_report;
   String topicBuf = "subpanel_3Ph";
+  // String topicBuf = EMSId;
 
   JsonDocument jsonDoc;
   sunSpecData.toJson(jsonDoc);
@@ -138,7 +186,7 @@ void mqtt_publish_StreetPoleEMS(String meterId, const PowerData& meterData) {
   mqtt_publish_json(topicBuf.c_str(), &jsonDoc);
 }
 
-void mqtt_publish_Meter(String meterId, const PowerData& meterData) {
+void mqtt_publish_Meter(String meterId, const PowerData& meterData) { 
   SunSpecModel213 sunSpecData;
 
   // For now assume phase A. This can be extended to put the meter readings in the
@@ -158,6 +206,16 @@ void mqtt_publish_Meter(String meterId, const PowerData& meterData) {
 
   JsonDocument jsonDoc;
   sunSpecData.toJson(jsonDoc);
+  jsonDoc["timestamp"] = timestamp;
+
+  mqtt_publish_json(topicBuf.c_str(), &jsonDoc);
+}
+
+void mqtt_publish_Harmonics(const SunSpecModel213Harmonics& harmonicsData, long timestamp) { // TODO pass EMSdata structured model
+  String topicBuf = "harmonics"; // Subtopic under the device topic
+
+  JsonDocument jsonDoc;
+  harmonicsData.toJson(jsonDoc);  // This assumes you have a method toJson() defined for harmonics
   jsonDoc["timestamp"] = timestamp;
 
   mqtt_publish_json(topicBuf.c_str(), &jsonDoc);
@@ -288,7 +346,7 @@ void setup_mqtt_client() {
   mqtt_interval_ts = now();
 }
 
-void loop_mqtt(PowerData last_reading) {
+void loop_mqtt(PowerData last_reading) {  // TODO powerdata need have object instances per subtopic json document blobs 3Phase EMS, Harmonics, Leakage, 1 Phase meters
 
       bool mqtt_connected = mqttclient.connected();
       if (!mqtt_connected) {
@@ -297,24 +355,18 @@ void loop_mqtt(PowerData last_reading) {
       //mqtt_publish(input);
       if (mqtt_connected) {  
       // TODO not all telemetry has to publish on same iteration, different rates of publish , including adaptive meaningful rate is a good thing
-       // TODO publish streetpoleEMS actionable telemetry
-       // mqtt_publish_EMS("", last_reading);
-       // Serial.println("Publishing EMS device stats!");
-       // TODO publish per phase per streetpoleEMS actionable telemetry 
-       // mqtt_publish_phase("", last_reading);
-       // Serial.println("Publishing Phase stats!");
+
 
         //TODO publish 3 phase OPENAMI per meter/tenant energy totals per phase ;
         mqtt_publish_StreetPoleEMS("", last_reading);
-        Serial.println("Publishing ems!");
+        Serial.println("Publishing actionable ems 3phase telemetry!");
+        //mqtt_publish_Harmonics(HarmonicsData, last_reading.timestamp_last_report);
+        //TODO Serial.println("Publishing actionable harmonics telemetry!");
         mqtt_publish_Leakage("", last_reading);
-        Serial.println("Publishing leakage!");
-        mqtt_publish_Meter("1", last_reading);
-        Serial.println("Publishing meter!");
-       // mqtt_publish_phase("", last_reading);
-       // Serial.println("Publishing Phase stats!");
-       // mqtt_publish_EMS("", last_reading);
-       // Serial.println("Publishing EMS device stats!");
+        Serial.println("Publishing actionable leakage telemetry!");
+        mqtt_publish_Meter("meterid", last_reading);
+        Serial.println("Publishing actionable meter/tenant telemetry!");
+
       } else {
         Serial.println("MQTT not connected!");
       }

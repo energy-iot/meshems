@@ -39,9 +39,9 @@ float Modbus_DDS238::read_modbus_extended_value(uint16_t registerAddress) {
     return (float)(getResponseBuffer(0) << 16 + getResponseBuffer(1));
 }
 
-Power1PhData Modbus_DDS238::poll() {
+PowerData Modbus_DDS238::poll() { // TODO need 3phase per ems subpanel power data  as well as per tenant or per meter single phase meter data
     // Create a PowerData struct and populate it by making getResponseBuffer() calls
-    Power1PhData last_reading;
+    PowerData last_reading;
     try {
         last_reading.total_energy = read_modbus_extended_value(rTOTAL_ENERGY)/100;
         last_reading.export_energy = read_modbus_extended_value(rEXPORT_ENERGY_LOW)/100;
@@ -67,8 +67,9 @@ Power1PhData Modbus_DDS238::poll() {
         Serial.printf("MODBUS DDS238: Metadata: %d\n", last_reading.metadata);
     } catch (std::runtime_error& e) {
         Serial.println("MODBUS DDS238: Error reading registers");
-    }
-    return last_reading;
+
+    }// TODO get rid of passing this as a parameter and instead have a simpler shared data model that caching modbus device pollers use and mqtt client publishers use
+    return last_reading; // return success or return a stats that gets saved against the ems subpanel node
 }
 
  float Modbus_DDS238::getTotalEnergy() {
@@ -76,16 +77,16 @@ Power1PhData Modbus_DDS238::poll() {
  }
 
 float Modbus_DDS238::getExportEnergy() {
-    return last_power_reading.export_energy;
+    return last_reading.export_energy;
 }
 float Modbus_DDS238::getImportEnergy() {
-    return last_power_reading.import_energy;
+    return last_reading.import_energy; 
 }
 
 float Modbus_DDS238::getVoltage() {
-    return last_power_reading.voltage;
+    return last_reading.voltage;
 }
 
 float Modbus_DDS238::getCurrent() {
-    return last_power_reading.current;
+    return last_reading.current;
 }

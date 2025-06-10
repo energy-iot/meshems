@@ -1,11 +1,16 @@
-// DTMPowerCache.h
 #pragma once
 
 #include <map>
 #include <ArduinoJson.h>
 #include <limits>
 #include <cmath>
+/*
+Notes for ArduinoJson 7.x
+DynamicJsonDocument is not strictly "removed", but JsonDocument is now the common alias; still, 
+StaticJsonDocument or a class member buffer is preferred for performance.
 
+TODO If you want to support larger JSON payloads, consider returning a pointer or passing in a JsonDocument& to the buildJson function.
+*/
 struct Stats {
   float min = std::numeric_limits<float>::max();
   float max = std::numeric_limits<float>::lowest();
@@ -39,7 +44,7 @@ class DTMPowerCache {
 public:
   void init();
   void addSamples(const std::map<String, String>& raw);
-  DynamicJsonDocument buildJson();
+  JsonDocument buildJson();  // Updated
   void resetStats();
 
   const std::map<String, Stats>& getStats() const { return statsMap; }
@@ -50,12 +55,12 @@ private:
   std::map<String, float> totalizers;
 };
 
-// DTMPowerCache.cpp
-//#include "DTMPowerCache.h"
+#include "DTMPowerCache.h"
+#include <set>
 
 // Define which registers are totalizers
 static const std::set<String> totalizerRegs = {
-  "36", "37", "38", "39" // Example: last 4 registers
+  "36", "37", "38", "39"
 };
 
 void DTMPowerCache::init() {
@@ -74,11 +79,12 @@ void DTMPowerCache::addSamples(const std::map<String, String>& raw) {
   }
 }
 
-DynamicJsonDocument DTMPowerCache::buildJson() {
-  DynamicJsonDocument doc(2048);
-  JsonObject root = doc.to<JsonObject>();
+JsonDocument DTMPowerCache::buildJson() {
+  StaticJsonDocument<2048> internalDoc;  // Constructed using StaticJsonDocument
+  JsonObject root = internalDoc.to<JsonObject>();
   root["device_id"] = "esp32s3-001";
-  root["timestamp"] = time(nullptr);
+  root["timestamp"] = static_cast<uint32_t>(time(nullptr));
+
   JsonObject regs = root.createNestedObject("registers");
 
   for (const auto& [key, stat] : statsMap) {
@@ -93,7 +99,8 @@ DynamicJsonDocument DTMPowerCache::buildJson() {
     regs[key]["value"] = val;
   }
 
-  return doc;
+  JsonDocument result = internalDoc;  // Return as JsonDocument
+  return result;
 }
 
 void DTMPowerCache::resetStats() {
