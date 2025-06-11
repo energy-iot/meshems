@@ -4,8 +4,8 @@
 
 //#define WIFI_SSID "E@rthday2025"
 //#define WIFI_PW "EMSWorkshop"
-#define WIFI_SSID "Starlink"
-#define WIFI_PW "tikka2013"
+#define WIFI_SSID "energy-iot-2.4"
+#define WIFI_PW "Pride1@Azure"
 int CONNECT_ATTEMPTS = 6;
 WiFiMulti wifiMulti;
 
