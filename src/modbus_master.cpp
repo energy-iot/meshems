@@ -15,27 +15,53 @@
 unsigned int POLL_INTERVAL = 100;  // Initial value of 100ms for faster updates
 
 // ==================== Modbus Device Addresses ====================
-#define THERMOSTAT_1_ADDR 0x01
+// during staging of subpanel must stage each modbus meter with its assigned node number - in future could use qr code sticker per meter for faster staging of a subpanel
+#define THERMOSTAT_1_ADDR 0x01    // TODO  maybe set temp/humid sensor as modbus node num 99 so never conflicts
+//#define THERMOSTAT_1_ADDR 0x99  // set temp/humid sensor as modbus node num 99 so never conflicts
+
+//3 meter subpanel , either 1 tenant meter per phase or all 3 meters on same phase 
 #define DDS238_1_ADDR 0x01
 #define DDS238_2_ADDR 0x02
 #define DDS238_3_ADDR 0x03
+//6 meter subpanel , either n tenant meters per phase, or all  meters on same phase 
+//#define DDS238_1_ADDR 0x04
+//#define DDS238_2_ADDR 0x05
+//#define DDS238_3_ADDR 0x06
+//9 meter subpanel , either n tenant meters per phase, or all  meters on same phase 
+//#define DDS238_1_ADDR 0x07
+//#define DDS238_2_ADDR 0x08
+//#define DDS238_3_ADDR 0x09
+// NOTE 2/4/8 multitenant subpanels can be cookie cutter options 
+
 
 // ==================== Serial Interface Setup ====================
-SoftwareSerial _modbus1(RS485_RX_1, RS485_TX_1); // HW519 module pinout
-//SoftwareSerial *modbus2(RS485_RX_2, RS485_TX_2); // Client in EMS ModCan
+SoftwareSerial _modbus1(RS485_RX_1, RS485_TX_1); // RS485 modbus HW519 module pinout - all meters on a rs485 daisy chain (and door thermostat  and tamper door alarm)
+//SoftwareSerial *modbus2(RS485_RX_2, RS485_TX_2); // TODO merge Canbus support and Modbus Client in other EMS branch to here ModCan
 
 // Temperature/humidity sensor
 Modbus_SHT20 sht20;
 
 // Energy Meter (HIKING DDS238)
 Modbus_DDS238 dds238_1;
-//UNcomment for the 3-meter boxes
-//Modbus_DDS238 dds238_2;
-//Modbus_DDS238 dds238_3;
+//UNcomment for the 3-meter subpanels
+Modbus_DDS238 dds238_2;
+Modbus_DDS238 dds238_3;
+//UNcomment for the 6-meter subpanels
+//Modbus_DDS238 dds238_4;
+//Modbus_DDS238 dds238_5;
+//Modbus_DDS238 dds238_6;
+//UNcomment for the 9-meter subpanels
+//Modbus_DDS238 dds238_7;
+//Modbus_DDS238 dds238_8;
+//Modbus_DDS238 dds238_9;
 
-Modbus_DDS238* dds238_meters[MODBUS_NUM_METERS] = {&dds238_1}; // Array of Modbus meters
-//ModbusMaster* meters[MODBUS_NUM_METERS] = {&dds238_1, &dds238_2, &dds238_3}; // add to the array for the multi-meter boxes
+//Modbus_DDS238* dds238_meters[MODBUS_NUM_METERS] = {&dds238_1}; // Array of single 3 phase or single 1 phase tenant Modbus meters
+Modbus_DDS238* dds238_meters[MODBUS_NUM_METERS] = {&dds238_1, &dds238_2, &dds238_3}; // Array of single 3 phase or single 1 phase tenant Modbus meters
 
+// Uncomment for the 3/6/9 single phase meter 
+ModbusMaster* meters[MODBUS_NUM_METERS] = {&dds238_1, &dds238_2, &dds238_3}; // add to the array for the 3 multi-meter boxes
+//ModbusMaster* meters[MODBUS_NUM_METERS] = {&dds238_1, &dds238_2, &dds238_3, &dds238_4, &dds238_5, &dds238_6}; // add to the array for the 3 multi-meter boxes
+//ModbusMaster* meters[MODBUS_NUM_METERS] = {&dds238_1, &dds238_2, &dds238_3, &dds238_4, &dds238_5, &dds238_6, &dds238_7, &dds238_8, &dds238_9}; // add to the array for the 3 multi-meter boxes
 // Timing variables
 unsigned long lastPollMillis, lastEVSEMillis, lastEVSEChargingMillis = 0;
 
@@ -49,13 +75,20 @@ void setup_sht20() {
 }
 
 void setup_dds238() {
-   Serial.printf("SETUP: MODBUS: DDS238 #1: address:%d\n", THERMOSTAT_1_ADDR);
+   Serial.printf("SETUP: MODBUS: DDS238 #1: address:%d\n", DDS238_1_ADDR);
    dds238_1.set_modbus_address(DDS238_1_ADDR);
-   //dds238_2.set_modbus_address(DDS238_2_ADDR);
-   //dds238_3.set_modbus_address(DDS238_3_ADDR);
+   dds238_2.set_modbus_address(DDS238_2_ADDR);
+   dds238_3.set_modbus_address(DDS238_3_ADDR);
+   //dds238_4.set_modbus_address(DDS238_4_ADDR);
+   //dds238_5.set_modbus_address(DDS238_5_ADDR);
+   //dds238_6.set_modbus_address(DDS238_6_ADDR);
    dds238_1.begin(DDS238_1_ADDR, _modbus1);
-   //dds238_2.begin(DDS238_2_ADDR, _modbus1);
-   //dds238_3.begin(DDS238_3_ADDR, _modbus1);
+   dds238_2.begin(DDS238_2_ADDR, _modbus1);
+   dds238_3.begin(DDS238_3_ADDR, _modbus1);
+    //dds238_2.begin(DDS238_2_ADDR, _modbus4);
+   //dds238_3.begin(DDS238_3_ADDR, _modbus5);
+    //dds238_2.begin(DDS238_2_ADDR, _modbus6);
+ 
 }
 
 /**
@@ -157,6 +190,7 @@ void loop_modbus_master() {
         Serial.println("Starting poll cycle...");
         //poll_thermostats();
         poll_energy_meters(); // Poll energy meters
+        // TODO poll other modbus device on same link
         lastPollMillis = millis();
     }
 }

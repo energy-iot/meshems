@@ -1,6 +1,7 @@
 #pragma once
 
-#define MODBUS_NUM_METERS 1
+//#define MODBUS_NUM_METERS 1
+#define MODBUS_NUM_METERS 3 //TODO 
 #define MODBUS_NUM_THERMOSTATS 1
 
 #define MODBUS_NUM_COILS                2

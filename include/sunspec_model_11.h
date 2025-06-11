@@ -18,6 +18,7 @@ struct SunSpecModel11 {
     float Var = 0.0;       // Reactive Power
     float PF = 0.0;        // Power Factor
     float Hz = 0.0;        // Frequency
+    int16_t Phase = 0;        // Phase 1,2,3,  = A,B,C
 
     // Accumulated Energy
     float TotWhImport = 0.0;
@@ -44,7 +45,7 @@ struct SunSpecModel11 {
     void toJson(JsonDocument& doc) const {
         doc["model_id"] = model_id;
         doc["length"] = length;
-
+        doc["Phase"] = Phase;
         doc["Hz"] = Hz;
         doc["A"] = A;
         doc["PhV"] = PhV;
@@ -66,7 +67,7 @@ struct SunSpecModel11 {
         doc["TotDayWhImport"] = TotDayWhImport;
         doc["TotDayWhExport"] = TotDayWhExport;
 
-        // Labelled Harmonics
+        // TODO move this out as a hourly publish of Harmonics subtopic per meterid  subtopic  -its too much detail for now Labelled Harmonics
         JsonObject harmonics = doc.createNestedObject("harmonics");
 
         for (int i = 0; i < 15; ++i) {

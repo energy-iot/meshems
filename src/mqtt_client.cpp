@@ -116,9 +116,9 @@ boolean mqtt_connect()
   return (1);
 }
 
-void mqtt_publish_StreetPoleEMS(String meterId, const PowerData& meterData) {
+void mqtt_publish_StreetPoleEMS(String EMSId, const PowerData& meterData) {
   SunSpecModel213 sunSpecData;
-
+  // TODO publish Model 213 here
   // For now assume phase A. This can be extended to put the meter readings in the
   // correct phase using configuration data about which meter is on which phase.
   sunSpecData.PhVphA = meterData.voltage;
@@ -142,7 +142,7 @@ void mqtt_publish_StreetPoleEMS(String meterId, const PowerData& meterData) {
 
 void mqtt_publish_Meter(String meterId, const PowerData& meterData) {
   SunSpecModel213 sunSpecData;
-
+  // TODO publish Model 11 here
   // For now assume phase A. This can be extended to put the meter readings in the
   // correct phase using configuration data about which meter is on which phase.
   sunSpecData.PhVphA = meterData.voltage;
@@ -307,17 +307,23 @@ void loop_mqtt() {
        // Serial.println("Publishing Phase stats!");
 
         //TODO publish 3 phase OPENAMI per meter/tenant energy totals per phase ;
+      mqtt_publish_StreetPoleEMS("", readings[0]);
+       Serial.println("Publishing ems");
+       mqtt_publish_Leakage("", readings[0]);
+       Serial.println("Publishing leakage");
+          
         for(int i=0;i<MODBUS_NUM_METERS;i++) {
-          mqtt_publish_StreetPoleEMS("", readings[i]);
-          Serial.println("Publishing ems");
-          mqtt_publish_Leakage("", readings[i]);
-          Serial.println("Publishing leakage");
-          mqtt_publish_Meter("1", readings[i]);
+         
+          mqtt_publish_Meter(String(i), readings[i]);  // TODO add modbus node number in the readings powerdata
           Serial.println("Publishing meter");
         // mqtt_publish_phase("", last_reading);
         // Serial.println("Publishing Phase stats!");
         // mqtt_publish_EMS("", last_reading);
         // Serial.println("Publishing EMS device stats!");
+        /*char topicId[8];
+        snprintf(topicId, sizeof(topicId), "%d", i);
+        mqtt_publish_Meter(topicId, readings[i]);
+        */
         }
       } else {
         Serial.println("MQTT not connected!");
