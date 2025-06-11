@@ -24,12 +24,8 @@ extern uint16_t inputRegisters[MODBUS_NUM_INPUT_REGISTERS];
 // for a future staging/installer app, all networking device shall have meaningful QR codes
 // Staging or install or at maintenance time  scan the subpanel and all active networking parts installed to the subpanel
 // are auto provisoned in a backend Db addressable to the MS subpanel globally unique QR code
-<<<<<<< HEAD
-struct PowerData {
-=======
 
 struct PowerData {  // single phase per meter data, equivalent to per tenant
->>>>>>> readall_meter
     unsigned long timestamp_last_report = 0;
     float total_energy = 0;  // kWh
     float export_energy = 0; // kWh
@@ -47,22 +43,6 @@ struct PowerData {  // single phase per meter data, equivalent to per tenant
     float metadata = 0;      // 1-247 (high byte), 1-16 (low byte)
 };
 
-<<<<<<< HEAD
-// Current history data structure for timeline graph
-typedef struct {
-    float values[CURRENT_HISTORY_SIZE];  // Circular buffer for current values
-    int currentIndex;                    // Current position in the buffer
-    int count;                           // Number of readings stored (up to CURRENT_HISTORY_SIZE)
-    float minValue;                      // Minimum value in the buffer (for auto-scaling)
-    float maxValue;                      // Maximum value in the buffer (for auto-scaling)
-} CurrentHistory;
-
-extern CurrentHistory currentHistory;
-extern PowerData readings[]; // Array to hold readings for each meter
-
-// Function to add a new current reading to the history buffer
-void addCurrentReading(float value);
-=======
 struct Power1PhData {  // single phase per meter data, equivalent to per tenant
     unsigned long timestamp_last_report = 0;
     float total_energy = 0;  // kWh
@@ -98,7 +78,22 @@ struct HarmonicsData {  // TODO expand this struct for all powerdata OR have dif
     float metadata = 0;      // 1-247 (high byte), 1-16 (low byte)
 };
 
-extern PowerData last_reading;
+// Current history data structure for timeline graph
+typedef struct {
+    float values[CURRENT_HISTORY_SIZE];  // Circular buffer for current values
+    int currentIndex;                    // Current position in the buffer
+    int count;                           // Number of readings stored (up to CURRENT_HISTORY_SIZE)
+    float minValue;                      // Minimum value in the buffer (for auto-scaling)
+    float maxValue;                      // Maximum value in the buffer (for auto-scaling)
+} CurrentHistory;
+
+extern CurrentHistory currentHistory;
+extern PowerData readings[]; // Array to hold readings for each meter
+
+// Function to add a new current reading to the history buffer
+void addCurrentReading(float value);
+
+extern PowerData last_reading; // older cache data to allow easier iterative design testing and debugging
 extern Power3PhData last_EMS_power_reading;  // 3 phase streetpole EMS ( include EMS subpanel scoped energy data totalized per phase)
 extern Power1PhData last_power_reading;         // TODO make per meter/tenant per phase modbus node num unique to EMS only
 extern HarmonicsData last_harmonics_reading;    // TODO breakout Harmonics data Current and Voltage per phase as its own 
@@ -108,4 +103,3 @@ extern LeakageData last_leakage_reading;        // Leakage data is measured repo
                                                 // RCM leakage will report per tenant leakage measurements and autonoomous trigger of tenant contactor to open if hits life threatening levels as per Type B
                                                 // if per phase leakage is measured then may not have to per tenant leakage - downside is the\\at all tenants on a phase get opencircuited if phase leakage RCM hits life threatening levels
 
->>>>>>> readall_meter
