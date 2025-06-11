@@ -11,5 +11,14 @@
 #define MQTT_USER               "public"                  // leave empty for test.mosquitto.org
 #define MQTT_PW                 "public"                  // leave empty for test.mosquitto.org   
 
+// DTM485 custom Ascii on serial on rsa485 -  Serial Pins and Baud Rate
+#define DTM485_SERIAL Serial2
+#define DTM485_DE_RE_PIN 23
+#define DTM485_BAUDRATE 9600
+
+// Poll and Publish Intervals
+#define DTM485POLL_INTERVAL_MS 5000        // 5 seconds
+#define DTM_MQTT_PUBLISH_INTERVAL_MS 300000   // 5 minutes
+
 void generateDeviceID();
 const char* getDeviceID();

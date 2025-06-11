@@ -2,11 +2,11 @@
 #include <ArduinoJson.h>
 
 /*
-SunSpec Model 11 - Single Phase AC Meter with Harmonics and THD Support
+SunSpec Model 11 - for use by Single Phase AC Meter (per tenant for example) with Harmonics and THD Support added
 Model ID: 11
 */
 
-struct SunSpecModel11 {
+struct SunSpecModel11 { // used for single phase per tenant meter reports - billable 15 min interval energy use case
     uint16_t model_id = 11;
     uint16_t length = 38; // Actual modbus length, not including harmonics
 
@@ -26,15 +26,17 @@ struct SunSpecModel11 {
     float TotVarhImport = 0.0;
     float TotVarhExport = 0.0;
     float TotAh = 0.0;
-
+    // accumulations in last 15 min, 1 hr, 1 day, 1month
     float Tot15mWhImport = 0.0;
     float Tot15mWhExport = 0.0;
     float TotHrWhImport = 0.0;
     float TotHrWhExport = 0.0;
     float TotDayWhImport = 0.0;
     float TotDayWhExport = 0.0;
+    float TotMnthWhImport = 0.0;
+    float TotMnthWhExport = 0.0;
 
-    // Harmonics (1st through 15th)
+    // TBD not to many single phase meters support it, optional Harmonics (1st through 15th)
     float currentHarmonics[15] = {0.0}; // A_H1 through A_H15
     float voltageHarmonics[15] = {0.0}; // V_H1 through V_H15
 

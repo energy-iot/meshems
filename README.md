@@ -1,7 +1,7 @@
 # EIOT.Energy EMS DER/Site Controller Dev Kit
 
 ## Overview
-A development kit based on the ESP32S3 N16R8 DEV KIT C-1 for energy management systems (EMS) with support for various communication protocols and peripherals.
+A development kit based on the ESP32S3 N16R8 DEV KIT C1 for energy management systems (EMS) with support for various communication protocols and peripherals. There are a few N16R8 40/42/44 pin layouts. Th EMS kit th \evariant where the rgbw led is top center mounted just below the WROOM ESP32S3 surface mount module. All variants will work except the pins layout differs. 
 
 ## Features
 This development kit supports multiple peripherals using the PlatformIO and Arduino framework:

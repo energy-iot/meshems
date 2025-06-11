@@ -1,7 +1,7 @@
 #include <modbus_dds238.h>
 #include <TimeLib.h>
 #include <data_model.h>
-//#include <DTMPowerCache.h>
+#include <DTMPowerCache.h>
 #define PAUSE_ON_RAMP_LEVELS 30000
 
 /*
@@ -77,7 +77,7 @@ float Modbus_DDS238::getExportEnergy() {
     return last_reading.export_energy;
 }
 float Modbus_DDS238::getImportEnergy() {
-    return last_reading.import_energy;
+    return last_reading.import_energy; 
 }
 
 float Modbus_DDS238::getVoltage() {
