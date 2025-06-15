@@ -8,15 +8,15 @@ model and versioning of Hardware integrated (for example 3 phase breakout vs sin
 how many tenants serve
 alsoo OAM alarms sumary such as caution of any export of energy active from tenants,
 a local  faults summary like leakage performance issue/alarm or harmonics performance issue/alarm
-*/*
-struct SunSpecModel1_SPEMS { // Street Pole EMS as a cookie cutter prebuilt, wired, software QA tested 
+*/
+struct SunSpecModel1_EMS { //  EMS subpanel as a cookie cutter prebuilt, wired, software QA tested 
     uint16_t model_id = 1;   // SunSpec Common Model ID
     uint16_t length = 66;    // Default length for Model 1 (can adjust per device)
 
     // Device Identification Fields
     char Mn[33] = "NESL EIOT Prototype";    // Manufacturer
-    char Md[33] = "IP65_5KVA_LeakageperPhase";    // Model
-    char Opt[64] = "3Tenant_Meter_Hiking_DDS328_ZN/S";   // Options
+    char Md[33] = "IP65_5KVA";    // Model
+    char Opt[64] = "3Tenant_Meter_Hiking_DDS328_ZN/S, LeakageRCMperPhase";   // Options
     char Vr[17] = "01.1";    // EMS subpanel Version
     char SN[17] = "";    // TODO Serial Number - put EMS full macid here 
     char DA[17] = "";    // TODO Device Address (or other ID) - put shortenend unique MACID

@@ -11,9 +11,9 @@ struct SunSpecModel11 { // used for single phase per tenant meter reports - bill
     uint16_t length = 38; // Actual modbus length, not including harmonics
 
     // Real-time measurements
-    float A = 0.0;         // RMS Current
+    float PhA = 0.0;         // RMS Current
     float PhV = 0.0;       // RMS Voltage
-    float W = 0.0;         // Active Power
+    float PhW = 0.0;         // Active Power
     float VA = 0.0;        // Apparent Power
     float Var = 0.0;       // Reactive Power
     float PF = 0.0;        // Power Factor
@@ -36,22 +36,23 @@ struct SunSpecModel11 { // used for single phase per tenant meter reports - bill
     float TotMnthWhImport = 0.0;
     float TotMnthWhExport = 0.0;
 
-    // TBD not to many single phase meters support it, optional Harmonics (1st through 15th)
+
+    // TODO move to EMS subpanel per phase Harmonics - TBD not to many single phase meters support it, optional Harmonics (1st through 15th)
     float currentHarmonics[15] = {0.0}; // A_H1 through A_H15
     float voltageHarmonics[15] = {0.0}; // V_H1 through V_H15
 
-    // Optional Total Harmonic Distortion
+    // Optional Total Harmonic Distortion - tbd is keeo this here
     float THD_A = 0.0; // THD Current (%)
     float THD_V = 0.0; // THD Voltage (%)
 
     void toJson(JsonDocument& doc) const {
         doc["model_id"] = model_id;
         doc["length"] = length;
-        doc["Phase"] = Phase;
+        doc["Phase"] = Phase; // track what phase the meter was added to at install/rebalanced service ticket time
         doc["Hz"] = Hz;
-        doc["A"] = A;
+        doc["PhA"] = PhA;
         doc["PhV"] = PhV;
-        doc["W"] = W;
+        doc["PhW"] = PhW;
         doc["VA"] = VA;
         doc["Var"] = Var;
         doc["PF"] = PF;
@@ -70,7 +71,7 @@ struct SunSpecModel11 { // used for single phase per tenant meter reports - bill
         doc["TotDayWhExport"] = TotDayWhExport;
 
         // TODO move this out as a hourly publish of Harmonics subtopic per meterid  subtopic  -its too much detail for now Labelled Harmonics
-        JsonObject harmonics = doc.createNestedObject("harmonics");
+        /*JsonObject harmonics = doc.createNestedObject("harmonics");
 
         for (int i = 0; i < 15; ++i) {
             String keyA = "A_H" + String(i + 1);
@@ -78,7 +79,7 @@ struct SunSpecModel11 { // used for single phase per tenant meter reports - bill
             harmonics[keyA] = currentHarmonics[i];
             harmonics[keyV] = voltageHarmonics[i];
         }
-
+        */
         // Add THD metrics
         doc["THD_A"] = THD_A;
         doc["THD_V"] = THD_V;

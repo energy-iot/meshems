@@ -37,7 +37,7 @@ OPTIONAL TODO:
 
 struct SunSpecModel213 {
     uint16_t model_id = 213;
-    uint16_t length = 85;
+    uint16_t length = 85;  //TODO confirm length
 
     float AphA = 0.0, AphB = 0.0, AphC = 0.0;
     float PhVphA = 0.0, PhVphB = 0.0, PhVphC = 0.0;
@@ -50,10 +50,9 @@ struct SunSpecModel213 {
 
     float Hz = 0.0;
 
-    // Harmonic distortion per phase (1st–15th order + THD)
     float THD_VphA = 0.0, THD_VphB = 0.0, THD_VphC = 0.0;
     float THD_IphA = 0.0, THD_IphB = 0.0, THD_IphC = 0.0;
-
+// TODO move out below detailed Harmonic distortion per phase (1st–15th order + THD) report as its own per phase report at adaptive rate of publish 
     float Harmonics_VphA[15] = {0};  // 1st to 15th voltage harmonics, phase A
     float Harmonics_VphB[15] = {0};  // phase B
     float Harmonics_VphC[15] = {0};  // phase C
