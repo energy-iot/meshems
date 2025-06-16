@@ -20,5 +20,9 @@
 #define DTM485POLL_INTERVAL_MS 5000        // 5 seconds
 #define DTM_MQTT_PUBLISH_INTERVAL_MS 300000   // 5 minutes
 
+//TODO allow these to 
+extern int ModbusMaster_rate;    //in 1000's millisecond or seconds
+extern int MQTTPublish_rootrate;  //in 1000's millisecond or seconds
+
 void generateDeviceID();
 const char* getDeviceID();

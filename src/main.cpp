@@ -68,6 +68,7 @@ void setup() {
     // Initialize Modbus RTU master/client communication
     setup_modbus_master(); // This sets up communication with sensors like the SHT20 temp/humidity sensor or other devices
     setup_modbus_client();
+    //setup_gpio  // ssr, temp_humid, door contact/tamper. shock, imaging)
     setup_can(); // Initialize CAN bus communication
 
     setup_buttons();
@@ -97,13 +98,27 @@ unsigned long lastMillis = 0;
 void loop() {
    loop_buttons();
    
-   if (millis() - lastMillis > 1000) {
-        loop_modbus_master();
+   if (millis() - lastMillis > ModbusMaster_rate) {
         lastMillis = millis();
         loop_mqtt();
    }
+
+   if (millis() - lastMillis > MQTTPublish_rootrate) {
+        lastMillis = millis();
+        /*
+            TODO  calculate which are the normal periodic work items for this loop based on configurable periodic operations 
+            then using 12 or so global bools turned on or off per loop, the periodic  tasks in the subloops can then be targeted to run 
+            this allows for adaptive rate of openami topics to be published , these adaptive rates can have a defualt periodicity
+            but then time of day schedule can chnage the periodicity of the tasks
+        */
+        loop_mqtt();
+   }
+  
     loop_modbus_client();
     loop_buttons(); 
     loop_display();
     loop_can();
+    // TODO loop_IFTTT();
+    // TODO loop_alerts();
+    
 }

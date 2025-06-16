@@ -3,6 +3,11 @@
 
 char device_id[MAX_DEVICE_ID_CHARS] = {0};
 
+// this data can be downloaded from a linux java policy server aggregation node for every m streetpoleEMS nodes
+int ModbusMaster_rate = 1000;
+int MQTTPublish_rootrate = 5000;
+
+
 void generatefullDeviceID() {// includes OUI vendorid of the ethernet MAC inside the ESP32S2 -prefer to not use  full MACid
   uint32_t low = ESP.getEfuseMac() & 0xFFFFFFFF;
   uint32_t high = (ESP.getEfuseMac() >> 32) & 0xFFFFFFFF;
