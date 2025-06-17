@@ -90,26 +90,34 @@ void setup() {
  * - Process CAN bus messages
  * - Handle Modbus master polling
  * - Handle Modbus client requests
+ * - Handle MQTT Publish
+ * - Handle MQTT cmd responses 
  * 
  */
 
-unsigned long lastMillis = 0;
+unsigned long lastModbusMillis = 0;
+unsigned long lastMQTTMillis = 0;
+
 
 void loop() {
    loop_buttons();
    
-   if (millis() - lastMillis > ModbusMaster_rate) {
-        lastMillis = millis();
-        loop_mqtt();
+   if (millis() - lastModbusMillis > ModbusMaster_rate) {
+        lastModbusMillis = millis();
+        loop_modbus_master();
    }
 
-   if (millis() - lastMillis > MQTTPublish_rootrate) {
-        lastMillis = millis();
+   if (millis() - lastMQTTMillis > MQTTPublish_rootrate) {
+        lastMQTTMillis = millis();
         /*
-            TODO  calculate which are the normal periodic work items for this loop based on configurable periodic operations 
-            then using 12 or so global bools turned on or off per loop, the periodic  tasks in the subloops can then be targeted to run 
+            TODO  calculate which are the normal periodic work items for this loop based on configurable MQTT periodic and adaptive 
+            PUBLISH operations 
+            perhaps  12 or so adaptive Publish global bools turned on or off per loop, the periodic  tasks in the subloops can then be targeted to run 
             this allows for adaptive rate of openami topics to be published , these adaptive rates can have a defualt periodicity
-            but then time of day schedule can chnage the periodicity of the tasks
+            but then time of day schedule can chnage the periodicity of the tasks.
+            for example publish a base rate of 30 seconds, publish leaks at period of hourly , publish 3 ph summaries and single tenant meters 
+             every 15 min itervals, publish harmnics every 15 mins, publish environmentals every 15 mins , 
+             dont publish stuff on same 15 min  cadence (other than the 3Phase and meters must be on hourly edge cadence)  to minmize peak bandwidths
         */
         loop_mqtt();
    }
