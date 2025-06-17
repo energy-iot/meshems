@@ -4,11 +4,12 @@
 A development kit based on the ESP32S3 N16R8 DEV KIT C1 for energy management systems (EMS) with support for various communication protocols and peripherals.
 
 ## Features
-This development kit supports multiple peripherals using the Arduino framework:
+This development kit supports multiple peripherals using the Arduino and scalable Platformio frameworks:
 - RS-485 MODBUS RTU communication
 - CANBUS V2.0 interface via SPI
 - Input buttons (using voltage divider array on analog GPIO)
 - 1.3in OLED Dispay over SPI (SH1106)
+- Secure WiFi/BLE on demand for 2way Energy OPENAMI over MQTT
 
 <img src="/ems_board_pinout_V001.png" alt="board" width="650"/>
 
@@ -23,7 +24,7 @@ This development kit supports multiple peripherals using the Arduino framework:
 - **Dimensions:** 51mm x 25.5mm x 10mm
 - **Operating Voltage:** 3.3V
 - **Datasheet:** [ESP32S3 Technical Reference Manual](https://www.espressif.com/sites/default/files/documentation/esp32-s3_technical_reference_manual_en.pdf)
-- **Development Board Datasheet:** [ESP32S3-DevKitC-1 Datasheet](https://docs.espressif.com/projects/esp-dev-kits/en/latest/esp32s3/esp32-s3-devkitc-1/index.html)
+- **Development Board Datasheet:** [ESP32S3-DevKitC-1 N16R8 Datasheet](https://docs.espressif.com/projects/esp-dev-kits/en/latest/esp32s3/esp32-s3-devkitc-1/index.html)
 
 ### HW-519 Breakout RS-485 MODBUS RTU Module
 - Industry-standard RS-485 interface for MODBUS RTU communication
@@ -42,14 +43,16 @@ This development kit supports multiple peripherals using the Arduino framework:
 - **Controller Datasheet:** [MCP2515 CAN Controller](https://ww1.microchip.com/downloads/en/DeviceDoc/MCP2515-Stand-Alone-CAN-Controller-with-SPI-20001801J.pdf)
 - **Transceiver Datasheet:** [TJA1051 CAN Transceiver](https://www.nxp.com/docs/en/data-sheet/TJA1051.pdf)
 
-### Additional Communication Options
+### Additional Networking Communication Options
 - **BLE/BLE Mesh:** Utilizing ESP32S3's built-in Bluetooth capabilities
+- Ethernet 100 BT Wiznet 5500/6100 off-the-shelf opensource addon module 
+- Bring your own LTE CAT M1 or LORA MESH modem via SPI or Serial
 
 ### Input/Output Capabilities
 - **Button Array Interface:** Analog input with voltage divider network
 - **Display:** Optional 1.3" OLED display (SPI interface)
-- **Expansion Headers:** Breakout area is avaible on the perfboard to allow for use of the remaining GPIO pins
-- **Relay:** Single 1A SSR (Solid State Relay) for AC Mains control
+- **Expansion Headers:** Breakout area is available on the perfboard to allow for use of the remaining GPIO pins
+- **Solid State Relays:** Multiple 1A SSR (Solid State Relay) for AC per tenant contactor control, normally closed or normally open options
 
 ### Power Supply Options
 - **USB Power:** 5V via USB Type-C connector
@@ -78,7 +81,7 @@ This development kit includes a connection for AC power input. When working with
 
 ## Dev Environment Installation Guide
 ### Prerequisites
-- A computer with internet connection
+- A computer with an internet connection
 - EMS Dev kit hardware
 - USB-C cable for connecting the development board to your computer
 
