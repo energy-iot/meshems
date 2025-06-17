@@ -8,7 +8,25 @@
 #include <PubSubClient.h>
 #include "DTMPowerCache.h"
 #include "Config.h"
+/*
+TODO an example set of alerts that can be done on local streetpoleEMS
+areas for alerts are mapped to OPENAMI areas of subtopics such as
+Subanel_ENV   
+  alert for when door openend and door closed with duration
+    alert for when temp exceeds 40c  cutionary alert panel is hot set watchdog if panel jumps another 5c in  1 hour
+    alert for when cabinet temp exceeds 50c back off on any fully loaded tenant connections - wires could be heating up
+Subpanel_RCMLeaks 
+    alert for when leakage first appears on any phase - timestamp and start watchdog on next leakage ramp up/down report 
+Subpanel Harmonics 
+    alert for when harmonics grow beyond set threshold - timestamp and start watchdog on next harmonics ramp up/down report
+Tenant meter report
+  green alert when goes to no load
+  yellow alert when ramps to max current over certain slope and duration
+  orange  alert when load is sustained max over certain duration
 
+
+
+*/
 struct Alert {
   String type;
   String message;

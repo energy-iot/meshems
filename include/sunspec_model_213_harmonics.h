@@ -2,6 +2,9 @@
 #include <ArduinoJson.h>
 
 struct SunSpecModel213Harmonics {
+    uint16_t model_id = 213;
+    uint16_t length = 85;
+
     float Harmonics_VphA[15] = {0};
     float Harmonics_VphB[15] = {0};
     float Harmonics_VphC[15] = {0};
@@ -11,6 +14,9 @@ struct SunSpecModel213Harmonics {
     float Harmonics_IphC[15] = {0};
 
     void toJson(JsonDocument& doc) const {
+        doc["model_id"] = model_id;
+        doc["length"] = length;
+        
         JsonArray hVA = doc["Harmonics_VphA"].to<JsonArray>();
         JsonArray hVB = doc["Harmonics_VphB"].to<JsonArray>();
         JsonArray hVC = doc["Harmonics_VphC"].to<JsonArray>();

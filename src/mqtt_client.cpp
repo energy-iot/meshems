@@ -92,6 +92,15 @@ establishing and encode and decode json documents and mqtt operations of a 2way 
 #include "data_model.h"
 #define ENABLE_DEBUG_MQTT = 1
 
+// some mqtt banditch stats to include hourly/daily as its own publish
+unsigned long mqtt_payload_bytes = 0;
+unsigned long mqtt_tcpip_bytes = 0;
+unsigned long mqtt_publish_count = 0;
+unsigned long last_bandwidth_report_time = 0;
+//const unsigned long BANDWIDTH_REPORT_INTERVAL_MS = 3600000; // 1 hour report interval on mqtt bandwidth stats per subpanel
+const unsigned long BANDWIDTH_REPORT_INTERVAL_MS = 300000; // debug only 5 min report interval on mqtt bandwidth stats per subpanel
+
+
 WiFiClient transportClient;                 // the network client for MQTT (also works with EthernetLarge)
 PubSubClient mqttclient(transportClient);   // the MQTT client
 
@@ -195,12 +204,13 @@ void mqtt_publish_EMS_3Ph(String EMSId, const PowerData& meterData) {  // TODO p
   mqtt_publish_json(topicBuf.c_str(), &jsonDoc);
 }
 
-void mqtt_publish_Meter(String meterId, const PowerData& meterData) { 
+void mqtt_publish_Meter(int meterId, const PowerData& meterData) { 
   SunSpecModel11 sunSpecData;
   // publish Model 11  SUnspec schema here for per tenant single phase
   // For now assume phase A. This can be extended to put the meter readings in the
   // correct phase using configuration data about which meter is on which phase.
-  sunSpecData.Phase= meterData.phase;
+  //TODO grab the specific cached meterId  PowerData[i] for example
+  sunSpecData.Phase= meterId; // assume 1 tenenat per phase in a 3 tenant 3ph subpanel , TODO part of stage operation and subpanel schema backed up  to a subpanel staging cloud 
   sunSpecData.PhV= meterData.voltage;
   sunSpecData.PhA = meterData.current;
   sunSpecData.PhW = meterData.active_power * 1000;
@@ -240,9 +250,9 @@ void mqtt_publish_EMS_ENV(String EMSId, long timestamp) {
   jsonDoc["timestamp"] = timestamp;
   mqtt_publish_json(topicBuf.c_str(), &jsonDoc);
 }
-void mqtt_publish_Harmonics(const SunSpecModel213Harmonics& harmonicsData, long timestamp) { // TODO pass EMSdata structured model
-  String topicBuf = "harmonics"; // Subtopic under the device topic
-
+void mqtt_publish_Harmonics(String EMSId, long timestamp) { // TODO pass EMSdata structured model
+  String topicBuf = "subpanel_harmonics"; // Subtopic under the streetPoleEMS per unique nodal topic
+  SunSpecModel213Harmonics harmonicsData;
   JsonDocument jsonDoc;
   harmonicsData.toJson(jsonDoc);  // This assumes you have a method toJson() defined for harmonics
   jsonDoc["timestamp"] = timestamp;
@@ -267,7 +277,38 @@ void mqtt_publish_Leakage(String meterId, const PowerData& meterData) {
   mqtt_publish_json(topicBuf.c_str(), &jsonDoc);
 }
 
+/*
+MQTT Stats
+What We’ll Track and report hourly
+  MQTT payload bytes (JSON body).
+  Estimated TCP/IP overhead per publish (default assumption: ~60 bytes per publish).
+  Packet count.
+*/
 
+
+void mqtt_publish_bandwidth_stats() {
+    JsonDocument statsDoc;
+    statsDoc["interval_ms"] = BANDWIDTH_REPORT_INTERVAL_MS;
+    statsDoc["publish_count"] = mqtt_publish_count;
+    statsDoc["payload_bytes"] = mqtt_payload_bytes;
+    statsDoc["tcpip_bytes"] = mqtt_tcpip_bytes;
+    statsDoc["timestamp"] = now();
+
+    mqtt_publish_json("subpanel_stats/bandwidth", &statsDoc);
+
+    // Reset counters
+    mqtt_payload_bytes = 0;
+    mqtt_tcpip_bytes = 0;
+    mqtt_publish_count = 0;
+}
+
+
+
+
+/*
+Json util and the mqtt PUBLISH main method
+
+older method working without stats:
 void mqtt_publish_json(const char* subtopic, const JsonDocument * payload) {
     String topicBuf;
     String jsonString;
@@ -288,6 +329,36 @@ void mqtt_publish_json(const char* subtopic, const JsonDocument * payload) {
     Serial.printf("topic: %s, data: %s\n", topicBuf.c_str(), data);
 #endif
 }
+*/
+void mqtt_publish_json(const char* subtopic, const JsonDocument* payload) {
+    String topicBuf;
+    String jsonString;
+
+    size_t payload_len = measureJson(*payload);
+    if (payload_len >= 1024) {
+        Serial.println("MQTT publish: payload too large");
+        return;
+    }
+
+    serializeJson(*payload, jsonString);
+    char data[1024];
+    jsonString.toCharArray(data, sizeof(data));
+    
+    topicBuf = topic_device + subtopic;
+
+    if (!mqttclient.publish(topicBuf.c_str(), data)) {
+        Serial.println("MQTT publish: failed");
+    } else { // update stats on mqtt bandwidth used per streetpoleEMS
+        mqtt_payload_bytes += payload_len;
+        mqtt_tcpip_bytes += payload_len + 60; // TCP/IP+MQTT overhead
+        mqtt_publish_count++;
+    }
+
+#ifdef ENABLE_DEBUG_MQTT
+    Serial.printf("topic: %s, data: %s\n", topicBuf.c_str(), data);
+#endif
+}  
+
 
 //pull apart a comma-sep colon-delim name:value string and publish the name:value pairs under 'subtopic'
 void mqtt_publish_comma_sep_colon_delim(const char* subtopic, const char * data) {
@@ -411,9 +482,13 @@ void loop_mqtt() {
       mqtt_publish_Leakage("", readings[0]);
       Serial.println("Published per phase leakage");
 
+      //next is publish EMS per phase Harmonics , TODO adpative rate: if leakage is non zero or leakage fault or leakage changed
+      mqtt_publish_Harmonics("", loop_timestamp);
+      Serial.println("Published per phase Harmonics");
+
     // next is loop over the subpanel per tenant meters   
     for(int i=0;i<MODBUS_NUM_METERS;i++) {
-          mqtt_publish_Meter(String(i), readings[i]);  
+          mqtt_publish_Meter(i, readings[i]);  
           // TODO add modbus node number and per meter leakage RCD Fault in the readings powerdata
           Serial.println("Published tenant meter num:");
   
@@ -426,6 +501,11 @@ void loop_mqtt() {
         Serial.println("MQTT not connected!");
       }
       mqtt_interval_ts = millis();
+    if (millis() - last_bandwidth_report_time >= BANDWIDTH_REPORT_INTERVAL_MS) {
+     mqtt_publish_bandwidth_stats();
+     Serial.println("Published stats/bandwidth");
+     last_bandwidth_report_time = millis();
+    }
     mqttclient.loop();
 }
 
