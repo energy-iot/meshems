@@ -11,7 +11,7 @@ a local  faults summary like leakage performance issue/alarm or harmonics perfor
 */
 struct SunSpecModel1_EMS { //  EMS subpanel as a cookie cutter prebuilt, wired, software QA tested 
     uint16_t model_id = 1;   // SunSpec Common Model ID
-    uint16_t length = 66;    // Default length for Model 1 (can adjust per device)
+    uint16_t length = 125;    // Default length for Model 1 (can adjust per device)
 
     // Device Identification Fields
     char Mn[33] = "NESL EIOT Prototype";    // Manufacturer

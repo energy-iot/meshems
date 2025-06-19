@@ -3,7 +3,7 @@
 
 struct SunSpecModel213Base {
     uint16_t model_id = 213;
-    uint16_t length = 85;
+    uint16_t length = 86;
 
     float AphA = 0.0, AphB = 0.0, AphC = 0.0;
     float PhVphA = 0.0, PhVphB = 0.0, PhVphC = 0.0;

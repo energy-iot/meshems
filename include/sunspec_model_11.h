@@ -8,7 +8,7 @@ Model ID: 11
 
 struct SunSpecModel11 { // used for single phase per tenant meter reports - billable 15 min interval energy use case
     uint16_t model_id = 11;
-    uint16_t length = 38; // Actual modbus length, not including harmonics
+    uint16_t length = 107; // Actual modbus length, not including harmonics
 
     // Real-time measurements
     float PhA = 0.0;         // RMS Current

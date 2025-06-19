@@ -15,6 +15,9 @@
 
 #pragma once
 
+// esp32s3 devkitc n16r8 onboard rgbw led
+#define RGBLED_DATA_PIN 48  
+
 // analog button array (voltage divider)
 #ifdef CONFIG_IDF_TARGET_ESP32S3
 #define ANALOG_BTN_PIN  A0 //GPIO1

@@ -20,8 +20,8 @@
 #include <Wire.h>
 
 struct EMS_ENV_Model {
-    uint16_t model_id = 1001;   // Custom EMS environment model ID
-    uint16_t length = 10;       // Adjustable length as needed
+    uint16_t model_id = 998;   // Custom EMS environment model ID
+    uint16_t length = 17;       // Adjustable length as needed
 
     // Cached environmental state
     float temperature_C = 0.0;

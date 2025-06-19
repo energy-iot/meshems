@@ -3,7 +3,7 @@
 
 struct SunSpecModel213Harmonics {
     uint16_t model_id = 213;
-    uint16_t length = 85;
+    uint16_t length = 180;
 
     float Harmonics_VphA[15] = {0};
     float Harmonics_VphB[15] = {0};

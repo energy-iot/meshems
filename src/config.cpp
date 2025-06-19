@@ -4,8 +4,11 @@
 char device_id[MAX_DEVICE_ID_CHARS] = {0};
 
 // this data can be downloaded from a linux java policy server aggregation node for every m streetpoleEMS nodes
-int ModbusMaster_rate = 1000;
-int MQTTPublish_rootrate = 30000;
+int ModbusMaster_pollrate = 100;  // in milliseconds
+int MQTTPublish_rootrate = 300000; // in milliseconds
+// TODO add different appropriate mqtt publish rates for environmental vs stats vs RCMleaks and harmonics vs real time billing energy usage 
+// keep the BPS donw below 300kbps , ideally 100 kbps per multitenant subpanel - reduce string char lengths convert to binary compression etc
+// this leaves room for villager-villager low bit rate side channel on the packet control plane shared with energy : PTT store-and-forward clear-voice/txt/imaging 
 
 
 void generatefullDeviceID() {// includes OUI vendorid of the ethernet MAC inside the ESP32S2 -prefer to not use  full MACid

@@ -7,12 +7,13 @@
 #include <modbus.h>
 #include <pins.h>
 #include <data_model.h>
+#include <config.h>
 #include <math.h>  // For sin function in test data
 
 // Poll every 10 seconds (300000ms = 5 mins for production)
 // Changed to 500ms for more stable operation
 // Make the polling interval adjustable and accessible from other files
-unsigned int POLL_INTERVAL = 100;  // Initial value of 100ms for faster updates
+//unsigned int POLL_INTERVAL = 100;  // moved to config.h 
 
 // ==================== Modbus Device Addresses ====================
 // during staging of subpanel must stage each modbus meter with its assigned node number - in future could use qr code sticker per meter for faster staging of a subpanel
@@ -188,9 +189,9 @@ void poll_thermostats() {
  * Main polling loop for Modbus communication
  */
 void loop_modbus_master() {
-    if (millis() - lastPollMillis > POLL_INTERVAL) {
+    if (millis() - lastPollMillis > ModbusMaster_rate) {
         Serial.println("Starting poll cycle...");
-        //poll_thermostats();
+        //poll_thermostats(); // Poll thermostat/environmental  sensors such as cabinet temp/humid/pressure/ , wire mains and evse temps etc
         poll_energy_meters(); // Poll energy meters
         // TODO poll other modbus device on same link
         lastPollMillis = millis();

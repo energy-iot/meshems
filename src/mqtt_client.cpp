@@ -72,7 +72,18 @@ establishing and encode and decode json documents and mqtt operations of a 2way 
 
    Ideally each meter should have stats published of its powerflow managed energy asset transfer individual sessions performing as a 
    generate(export), store, consume(import), transform (AC-DC voltage coupled form, voltage level conversion),  transport (as a LVFeeder Lead EMS operational role) managed energy servcice entities  
-  */
+Summary of New Stats          Counter	Description
+mqtt_BWPubOut_payload_bytes
+mqtt_BWPubOut_tcpip_bytes
+mqtt_publish_count          outbound mqtt published report counts
+mqtt_cmd_count++	          Counts total mqtt commands received inbound
+mqtt_BWCmdIn_payload_bytes	Sum of all received inbound payload sizes
+mqtt_BWCmdIn_tcpip_bytes	  Payload size + 60 bytes per cmd message received inbound
+last_bandwidth_report_time  time in secs since last report
+
+
+
+   */
 
 #include "mqtt_client.h"
 #include <TimeLib.h>
@@ -93,9 +104,12 @@ establishing and encode and decode json documents and mqtt operations of a 2way 
 #define ENABLE_DEBUG_MQTT = 1
 
 // some mqtt banditch stats to include hourly/daily as its own publish
-unsigned long mqtt_payload_bytes = 0;
-unsigned long mqtt_tcpip_bytes = 0;
-unsigned long mqtt_publish_count = 0;
+unsigned long mqtt_BWPubOut_payload_bytes = 0;
+unsigned long mqtt_BWPubOut_tcpip_bytes = 0;
+unsigned long mqtt_BWCmdIn_payload_bytes = 0;
+unsigned long mqtt_BWCmdIn_tcpip_bytes = 0;
+unsigned long mqtt_publish_count = 0; // outbound published report counts
+unsigned long mqtt_cmd_count = 0;     // inbound  recived CMC request counts 
 unsigned long last_bandwidth_report_time = 0;
 //const unsigned long BANDWIDTH_REPORT_INTERVAL_MS = 3600000; // 1 hour report interval on mqtt bandwidth stats per subpanel
 const unsigned long BANDWIDTH_REPORT_INTERVAL_MS = 300000; // debug only 5 min report interval on mqtt bandwidth stats per subpanel
@@ -283,53 +297,80 @@ What We’ll Track and report hourly
   MQTT payload bytes (JSON body).
   Estimated TCP/IP overhead per publish (default assumption: ~60 bytes per publish).
   Packet count.
-*/
 
 
-void mqtt_publish_bandwidth_stats() {
+void mqtt_publish_BWPubOut_stats() {  // outgoing bandwidth used per streetpoleEMS stat
     JsonDocument statsDoc;
     statsDoc["interval_ms"] = BANDWIDTH_REPORT_INTERVAL_MS;
-    statsDoc["publish_count"] = mqtt_publish_count;
-    statsDoc["payload_bytes"] = mqtt_payload_bytes;
-    statsDoc["tcpip_bytes"] = mqtt_tcpip_bytes;
+    statsDoc["pubout_count"] = mqtt_publish_count;
+    statsDoc["payload_bytes"] = mqtt_BWPubOut_payload_bytes;
+    statsDoc["tcpip_bytes"] = mqtt_BWPubOut_tcpip_bytes;
     statsDoc["timestamp"] = now();
 
-    mqtt_publish_json("subpanel_stats/bandwidth", &statsDoc);
+    mqtt_publish_json("subpanel_BWPubOut", &statsDoc);
 
     // Reset counters
-    mqtt_payload_bytes = 0;
-    mqtt_tcpip_bytes = 0;
+    mqtt_BWPubOut_payload_bytes = 0;
+    mqtt_BWPubOut_tcpip_bytes = 0;
     mqtt_publish_count = 0;
 }
-
-
-
-
-/*
-Json util and the mqtt PUBLISH main method
-
-older method working without stats:
-void mqtt_publish_json(const char* subtopic, const JsonDocument * payload) {
-    String topicBuf;
-    String jsonString;
-    if (measureJson(*payload) >= 1024) {
-      Serial.println("MQTT publish: payload too large");
-      return;
-    }
-    serializeJson(*payload, jsonString);
-    // It's annoying to have to set this limit, but maybe a static size is better for performance?
-    char data[1024];
-    jsonString.toCharArray(data, sizeof(data));
-    topicBuf = topic_device;
-    topicBuf.concat(subtopic);
-    if (!mqttclient.publish(topicBuf.c_str(), data)) {
-        Serial.println("MQTT publish: failed");
-    }
-#ifdef ENABLE_DEBUG_MQTT
-    Serial.printf("topic: %s, data: %s\n", topicBuf.c_str(), data);
-#endif
-}
 */
+
+void mqtt_publish_BWPubOut_stats() {
+    JsonDocument statsDoc;
+
+    unsigned long current_time = millis();
+    unsigned long elapsed_ms = current_time - last_bandwidth_report_time;
+    float elapsed_sec = elapsed_ms / 1000.0;
+
+    // Calculate average bits per second
+    unsigned long total_bits_out = mqtt_BWPubOut_tcpip_bytes * 8;
+    float avg_bps_out = (elapsed_sec > 0) ? total_bits_out / elapsed_sec : 0;
+
+    statsDoc["interval_ms"] = BANDWIDTH_REPORT_INTERVAL_MS;
+    statsDoc["pubout_count"] = mqtt_publish_count;
+    statsDoc["payload_bytes"] = mqtt_BWPubOut_payload_bytes;
+    statsDoc["tcpip_bytes"] = mqtt_BWPubOut_tcpip_bytes;
+    statsDoc["avg_bps_out"] = (int)avg_bps_out;
+    statsDoc["timestamp"] = now();
+
+    mqtt_publish_json("subpanel_BWPubOut", &statsDoc);
+
+    // Reset counters
+    mqtt_BWPubOut_payload_bytes = 0;
+    mqtt_BWPubOut_tcpip_bytes = 0;
+    mqtt_publish_count = 0;
+    last_bandwidth_report_time = current_time;
+}
+
+void mqtt_publish_BWCmdIn_stats() { // incoming bandwidth used per streetpoleEMS stat
+    JsonDocument statsDoc;
+
+    unsigned long current_time = millis();
+    unsigned long elapsed_ms = current_time - last_bandwidth_report_time;
+    float elapsed_sec = elapsed_ms / 1000.0;
+
+    // Calculate average bits per second (bps) for incoming traffic
+    unsigned long total_bits_in = mqtt_BWCmdIn_tcpip_bytes * 8;
+    float avg_bps_in = (elapsed_sec > 0) ? total_bits_in / elapsed_sec : 0;
+
+    statsDoc["interval_ms"] = BANDWIDTH_REPORT_INTERVAL_MS;
+    statsDoc["cmdin_count"] = mqtt_cmd_count;
+    statsDoc["payload_bytes"] = mqtt_BWCmdIn_payload_bytes;
+    statsDoc["tcpip_bytes"] = mqtt_BWCmdIn_tcpip_bytes;
+    statsDoc["avg_bps_in"] = (int)avg_bps_in;
+    statsDoc["timestamp"] = now();
+
+    mqtt_publish_json("subpanel_BWCmdIn", &statsDoc);
+
+    // Reset counters
+    mqtt_BWCmdIn_payload_bytes = 0;
+    mqtt_BWCmdIn_tcpip_bytes = 0;
+    mqtt_cmd_count = 0;
+}
+
+
+// Method to publish json blob in a mqtt subtopic
 void mqtt_publish_json(const char* subtopic, const JsonDocument* payload) {
     String topicBuf;
     String jsonString;
@@ -349,8 +390,10 @@ void mqtt_publish_json(const char* subtopic, const JsonDocument* payload) {
     if (!mqttclient.publish(topicBuf.c_str(), data)) {
         Serial.println("MQTT publish: failed");
     } else { // update stats on mqtt bandwidth used per streetpoleEMS
-        mqtt_payload_bytes += payload_len;
-        mqtt_tcpip_bytes += payload_len + 60; // TCP/IP+MQTT overhead
+        //mqtt_payload_bytes += payload_len;
+      
+        mqtt_BWPubOut_payload_bytes += payload_len;
+        mqtt_BWPubOut_tcpip_bytes += payload_len + 60; // TCP/IP+MQTT overhead
         mqtt_publish_count++;
     }
 
@@ -398,6 +441,7 @@ void mqtt_publish_comma_sep_colon_delim(const char* subtopic, const char * data)
 // We're subscribed to the following topics:
 // <top>/<device_id>/cmd
 //
+//TODO add a few lines where the mqtt_cmd_count stat is incremented
 // 
 void subscriber_callback(char* topic, uint8_t* payload, unsigned int length) {
   //sanity
@@ -405,10 +449,14 @@ void subscriber_callback(char* topic, uint8_t* payload, unsigned int length) {
     Serial.printf("MQTT CALLBACK: not handled: payload len overrun:%d\n", length);
     return;
   }
+
   if (strcmp(topic, topic_cmd.c_str()) == 0) {
+    mqtt_cmd_count++;                   // <-- stat to INCREMENT Cmd inbound COUNT HERE
+    mqtt_BWCmdIn_payload_bytes += length;            // Count the raw payload size
+    mqtt_BWCmdIn_tcpip_bytes += length + 60;         // Add estimated MQTT+TCP/IP overhead
     char payload_buf[length+1] = {0};
     strncpy(payload_buf, (char*)payload, length);
-    payload_buf[length] = '\0'; //ensure null-termination
+    payload_buf[length] = '\0';         //ensure null-termination
     Serial.printf("\n***MQTT CALLBACK: topic '%s', payload '%s'\n", topic, payload_buf);
     if (strstr(payload_buf, "report") == 0) {
       //trigger a data-model dump
@@ -502,7 +550,8 @@ void loop_mqtt() {
       }
       mqtt_interval_ts = millis();
     if (millis() - last_bandwidth_report_time >= BANDWIDTH_REPORT_INTERVAL_MS) {
-     mqtt_publish_bandwidth_stats();
+     mqtt_publish_BWPubOut_stats();
+     mqtt_publish_BWCmdIn_stats();
      Serial.println("Published stats/bandwidth");
      last_bandwidth_report_time = millis();
     }
