@@ -53,6 +53,8 @@ void setup() {
 
     generateDeviceID();
     setup_display();
+    _console.addLine(" Display up! next is WiFi/Eth, ");
+    _console.addLine(" NTP, MQTT, Modbus, Buttons... ");
     // Display startup splash screen (Rick image)
     drawBitmap(40, 5, RICK_WIDTH, RICK_HEIGHT, rick);
     delay(1000);
