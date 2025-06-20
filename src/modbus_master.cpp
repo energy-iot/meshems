@@ -189,7 +189,7 @@ void poll_thermostats() {
  * Main polling loop for Modbus communication
  */
 void loop_modbus_master() {
-    if (millis() - lastPollMillis > ModbusMaster_rate) {
+    if (millis() - lastPollMillis > ModbusMaster_pollrate) {
         Serial.println("Starting poll cycle...");
         //poll_thermostats(); // Poll thermostat/environmental  sensors such as cabinet temp/humid/pressure/ , wire mains and evse temps etc
         poll_energy_meters(); // Poll energy meters

@@ -102,7 +102,7 @@ unsigned long lastMQTTMillis = 0;
 void loop() {
    loop_buttons();
    
-   if (millis() - lastModbusMillis > ModbusMaster_rate) {
+   if (millis() - lastModbusMillis > ModbusMaster_pollrate) {
         lastModbusMillis = millis();
         loop_modbus_master();
    }

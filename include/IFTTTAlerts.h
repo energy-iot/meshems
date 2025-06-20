@@ -9,6 +9,8 @@
 #include "DTMPowerCache.h"
 #include "Config.h"
 /*
+WARNING This is an in-progress initial draft implementation to support lite-weight  framework of local data-model driven IFTTT alerts and automations to decouple decision based policy enforcements 
+
 TODO an example set of alerts that can be done on local streetpoleEMS
 areas for alerts are mapped to OPENAMI areas of subtopics such as
 Subanel_ENV   
