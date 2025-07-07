@@ -22,9 +22,11 @@ This development kit supports multiple peripherals using the Arduino and scalabl
 - **USB:** USB OTG interface with Type-C connector
 - **GPIO:** 45 programmable GPIO pins
 - **Dimensions:** 51mm x 25.5mm x 10mm
+- 42 pins via 2 x 21pin rails
 - **Operating Voltage:** 3.3V
 - **Datasheet:** [ESP32S3 Technical Reference Manual](https://www.espressif.com/sites/default/files/documentation/esp32-s3_technical_reference_manual_en.pdf)
 - **Development Board Datasheet:** [ESP32S3-DevKitC-1 N16R8 Datasheet](https://docs.espressif.com/projects/esp-dev-kits/en/latest/esp32s3/esp32-s3-devkitc-1/index.html)
+- 1U includes ufl connector for an optional external antenna
 
 ### HW-519 Breakout RS-485 MODBUS RTU Module
 - Industry-standard RS-485 interface for MODBUS RTU communication
@@ -54,16 +56,17 @@ This development kit supports multiple peripherals using the Arduino and scalabl
 - A return /cmd path is supported for remote backend, nearby aggregation policy-maker  or adjacent streetpoleEMS nodes to issue policy energy enforcement TOD schedule updates 
 - The OpenAMi published tuples format is encoded for now in the in line mqttclient methods. 
 OPENAMI publish format includes, but is not limited to 
--totalized per phase 3 phase subpanel current, voltage and energy and power readings, configurable interval rate
--totalized per tenant single-phase current, voltage and energy and power readings, configurable interval rate
--active leakage detection currents and actionable faults  using a Modbus RCM device per phase, or per tenant, or a mix, configurable interval rate
--active harmonics individual levels and THD totals per phase, configurable interval rate
--local cabinet subpanel alarms and environmental conditions report, configurable interval rate
--future options for on-demand audio/visual one way and two way unified communication options. - street image and audio snippets - glass break, scream, or gunshot detection/isolation
+- totalized per phase 3 phase subpanel current, voltage and energy and power readings, configurable interval rate
+- totalized per tenant single-phase current, voltage and energy and power readings, configurable interval rate
+- active leakage detection currents and actionable faults  using a Modbus RCM device per phase, or per tenant, or a mix, configurable interval rate
+- active harmonics individual levels and THD totals per phase, configurable interval rate
+- local cabinet subpanel alarms and environmental conditions report, configurable interval rate
+- future options for on-demand audio/visual one way and two way unified communication options. - street image and audio snippets - glass break, scream, or gunshot detection/isolation
 
 ### Input/Output Capabilities
 - **Button Array Interface:** Analog input with voltage divider network
 - **Display:** Optional 1.3" OLED display (SPI interface)
+-  https://wiki.keyestudio.com/index.php/Ks0056_keyestudio_1.3%22_128x64_OLED_Graphic_Display
 - **Expansion Headers:** Breakout area is available on the perfboard to allow for use of the remaining GPIO pins
 - **Solid State Relays:** Multiple (per tenant) 2A SSR (Solid State Relay) opto isolated zero crossing triac for AC per tenant contactor control, for example
 -   An SSR, for example, can be used to software  trigger a larger normally closed or normally open per-tenant  contactor and/or 3-phase transfer switch
