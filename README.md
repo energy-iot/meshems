@@ -45,14 +45,29 @@ This development kit supports multiple peripherals using the Arduino and scalabl
 
 ### Additional Networking Communication Options
 - **BLE/BLE Mesh:** Utilizing ESP32S3's built-in Bluetooth capabilities
-- Ethernet 100 BT Wiznet 5500/6100 off-the-shelf opensource addon module 
+- Ethernet 100 BT Wiznet 5500/6100 off-the-shelf open-source addon module 
 - Bring your own LTE CAT M1 or LORA MESH modem via SPI or Serial
+
+### OPENAMI over MQTT Option
+- using Wifi or Ethernet or other TCP/IP networking options, the locally networked DER Modbus Master lan side interfaces are terminated and adapted into lightweight MQTT pub/sub
+- A local data model cached as the Modbus ports may be scanned at subsecond rates, for example, whereas the MQTT published energy telemetry may be at 30-second or minute intervals or varied based on meaningful data event triggers.
+- A return /cmd path is supported for remote backend, nearby aggregation policy-maker  or adjacent streetpoleEMS nodes to issue policy energy enforcement TOD schedule updates 
+- The OpenAMi published tuples format is encoded for now in the in line mqttclient methods. 
+OPENAMI publish format includes, but is not limited to 
+-totalized per phase 3 phase subpanel current, voltage and energy and power readings, configurable interval rate
+-totalized per tenant single-phase current, voltage and energy and power readings, configurable interval rate
+-active leakage detection currents and actionable faults  using a Modbus RCM device per phase, or per tenant, or a mix, configurable interval rate
+-active harmonics individual levels and THD totals per phase, configurable interval rate
+-local cabinet subpanel alarms and environmental conditions report, configurable interval rate
+-future options for on-demand audio/visual one way and two way unified communication options. - street image and audio snippets - glass break, scream, or gunshot detection/isolation
 
 ### Input/Output Capabilities
 - **Button Array Interface:** Analog input with voltage divider network
 - **Display:** Optional 1.3" OLED display (SPI interface)
 - **Expansion Headers:** Breakout area is available on the perfboard to allow for use of the remaining GPIO pins
-- **Solid State Relays:** Multiple 1A SSR (Solid State Relay) for AC per tenant contactor control, normally closed or normally open options
+- **Solid State Relays:** Multiple (per tenant) 2A SSR (Solid State Relay) opto isolated zero crossing triac for AC per tenant contactor control, for example
+-   An SSR, for example, can be used to software  trigger a larger normally closed or normally open per-tenant  contactor and/or 3-phase transfer switch
+-   https://datasheet.octopart.com/G3MB-202PEG-4-DC20MA-Omron-datasheet-111010.pdf 
 
 ### Power Supply Options
 - **USB Power:** 5V via USB Type-C connector
@@ -83,7 +98,7 @@ This development kit includes a connection for AC power input. When working with
 ### Prerequisites
 - A computer with an internet connection
 - EMS Dev kit hardware
-- USB-C cable for connecting the development board to your computer
+- USB-C data-rated cable for connecting the development board to your computer
 
 ### Step 1: Install Visual Studio Code
 1. Download Visual Studio Code from https://code.visualstudio.com/
