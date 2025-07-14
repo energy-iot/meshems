@@ -3,6 +3,9 @@
 ## Overview
 A development kit based on the ESP32S3 N16R8 DEV KIT C1 for energy management systems (EMS) with support for various communication protocols and peripherals.
 
+It enables distributed management of a micro-grid energy assets such as meters, sensors, and invertors with choice of communication protocols like MQTT and low-cost, off-the-shelf hardware.
+**MeshEMS** is the combined open source hardware and software contributed under this repository.  The EMS Dev Kit publishes using OpenAMI schema to public.cloud.shiftr.io to openami MQTT topic.
+
 ## Features
 This development kit supports multiple peripherals using the Arduino and scalable Platformio frameworks:
 - RS-485 MODBUS RTU communication
