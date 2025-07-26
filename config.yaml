@@ -1,0 +1,69 @@
+# EMS Python Configuration
+# Configuration for Energy Management System Python implementation
+
+# Serial/RS485 Configuration
+serial:
+  # Primary RS485 port for Sol-Ark communication
+  port: "/dev/ttyUSB0"  # Change to your actual RS485 device
+  baudrate: 9600
+  bytesize: 8
+  parity: "N"  # None
+  stopbits: 1
+  timeout: 1.0
+  
+  # Secondary RS485 port (if needed)
+  port2: "/dev/ttyUSB1"
+  
+# Sol-Ark Inverter Configuration
+solark:
+  modbus_address: 1
+  poll_interval: 5.0  # seconds
+  max_retries: 3
+  retry_delay: 0.5  # seconds
+
+# SunSpec Modbus TCP Server Configuration
+sunspec_server:
+  enabled: true
+  host: "0.0.0.0"  # Listen on all interfaces
+  port: 8502
+  unit_id: 1
+
+# Logging Configuration
+logging:
+  level: "INFO"  # DEBUG, INFO, WARNING, ERROR
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file: "ems.log"
+  max_bytes: 10485760  # 10MB
+  backup_count: 5
+
+# Data Storage Configuration
+data:
+  # SQLite database for historical data
+  database: "ems_data.db"
+  # Data retention period in days
+  retention_days: 30
+  # Export data to CSV
+  csv_export: true
+  csv_directory: "data_exports"
+
+# Device Information (for SunSpec Common Model)
+device_info:
+  manufacturer: "Energy IoT Open Source"
+  model: "EMS-Dev Python"
+  version: "1.0.0"
+  serial_number: "EMS-PY-001"
+  options: "Sol-Ark Gateway"
+
+# Monitoring and Alerts
+monitoring:
+  # Enable console output
+  console_output: true
+  # Update interval for console display
+  console_update_interval: 10.0  # seconds
+  
+  # Alert thresholds
+  alerts:
+    battery_low_soc: 20  # %
+    battery_high_temp: 50  # °C
+    grid_voltage_low: 110  # V
+    grid_voltage_high: 130  # V

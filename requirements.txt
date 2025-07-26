@@ -1,0 +1,9 @@
+# Core dependencies for EMS Python implementation
+pyserial>=3.5
+pymodbus>=3.5.0
+pysunspec2>=1.0.0
+asyncio-mqtt>=0.13.0
+pyyaml>=6.0
+click>=8.0.0
+rich>=13.0.0
+schedule>=1.2.0
