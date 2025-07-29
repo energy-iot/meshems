@@ -6,3 +6,6 @@
 .vscode/extensions.json
 .DS_Store
 .env
+ems_dev_python.egg-info
+venv
+ems-dev.service

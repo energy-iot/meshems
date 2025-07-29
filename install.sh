@@ -59,26 +59,26 @@ echo "Installing EMS-Dev Python package..."
 pip install -e .
 
 # Check serial port permissions
-echo "Checking serial port permissions..."
-if groups $USER | grep -q dialout; then
-    echo "✓ User is in dialout group"
-else
-    echo "⚠ User is not in dialout group. Adding user to dialout group..."
-    echo "You may need to enter your password:"
-    sudo usermod -a -G dialout $USER
-    echo "✓ User added to dialout group"
-    echo "⚠ You need to log out and log back in for group changes to take effect"
-fi
+# echo "Checking serial port permissions..."
+# if groups $USER | grep -q dialout; then
+#     echo "✓ User is in dialout group"
+# else
+#     echo "⚠ User is not in dialout group. Adding user to dialout group..."
+#     echo "You may need to enter your password:"
+#     sudo usermod -a -G dialout $USER
+#     echo "✓ User added to dialout group"
+#     echo "⚠ You need to log out and log back in for group changes to take effect"
+# fi
 
-# Check for USB serial devices
-echo "Checking for USB serial devices..."
-if ls /dev/ttyUSB* 1> /dev/null 2>&1; then
-    echo "✓ Found USB serial devices:"
-    ls -l /dev/ttyUSB*
-else
-    echo "⚠ No USB serial devices found (/dev/ttyUSB*)"
-    echo "  Make sure your RS485 adapter is connected"
-fi
+# # Check for USB serial devices
+# echo "Checking for USB serial devices..."
+# if ls /dev/ttyUSB* 1> /dev/null 2>&1; then
+#     echo "✓ Found USB serial devices:"
+#     ls -l /dev/ttyUSB*
+# else
+#     echo "⚠ No USB serial devices found (/dev/ttyUSB*)"
+#     echo "  Make sure your RS485 adapter is connected"
+# fi
 
 # Create default configuration if it doesn't exist
 if [ ! -f "config.yaml" ]; then
@@ -86,9 +86,9 @@ if [ ! -f "config.yaml" ]; then
     cat > config.yaml << 'EOF'
 # EMS Python Configuration
 serial:
-  port: "/dev/ttyUSB0"
+  port: "/dev/ttyRS485"
   baudrate: 9600
-  timeout: 1.0
+  timeout: 2.0
 
 solark:
   modbus_address: 1
