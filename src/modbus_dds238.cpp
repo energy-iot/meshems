@@ -54,16 +54,22 @@ void Modbus_DDS238::poll() {
         last_reading.timestamp_last_report = now();
         last_reading.metadata = read_modbus_value(rMETADATA);
 
-        Serial.printf("MODBUS DDS238: Total Energy: %.2f kWh\n", last_reading.total_energy);
-        Serial.printf("MODBUS DDS238: Export Energy: %.2f kWh\n", last_reading.export_energy);
-        Serial.printf("MODBUS DDS238: Import Energy: %.2f kWh\n", last_reading.import_energy);
-        Serial.printf("MODBUS DDS238: Voltage: %.2f V\n", last_reading.voltage);
-        Serial.printf("MODBUS DDS238: Current: %.2f A\n", last_reading.current);
-        Serial.printf("MODBUS DDS238: Active Power: %.3f kW\n", last_reading.active_power);
-        Serial.printf("MODBUS DDS238: Reactive Power: %.3f kVAr\n", last_reading.reactive_power);
-        Serial.printf("MODBUS DDS238: Power Factor: %.3f\n", last_reading.power_factor);
-        Serial.printf("MODBUS DDS238: Frequency: %.2f Hz\n", last_reading.frequency);
-        Serial.printf("MODBUS DDS238: Metadata: %d\n", last_reading.metadata);
+        //TODO add energy used totalizer calculations 
+
+        // debug option
+        #ifdef DEBUG_METERS
+            Serial.printf("MODBUS DDS238: Total Energy: %.2f kWh\n", last_reading.total_energy);
+            Serial.printf("MODBUS DDS238: Export Energy: %.2f kWh\n", last_reading.export_energy);
+            Serial.printf("MODBUS DDS238: Import Energy: %.2f kWh\n", last_reading.import_energy);
+            Serial.printf("MODBUS DDS238: Voltage: %.2f V\n", last_reading.voltage);
+            Serial.printf("MODBUS DDS238: Current: %.2f A\n", last_reading.current);
+            Serial.printf("MODBUS DDS238: Active Power: %.3f kW\n", last_reading.active_power);
+            Serial.printf("MODBUS DDS238: Reactive Power: %.3f kVAr\n", last_reading.reactive_power);
+            Serial.printf("MODBUS DDS238: Power Factor: %.3f\n", last_reading.power_factor);
+            Serial.printf("MODBUS DDS238: Frequency: %.2f Hz\n", last_reading.frequency);
+            Serial.printf("MODBUS DDS238: Metadata: %d\n", last_reading.metadata);
+        #endif
+
     } catch (std::runtime_error& e) {
         Serial.println("MODBUS DDS238: Error reading registers");
     }

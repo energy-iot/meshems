@@ -17,27 +17,28 @@
 
 // ==================== Modbus Device Addresses ====================
 // during staging of subpanel must stage each modbus meter with its assigned node number - in future could use qr code sticker per meter for faster staging of a subpanel
-#define THERMOSTAT_1_ADDR 0x01    // TODO  maybe set temp/humid sensor as modbus node num 99 so never conflicts
-//#define THERMOSTAT_1_ADDR 0x99  // set temp/humid sensor as modbus node num 99 so never conflicts
+//#define THERMOSTAT_1_ADDR 0x01    // when no meters shared on same rs485 modbus RTU line
+#define THERMOSTAT_1_ADDR 0x99  // at staging of subpanel set temp/humid sensor as modbus node num 99 so never conflicts
 
-//3 meter subpanel , either 1 tenant meter per phase or all 3 meters on same phase 
+// 3 meter subpanel , either 1 tenant meter per phase or all 3 meters on same phase 
 #define DDS238_1_ADDR 0x01
 #define DDS238_2_ADDR 0x02
 #define DDS238_3_ADDR 0x03
-//6 meter subpanel , either n tenant meters per phase, or all  meters on same phase 
+// uncomment for 6 meter subpanel , either n tenant meters per phase, or all  meters on same phase 
 //#define DDS238_1_ADDR 0x04
 //#define DDS238_2_ADDR 0x05
 //#define DDS238_3_ADDR 0x06
-//9 meter subpanel , either n tenant meters per phase, or all  meters on same phase 
+// uncomment for 9 meter subpanel , either n tenant meters per phase, or all  meters on same phase 
 //#define DDS238_1_ADDR 0x07
 //#define DDS238_2_ADDR 0x08
 //#define DDS238_3_ADDR 0x09
-// NOTE 2/4/8 multitenant subpanels can be cookie cutter options 
+// NOTE 3/6/9 multitenant subpanels can be cookie cutter options - 3 phase so x tenants/meters per phase typical, assume subanels in multiples of 3
 
 
 // ==================== Serial Interface Setup ====================
 SoftwareSerial _modbus1(RS485_RX_1, RS485_TX_1); // RS485 modbus HW519 module pinout - all meters on a rs485 daisy chain (and door thermostat  and tamper door alarm)
-//SoftwareSerial *modbus2(RS485_RX_2, RS485_TX_2); // TODO merge Canbus support and Modbus Client in other EMS branch to here ModCan
+//SoftwareSerial *modbus2(RS485_RX_2, RS485_TX_2); // uncomment when 2 modbus masters are to be used on the EMS PCB
+// TODO merge Canbus support and Modbus Client in other EMS branch to here ModCan
 
 // Temperature/humidity sensor
 Modbus_SHT20 sht20;
@@ -71,8 +72,8 @@ unsigned long lastPollMillis, lastEVSEMillis, lastEVSEChargingMillis = 0;
  */
 void setup_sht20() {
     Serial.printf("SETUP: MODBUS: SHT20 #1: address:%d\n", THERMOSTAT_1_ADDR);
-    //sht20.set_modbus_address(THERMOSTAT_1_ADDR);
-    //sht20.begin(THERMOSTAT_1_ADDR, _modbus1);
+    sht20.set_modbus_address(THERMOSTAT_1_ADDR);
+    sht20.begin(THERMOSTAT_1_ADDR, _modbus1);    // node number 99 so doesnt conflict with meters at 1-n
 }
 
 void setup_dds238() {
@@ -86,34 +87,37 @@ void setup_dds238() {
    dds238_1.begin(DDS238_1_ADDR, _modbus1);
    dds238_2.begin(DDS238_2_ADDR, _modbus1);
    dds238_3.begin(DDS238_3_ADDR, _modbus1);
-    //dds238_2.begin(DDS238_2_ADDR, _modbus4);
-   //dds238_3.begin(DDS238_3_ADDR, _modbus5);
-    //dds238_2.begin(DDS238_2_ADDR, _modbus6);
- 
+    //dds238_4.begin(DDS238_4_ADDR, _modbus1);
+    //dds238_5.begin(DDS238_5_ADDR, _modbus1);
+    //dds238_6.begin(DDS238_6_ADDR, _modbus1);
+    //dds238_7.begin(DDS238_7_ADDR, _modbus1);
+    //dds238_8.begin(DDS238_8_ADDR, _modbus1);
+    //dds238_9.begin(DDS238_9_ADDR, _modbus1);
 }
 
 /**
  * Initialize all Modbus clients
  */
 void setup_modbus_clients() {
-    //setup_thermostats();  // Future expansion
-    //setup_dtm();          // Future expansion
-    //setup_sht20();          // Initialize SHT20
-    //setup_evse();         // Future expansion
-    setup_dds238();
+    //setup_thermostats();  // Future expansion for modbus building thermostat
+    //setup_dtm();          // Future expansion Building mains
+    //TODO support thermostat and mete on same modbus master daisy chain
+    setup_sht20();          // Initialize SHT20 temp/humid modbus sensor
+    //setup_evse();         // Future expansion multitenant EV charging
+    setup_dds238();         // Initialize single phase meters , note they can be wired on separate phases
 }
 
 /**
  * Initialize Modbus master interface
  */
 void setup_modbus_master() {
-    // Reset GPIO pins for RS485
+    // Reset GPIO pins for 2 ports of  RS485
     gpio_reset_pin(RS485_RX_1);
     gpio_reset_pin(RS485_TX_1);
     gpio_reset_pin(RS485_RX_2);
     gpio_reset_pin(RS485_TX_2);
 
-    // Initialize serial at 9600 baud
+    // Initialize serial at 9600 baud for now, good for less than 20 modbus nodes of scanning
     _modbus1.begin(9600);
     
     // Setup connected devices
@@ -171,16 +175,16 @@ void poll_energy_meters() {
     for(int i = 0; i < MODBUS_NUM_METERS; i++) {
         dds238_meters[i]->poll();
     }
-    // Update data model with latest readings
+    // Update data model cache with latest readings
     update();
 }
 
 void poll_thermostats() {
-    // Poll each DDS238 meter
+    // Poll cabinet temp/humid sensor
     for(int i = 0; i < MODBUS_NUM_THERMOSTATS; i++) {
-        //sht20_thermostats[i]->poll();
+        //sht20_thermostats[i]->poll();  // TODO future option for multiple temp sensing in cabinet and nearby 
     }
-    // Update data model with latest readings
+    // Update data model cache with latest readings
     update();
 }
 //sht20.poll();        // Get new readings
@@ -191,7 +195,7 @@ void poll_thermostats() {
 void loop_modbus_master() {
     if (millis() - lastPollMillis > ModbusMaster_pollrate) {
         Serial.println("Starting poll cycle...");
-        //poll_thermostats(); // Poll thermostat/environmental  sensors such as cabinet temp/humid/pressure/ , wire mains and evse temps etc
+        poll_thermostats(); // Poll thermostat/environmental  sensors such as cabinet temp/humid/pressure/ , wire mains and evse temps etc
         poll_energy_meters(); // Poll energy meters
         // TODO poll other modbus device on same link
         lastPollMillis = millis();
