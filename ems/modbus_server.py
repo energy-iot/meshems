@@ -14,7 +14,6 @@ from dataclasses import dataclass
 from pymodbus.server import StartTcpServer
 from pymodbus.device import ModbusDeviceIdentification
 from pymodbus.datastore import ModbusSequentialDataBlock, ModbusSlaveContext, ModbusServerContext
-from pymodbus.transaction import ModbusRtuFramer
 
 from .sunspec_models import SunSpecMapper
 
@@ -59,17 +58,17 @@ class SunSpecModbusServer:
     def _setup_datastore(self):
         """Setup Modbus data store with SunSpec registers"""
         # Create data blocks for different register types
-        # Holding registers (40000-49999) - SunSpec models live here
-        holding_registers = ModbusSequentialDataBlock(40000, [0] * 10000)
+        # Holding registers (0-9999) - SunSpec models live here (40000+ addressing handled by client)
+        holding_registers = ModbusSequentialDataBlock(0, [0] * 10000)
         
-        # Input registers (30000-39999) - Not used in SunSpec but available
-        input_registers = ModbusSequentialDataBlock(30000, [0] * 1000)
+        # Input registers (0-999) - Not used in SunSpec but available
+        input_registers = ModbusSequentialDataBlock(0, [0] * 1000)
         
-        # Coils (00000-09999) - Not used in SunSpec but available
+        # Coils (0-999) - Not used in SunSpec but available
         coils = ModbusSequentialDataBlock(0, [False] * 1000)
         
-        # Discrete inputs (10000-19999) - Not used in SunSpec but available
-        discrete_inputs = ModbusSequentialDataBlock(10000, [False] * 1000)
+        # Discrete inputs (0-999) - Not used in SunSpec but available
+        discrete_inputs = ModbusSequentialDataBlock(0, [False] * 1000)
         
         # Create slave context
         self.slave_context = ModbusSlaveContext(
@@ -163,9 +162,7 @@ class SunSpecModbusServer:
             StartTcpServer(
                 context=self.server_context,
                 identity=self.device_identity,
-                address=(self.config.host, self.config.port),
-                allow_reuse_address=True,
-                defer_start=False
+                address=(self.config.host, self.config.port)
             )
             
         except Exception as e:
@@ -240,10 +237,10 @@ class AsyncSunSpecModbusServer:
     def _setup_datastore(self):
         """Setup Modbus data store with SunSpec registers"""
         # Create data blocks for different register types
-        holding_registers = ModbusSequentialDataBlock(40000, [0] * 10000)
-        input_registers = ModbusSequentialDataBlock(30000, [0] * 1000)
+        holding_registers = ModbusSequentialDataBlock(0, [0] * 10000)
+        input_registers = ModbusSequentialDataBlock(0, [0] * 1000)
         coils = ModbusSequentialDataBlock(0, [False] * 1000)
-        discrete_inputs = ModbusSequentialDataBlock(10000, [False] * 1000)
+        discrete_inputs = ModbusSequentialDataBlock(0, [False] * 1000)
         
         # Create slave context
         self.slave_context = ModbusSlaveContext(

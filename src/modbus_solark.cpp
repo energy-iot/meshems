@@ -101,6 +101,10 @@ Modbus_SolArkLV::Modbus_SolArkLV() {
     
     // Inverter variables
     inverter_voltage = 0;
+    inverter_voltage_ln = 0;
+    inverter_voltage_l2n = 0;
+    inverter_power_l1 = 0;
+    inverter_power_l2 = 0;
     inverter_current_l1 = 0;
     inverter_current_l2 = 0;
     inverter_status = 0;
@@ -173,6 +177,8 @@ void Modbus_SolArkLV::processBlock(const ModbusReadBlock& block) {
             break;
         case SolArkBlockType::GRID_INVERTER_150: // Registers 150-169 (20 regs)
             grid_voltage = getResponseBuffer(SolArkRegisterMap::GRID_VOLTAGE - block.start_register) / SolArkScalingFactors::VOLTAGE;
+            inverter_voltage_ln = getResponseBuffer(SolArkRegisterMap::INVERTER_VOLTAGE_LN - block.start_register) / SolArkScalingFactors::VOLTAGE;
+            inverter_voltage_l2n = getResponseBuffer(SolArkRegisterMap::INVERTER_VOLTAGE_L2N - block.start_register) / SolArkScalingFactors::VOLTAGE;
             inverter_voltage = getResponseBuffer(SolArkRegisterMap::INVERTER_VOLTAGE - block.start_register) / SolArkScalingFactors::VOLTAGE;
             grid_current_l1 = getResponseBuffer(SolArkRegisterMap::GRID_CURRENT_L1 - block.start_register) / SolArkScalingFactors::CURRENT;
             grid_current_l2 = getResponseBuffer(SolArkRegisterMap::GRID_CURRENT_L2 - block.start_register) / SolArkScalingFactors::CURRENT;
@@ -185,6 +191,8 @@ void Modbus_SolArkLV::processBlock(const ModbusReadBlock& block) {
             break;
         case SolArkBlockType::POWER_BATTERY_170: // Registers 170-189 (20 regs)
             inverter_output_power = correctSignedValue(getResponseBuffer(SolArkRegisterMap::INVERTER_OUTPUT_POWER - block.start_register));
+            inverter_power_l1 = getResponseBuffer(SolArkRegisterMap::INVERTER_POWER_L1 - block.start_register);
+            inverter_power_l2 = getResponseBuffer(SolArkRegisterMap::INVERTER_POWER_L2 - block.start_register);
             load_power_l1 = getResponseBuffer(SolArkRegisterMap::LOAD_POWER_L1 - block.start_register);
             load_power_l2 = getResponseBuffer(SolArkRegisterMap::LOAD_POWER_L2 - block.start_register);
             load_power_total = getResponseBuffer(SolArkRegisterMap::LOAD_POWER_TOTAL - block.start_register);
@@ -396,6 +404,22 @@ uint8_t Modbus_SolArkLV::getGridRelayStatus() {
 // Inverter Status Getters
 float Modbus_SolArkLV::getInverterVoltage() {
     return inverter_voltage;
+}
+
+float Modbus_SolArkLV::getInverterVoltageLN() {
+    return inverter_voltage_ln;
+}
+
+float Modbus_SolArkLV::getInverterVoltageL2N() {
+    return inverter_voltage_l2n;
+}
+
+float Modbus_SolArkLV::getInverterPowerL1() {
+    return inverter_power_l1;
+}
+
+float Modbus_SolArkLV::getInverterPowerL2() {
+    return inverter_power_l2;
 }
 
 float Modbus_SolArkLV::getInverterCurrentL1() {

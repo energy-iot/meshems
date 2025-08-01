@@ -4,12 +4,12 @@
 # Serial/RS485 Configuration
 serial:
   # Primary RS485 port for Sol-Ark communication
-  port: "/dev/ttyUSB0"  # Change to your actual RS485 device
+  port: "/dev/tty.usbserial-A10OGBLS"  # Change to your actual RS485 device
   baudrate: 9600
   bytesize: 8
   parity: "N"  # None
   stopbits: 1
-  timeout: 1.0
+  timeout: 2.0
   
   # Secondary RS485 port (if needed)
   port2: "/dev/ttyUSB1"
@@ -17,14 +17,15 @@ serial:
 # Sol-Ark Inverter Configuration
 solark:
   modbus_address: 1
-  poll_interval: 5.0  # seconds
+  poll_interval: 1.0  # seconds
   max_retries: 3
   retry_delay: 0.5  # seconds
 
 # SunSpec Modbus TCP Server Configuration
 sunspec_server:
   enabled: true
-  host: "0.0.0.0"  # Listen on all interfaces
+  #host: "127.0.0.1"  # Listen on all interfaces
+  host: "192.168.95.28"
   port: 8502
   unit_id: 1
 

@@ -189,7 +189,7 @@ void update_sunspec_from_solark() {
     float ac_current_total = (solark.getInverterCurrentL1() + solark.getInverterCurrentL2()) / 2.0f;
     holdingRegisters[inverter_offset + INV_AC_CURRENT] = ac_current_total * 100;  // Scale by 100 for 0.01 scale factor
     holdingRegisters[inverter_offset + INV_AC_VOLTAGE_LL] = solark.getInverterVoltage() * 10;  // Scale by 10 for 0.1 scale factor
-    holdingRegisters[inverter_offset + INV_AC_VOLTAGE_LN] = (solark.getInverterVoltage() / 1.732) * 10;  // Approximation for LN voltage
+    holdingRegisters[inverter_offset + INV_AC_VOLTAGE_LN] = solark.getInverterVoltageLN() * 10;  // VL1: Line1-to-Neutral voltage from register 154
     
     // Set frequency (2 registers for uint32)
     uint32_t frequency = solark.getInverterFrequency() * 100;  // Scale by 100 for 0.01 scale factor
@@ -209,13 +209,15 @@ void update_sunspec_from_solark() {
     holdingRegisters[inverter_offset + INV_TEMP_IGBT] = solark.getIGBTTemp() * 10;  // Scale by 10 for 0.1 scale factor
     
     // Set phase L1 measurements
-    holdingRegisters[inverter_offset + INV_AC_POWER_L1] = solark.getLoadPowerL1();
+    holdingRegisters[inverter_offset + INV_AC_POWER_L1] = solark.getInverterPowerL1();  // WL1: AC Power L1 from register 173
     holdingRegisters[inverter_offset + INV_AC_CURRENT_L1] = solark.getInverterCurrentL1() * 100;
-    holdingRegisters[inverter_offset + INV_AC_VOLTAGE_L1L2] = solark.getInverterVoltage() * 10;
+    holdingRegisters[inverter_offset + INV_AC_VOLTAGE_L1L2] = solark.getInverterVoltageLN() * 10;  // VL1: Line1-to-Neutral voltage
     
     // Set phase L2 measurements
-    holdingRegisters[inverter_offset + INV_AC_POWER_L2] = solark.getLoadPowerL2();
+    holdingRegisters[inverter_offset + INV_AC_POWER_L2] = solark.getInverterPowerL2();  // WL2: AC Power L2 from register 174
     holdingRegisters[inverter_offset + INV_AC_CURRENT_L2] = solark.getInverterCurrentL2() * 100;
+    // Add VL2: Line2-to-Neutral voltage from register 155 (assuming offset 69 based on Python implementation)
+    holdingRegisters[inverter_offset + 69] = solark.getInverterVoltageL2N() * 10;  // VL2: Line2-to-Neutral voltage
     
     // Vendor-specific status information in the alarm info field
     char alarmInfo[64] = {0};

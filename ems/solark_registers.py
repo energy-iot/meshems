@@ -32,7 +32,9 @@ class SolArkRegisterMap:
     
     # Grid and inverter registers
     GRID_VOLTAGE = 152
-    INVERTER_VOLTAGE = 156
+    INVERTER_VOLTAGE_LN = 154  # Line1-to-Neutral voltage (VL1)
+    INVERTER_VOLTAGE_L2N = 155  # Line2-to-Neutral voltage (VL2)
+    INVERTER_VOLTAGE = 156     # Line-to-Line voltage
     GRID_CURRENT_L1 = 160
     GRID_CURRENT_L2 = 161
     GRID_CT_CURRENT_L1 = 162
@@ -41,6 +43,8 @@ class SolArkRegisterMap:
     INVERTER_CURRENT_L2 = 165
     SMART_LOAD_POWER = 166
     GRID_POWER = 169
+    INVERTER_POWER_L1 = 173  # Line 1 power (WL1)
+    INVERTER_POWER_L2 = 174  # Line 2 power (WL2)
     
     # Inverter status register
     INVERTER_STATUS = 59  # 1=Self-test, 2=Normal, 3=Alarm, 4=Fault

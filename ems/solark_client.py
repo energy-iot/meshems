@@ -68,11 +68,15 @@ class SolArkData:
     grid_relay_status: int = 0
     
     # Inverter variables
-    inverter_voltage: float = 0.0
+    inverter_voltage: float = 0.0      # Line-to-Line voltage
+    inverter_voltage_ln: float = 0.0   # Line1-to-Neutral voltage (VL1)
+    inverter_voltage_l2n: float = 0.0  # Line2-to-Neutral voltage (VL2)
     inverter_current_l1: float = 0.0
     inverter_current_l2: float = 0.0
     inverter_frequency: float = 0.0
     inverter_status: int = 0
+    inverter_power_l1: float = 0.0     # Line 1 power (WL1)
+    inverter_power_l2: float = 0.0     # Line 2 power (WL2)
     
     # Load variables
     load_current_l1: float = 0.0
@@ -172,8 +176,8 @@ class SolArkModbusClient:
         """Read holding registers from the device"""
         try:
             result = self.client.read_holding_registers(
-                start_register,
-                num_registers,
+                address=start_register,
+                count=num_registers,
                 slave=self.modbus_address
             )
             
@@ -233,6 +237,12 @@ class SolArkModbusClient:
                 # Registers 150-169 (20 regs)
                 offset = SolArkRegisterMap.GRID_VOLTAGE - block.start_register
                 self.data.grid_voltage = registers[offset] / SolArkScalingFactors.VOLTAGE
+                
+                offset = SolArkRegisterMap.INVERTER_VOLTAGE_LN - block.start_register
+                self.data.inverter_voltage_ln = registers[offset] / SolArkScalingFactors.VOLTAGE
+                
+                offset = SolArkRegisterMap.INVERTER_VOLTAGE_L2N - block.start_register
+                self.data.inverter_voltage_l2n = registers[offset] / SolArkScalingFactors.VOLTAGE
                 
                 offset = SolArkRegisterMap.INVERTER_VOLTAGE - block.start_register
                 self.data.inverter_voltage = registers[offset] / SolArkScalingFactors.VOLTAGE
@@ -295,6 +305,13 @@ class SolArkModbusClient:
                 
                 offset = SolArkRegisterMap.PV2_POWER - block.start_register
                 self.data.pv2_power = registers[offset]
+                
+                # Process inverter power L1 and L2 (WL1, WL2)
+                offset = SolArkRegisterMap.INVERTER_POWER_L1 - block.start_register
+                self.data.inverter_power_l1 = registers[offset]
+                
+                offset = SolArkRegisterMap.INVERTER_POWER_L2 - block.start_register
+                self.data.inverter_power_l2 = registers[offset]
                 
                 self.data.pv_power_total = (self.data.pv1_power + self.data.pv2_power) / 1000.0
             

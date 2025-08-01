@@ -24,6 +24,8 @@ struct SolArkRegisterMap {
     
     // Grid and inverter registers
     static const uint16_t GRID_VOLTAGE = 152;
+    static const uint16_t INVERTER_VOLTAGE_LN = 154;  // Line1-to-Neutral voltage (VL1)
+    static const uint16_t INVERTER_VOLTAGE_L2N = 155; // Line2-to-Neutral voltage (VL2)
     static const uint16_t INVERTER_VOLTAGE = 156;
     static const uint16_t GRID_CURRENT_L1 = 160;
     static const uint16_t GRID_CURRENT_L2 = 161;
@@ -33,6 +35,8 @@ struct SolArkRegisterMap {
     static const uint16_t INVERTER_CURRENT_L2 = 165;
     static const uint16_t SMART_LOAD_POWER = 166;
     static const uint16_t GRID_POWER = 169;
+    static const uint16_t INVERTER_POWER_L1 = 173;    // Line 1 power (WL1)
+    static const uint16_t INVERTER_POWER_L2 = 174;    // Line 2 power (WL2)
 
     // Inverter status register
     static const uint16_t INVERTER_STATUS = 59;             // Inverter Status: 1=Self-test, 2=Normal, 3=Alarm, 4=Fault
@@ -176,6 +180,10 @@ class Modbus_SolArkLV : public ModbusMaster {
         
         // Inverter Status Getters
         float getInverterVoltage();
+        float getInverterVoltageLN();     // VL1: Line1-to-Neutral voltage (register 154)
+        float getInverterVoltageL2N();    // VL2: Line2-to-Neutral voltage (register 155)
+        float getInverterPowerL1();       // WL1: Line 1 power (register 173)
+        float getInverterPowerL2();       // WL2: Line 2 power (register 174)
         float getInverterCurrentL1();
         float getInverterCurrentL2();
         float getInverterFrequency();
@@ -282,6 +290,10 @@ class Modbus_SolArkLV : public ModbusMaster {
         
         // Inverter variables
         float inverter_voltage;         // Register 156: Inverter output voltage L1-L2
+        float inverter_voltage_ln;      // Register 154: Line1-to-Neutral voltage (VL1)
+        float inverter_voltage_l2n;     // Register 155: Line2-to-Neutral voltage (VL2)
+        float inverter_power_l1;        // Register 173: Line 1 power (WL1)
+        float inverter_power_l2;        // Register 174: Line 2 power (WL2)
         float inverter_current_l1;      // Register 164: Inverter output current L1
         float inverter_current_l2;      // Register 165: Inverter output current L2
         float inverter_frequency;       // Register 193: Inverter output frequency
