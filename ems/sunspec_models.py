@@ -32,7 +32,7 @@ class SunSpecCommonModel:
 
 @dataclass
 class SunSpecInverterModel:
-    """SunSpec Inverter Model (Model 701) - Single phase inverter with split phase output"""
+    """SunSpec Inverter Model (Model 701) - Base class for Grid and Load instances"""
     
     # Model header
     model_id = 701
@@ -69,6 +69,18 @@ class SunSpecInverterModel:
 
 
 @dataclass
+class SunSpecGridModel(SunSpecInverterModel):
+    """SunSpec Grid Model (Model 701) - Grid-side measurements"""
+    pass
+
+
+@dataclass
+class SunSpecLoadModel(SunSpecInverterModel):
+    """SunSpec Load Model (Model 701) - Load-side measurements"""
+    pass
+
+
+@dataclass
 class SunSpecBatteryModel:
     """SunSpec Battery Model (Model 713) - Battery bank model"""
     
@@ -99,20 +111,85 @@ class SunSpecBatteryModel:
     temperature_sf = 0  # Tmp_SF
 
 
-class SunSpecRegisterMap:
-    """SunSpec register mapping for Modbus TCP server"""
+@dataclass
+class SunSpecDCPort:
+    """SunSpec DC Port for Model 714"""
     
-    # Base addresses for each model (matching C implementation exactly)
+    # Port identification
+    port_type: int = 0  # PrtTyp - 0=PV, 1=ESS, 2=EV, 3=INJ, 4=ABS, 5=BIDIR, 6=DC_DC
+    port_id: int = 0  # ID - Port ID number
+    port_id_string: str = ""  # IDStr - Port ID string (8 registers)
+    
+    # DC measurements
+    dc_current: float = 0.0  # DCA - DC current for the port
+    dc_voltage: float = 0.0  # DCV - DC voltage for the port
+    dc_power: float = 0.0  # DCW - DC power for the port
+    dc_energy_injected: int = 0  # DCWhInj - Total cumulative DC energy injected
+    dc_energy_absorbed: int = 0  # DCWhAbs - Total cumulative DC energy absorbed
+    
+    # Status and temperature
+    temperature: float = 0.0  # Tmp - DC port temperature
+    dc_status: int = 0  # DCSta - 0=OFF, 1=ON, 2=WARNING, 3=ERROR
+    dc_alarm: int = 0  # DCAlrm - DC port alarm bitfield (32-bit)
+
+
+@dataclass
+class SunSpec714Model:
+    """SunSpec DER DC Measurement Model (Model 714) - 4x PV ports + 1x ESS port"""
+    
+    # Model header
+    model_id: int = 714
+    model_length: int = 0  # Will be calculated based on number of ports
+    
+    # General DC measurements
+    port_alarms: int = 0  # PrtAlrms - Bitfield of ports with active alarms
+    num_ports: int = 5  # NPrt - Number of DC ports (4 PV + 1 ESS)
+    total_dc_current: float = 0.0  # DCA - Total DC current for all ports
+    total_dc_power: float = 0.0  # DCW - Total DC power for all ports
+    total_dc_energy_injected: int = 0  # DCWhInj - Total cumulative DC energy injected
+    total_dc_energy_absorbed: int = 0  # DCWhAbs - Total cumulative DC energy absorbed
+    
+    # Scale factors
+    current_sf: int = -2  # DCA_SF - DC current scale factor
+    voltage_sf: int = -1  # DCV_SF - DC voltage scale factor
+    power_sf: int = 0  # DCW_SF - DC power scale factor
+    energy_sf: int = -3  # DCWH_SF - DC energy scale factor
+    temperature_sf: int = -1  # Tmp_SF - Temperature scale factor
+    
+    # DC Ports (4 PV + 1 ESS)
+    ports: list = field(default_factory=lambda: [
+        SunSpecDCPort(port_type=0, port_id=1, port_id_string="MPPT1"),      # PV Port 1
+        SunSpecDCPort(port_type=0, port_id=2, port_id_string="MPPT2"),      # PV Port 2
+        SunSpecDCPort(port_type=0, port_id=3, port_id_string="MPPT3"),      # PV Port 3
+        SunSpecDCPort(port_type=0, port_id=4, port_id_string="MPPT"),      # PV Port 4 (uninitialized)
+        SunSpecDCPort(port_type=1, port_id=5, port_id_string="BATT1")     # Battery Port 1
+    ])
+    
+    def __post_init__(self):
+        """Calculate model length based on number of ports"""
+        # Base model: 2 (header) + 2 (PrtAlrms) + 1 (NPrt) + 1 (DCA) + 1 (DCW) + 4 (DCWhInj) + 4 (DCWhAbs) + 5 (scale factors) = 20
+        # Per port: 1 (PrtTyp) + 1 (ID) + 8 (IDStr) + 1 (DCA) + 1 (DCV) + 1 (DCW) + 4 (DCWhInj) + 4 (DCWhAbs) + 1 (Tmp) + 1 (DCSta) + 2 (DCAlrm) = 25
+        base_length = 18  # Without header
+        port_length = 25
+        self.model_length = base_length + (self.num_ports * port_length)
+
+
+class SunSpecRegisterMap:
+    """SunSpec register mapping for Modbus TCP server with dual 701 instances and 714 model"""
+    
+    # Base addresses for each model
     SUNSPEC_BASE_ADDR = 40000
     COMMON_MODEL_BASE = SUNSPEC_BASE_ADDR + 2  # 40002 (after SunS header)
-    INVERTER_MODEL_BASE = COMMON_MODEL_BASE + 66 + 2  # 40070 (after Common Model + header)
-    STORAGE_MODEL_BASE = INVERTER_MODEL_BASE + 153 + 2  # 40225 (after Inverter Model + header)
-    END_MODEL_BASE = STORAGE_MODEL_BASE + 7 + 2  # 40234 (after Storage Model + header)
+    GRID_MODEL_BASE = COMMON_MODEL_BASE + 66 + 2  # 40070 (after Common Model + header)
+    LOAD_MODEL_BASE = GRID_MODEL_BASE + 153 + 2  # 40225 (after Grid Model + header)
+    STORAGE_MODEL_BASE = LOAD_MODEL_BASE + 153 + 2  # 40380 (after Load Model + header)
+    DC_MODEL_BASE = STORAGE_MODEL_BASE + 7 + 2  # 40389 (after Storage Model + header)
+    END_MODEL_BASE = DC_MODEL_BASE + 143 + 2  # 40534 (after DC Model + header, 143 = 18 base + 5*25 ports)
     
     # SunSpec Header
     SUNSPEC_ID = SUNSPEC_BASE_ADDR  # 40000-40001 (2 registers)
     
-    # Common Model (1) registers 
+    # Common Model (1) registers
     COMMON_MODEL_ID = COMMON_MODEL_BASE + 0  # 40002
     COMMON_MODEL_LENGTH = COMMON_MODEL_BASE + 1  # 40003
     MANUFACTURER = COMMON_MODEL_BASE + 2  # 40004-40019 (16 registers)
@@ -122,42 +199,101 @@ class SunSpecRegisterMap:
     SERIAL_NUMBER = COMMON_MODEL_BASE + 50  # 40052-40067 (16 registers)
     DEVICE_ADDRESS = COMMON_MODEL_BASE + 66  # 40068
     
-    # Inverter Model (701) registers 
-    INVERTER_MODEL_ID = INVERTER_MODEL_BASE  # 40068
-    INVERTER_MODEL_LENGTH = INVERTER_MODEL_BASE + 1  # 40069
-    INV_AC_TYPE = INVERTER_MODEL_BASE + 2  # 40070
-    INV_OPERATING_STATE = INVERTER_MODEL_BASE + 3  # 40071
-    INV_STATUS = INVERTER_MODEL_BASE + 4  # 40072
-    INV_GRID_CONNECTION = INVERTER_MODEL_BASE + 5  # 40073
-    INV_ALARM = INVERTER_MODEL_BASE + 6  # 40074-40075 (2 registers)
-    INV_DER_MODE = INVERTER_MODEL_BASE + 8  # 40076-40077 (2 registers)
-    INV_AC_POWER = INVERTER_MODEL_BASE + 10  # 40078
-    INV_AC_VA = INVERTER_MODEL_BASE + 11  # 40079
-    INV_AC_VAR = INVERTER_MODEL_BASE + 12  # 40080
-    INV_AC_PF = INVERTER_MODEL_BASE + 13  # 40081
-    INV_AC_CURRENT = INVERTER_MODEL_BASE + 14  # 40082
-    INV_AC_VOLTAGE_LL = INVERTER_MODEL_BASE + 15  # 40083
-    INV_AC_VOLTAGE_LN = INVERTER_MODEL_BASE + 16  # 40084
-    INV_AC_FREQUENCY = INVERTER_MODEL_BASE + 17  # 40085-40086 (2 registers)
+    # Grid Model (701) registers - First instance
+    GRID_MODEL_ID = GRID_MODEL_BASE  # 40070
+    GRID_MODEL_LENGTH = GRID_MODEL_BASE + 1  # 40071
+    GRID_AC_TYPE = GRID_MODEL_BASE + 2  # 40072
+    GRID_OPERATING_STATE = GRID_MODEL_BASE + 3  # 40073
+    GRID_STATUS = GRID_MODEL_BASE + 4  # 40074
+    GRID_CONNECTION = GRID_MODEL_BASE + 5  # 40075
+    GRID_ALARM = GRID_MODEL_BASE + 6  # 40076-40077 (2 registers)
+    GRID_DER_MODE = GRID_MODEL_BASE + 8  # 40078-40079 (2 registers)
+    GRID_AC_POWER = GRID_MODEL_BASE + 10  # 40080
+    GRID_AC_VA = GRID_MODEL_BASE + 11  # 40081
+    GRID_AC_VAR = GRID_MODEL_BASE + 12  # 40082
+    GRID_AC_PF = GRID_MODEL_BASE + 13  # 40083
+    GRID_AC_CURRENT = GRID_MODEL_BASE + 14  # 40084
+    GRID_AC_VOLTAGE_LL = GRID_MODEL_BASE + 15  # 40085
+    GRID_AC_VOLTAGE_LN = GRID_MODEL_BASE + 16  # 40086
+    GRID_AC_FREQUENCY = GRID_MODEL_BASE + 17  # 40087-40088 (2 registers)
     
-    # Storage Model (713) registers 
-    STORAGE_MODEL_ID = STORAGE_MODEL_BASE + 0  # 40225
-    STORAGE_MODEL_LENGTH = STORAGE_MODEL_BASE + 1  # 40226
-    STORAGE_ENERGY_RATING = STORAGE_MODEL_BASE + 2  # 40227
-    STORAGE_ENERGY_AVAILABLE = STORAGE_MODEL_BASE + 3  # 40228
-    STORAGE_SOC = STORAGE_MODEL_BASE + 4  # 40229
-    STORAGE_SOH = STORAGE_MODEL_BASE + 5  # 40230
-    STORAGE_STATUS = STORAGE_MODEL_BASE + 6  # 40231
-    STORAGE_SF_ENERGY = STORAGE_MODEL_BASE + 7  # 40232
-    STORAGE_SF_PERCENT = STORAGE_MODEL_BASE + 8  # 40233
+    # Load Model (701) registers - Second instance
+    LOAD_MODEL_ID = LOAD_MODEL_BASE  # 40225
+    LOAD_MODEL_LENGTH = LOAD_MODEL_BASE + 1  # 40226
+    LOAD_AC_TYPE = LOAD_MODEL_BASE + 2  # 40227
+    LOAD_OPERATING_STATE = LOAD_MODEL_BASE + 3  # 40228
+    LOAD_STATUS = LOAD_MODEL_BASE + 4  # 40229
+    LOAD_CONNECTION = LOAD_MODEL_BASE + 5  # 40230
+    LOAD_ALARM = LOAD_MODEL_BASE + 6  # 40231-40232 (2 registers)
+    LOAD_DER_MODE = LOAD_MODEL_BASE + 8  # 40233-40234 (2 registers)
+    LOAD_AC_POWER = LOAD_MODEL_BASE + 10  # 40235
+    LOAD_AC_VA = LOAD_MODEL_BASE + 11  # 40236
+    LOAD_AC_VAR = LOAD_MODEL_BASE + 12  # 40237
+    LOAD_AC_PF = LOAD_MODEL_BASE + 13  # 40238
+    LOAD_AC_CURRENT = LOAD_MODEL_BASE + 14  # 40239
+    LOAD_AC_VOLTAGE_LL = LOAD_MODEL_BASE + 15  # 40240
+    LOAD_AC_VOLTAGE_LN = LOAD_MODEL_BASE + 16  # 40241
+    LOAD_AC_FREQUENCY = LOAD_MODEL_BASE + 17  # 40242-40243 (2 registers)
+    
+    # Storage Model (713) registers
+    STORAGE_MODEL_ID = STORAGE_MODEL_BASE + 0  # 40380
+    STORAGE_MODEL_LENGTH = STORAGE_MODEL_BASE + 1  # 40381
+    STORAGE_ENERGY_RATING = STORAGE_MODEL_BASE + 2  # 40382
+    STORAGE_ENERGY_AVAILABLE = STORAGE_MODEL_BASE + 3  # 40383
+    STORAGE_SOC = STORAGE_MODEL_BASE + 4  # 40384
+    STORAGE_SOH = STORAGE_MODEL_BASE + 5  # 40385
+    STORAGE_STATUS = STORAGE_MODEL_BASE + 6  # 40386
+    STORAGE_SF_ENERGY = STORAGE_MODEL_BASE + 7  # 40387
+    STORAGE_SF_PERCENT = STORAGE_MODEL_BASE + 8  # 40388
+    
+    # DC Model (714) registers
+    DC_MODEL_ID = DC_MODEL_BASE + 0  # 40389
+    DC_MODEL_LENGTH = DC_MODEL_BASE + 1  # 40390
+    DC_PORT_ALARMS = DC_MODEL_BASE + 2  # 40391-40392 (2 registers for bitfield32)
+    DC_NUM_PORTS = DC_MODEL_BASE + 4  # 40393
+    DC_TOTAL_CURRENT = DC_MODEL_BASE + 5  # 40394
+    DC_TOTAL_POWER = DC_MODEL_BASE + 6  # 40395
+    DC_TOTAL_ENERGY_INJ = DC_MODEL_BASE + 7  # 40396-40399 (4 registers for uint64)
+    DC_TOTAL_ENERGY_ABS = DC_MODEL_BASE + 11  # 40400-40403 (4 registers for uint64)
+    DC_CURRENT_SF = DC_MODEL_BASE + 15  # 40404
+    DC_VOLTAGE_SF = DC_MODEL_BASE + 16  # 40405
+    DC_POWER_SF = DC_MODEL_BASE + 17  # 40406
+    DC_ENERGY_SF = DC_MODEL_BASE + 18  # 40407
+    DC_TEMP_SF = DC_MODEL_BASE + 19  # 40408
+    
+    # DC Port base addresses (each port takes 25 registers)
+    DC_PORT1_BASE = DC_MODEL_BASE + 20  # 40409 - PV Port 1
+    DC_PORT2_BASE = DC_PORT1_BASE + 25  # 40434 - PV Port 2
+    DC_PORT3_BASE = DC_PORT2_BASE + 25  # 40459 - PV Port 3
+    DC_PORT4_BASE = DC_PORT3_BASE + 25  # 40484 - PV Port 4 (uninitialized)
+    DC_PORT5_BASE = DC_PORT4_BASE + 25  # 40509 - ESS Port 1
     
     # End-of-map marker
-    END_MODEL_ID = END_MODEL_BASE + 0  # 40234 - Model ID 65535 (0xFFFF)
-    END_MODEL_LENGTH = END_MODEL_BASE + 1  # 40235 - Length 0
+    END_MODEL_ID = END_MODEL_BASE + 0  # 40534 - Model ID 65535 (0xFFFF)
+    END_MODEL_LENGTH = END_MODEL_BASE + 1  # 40535 - Length 0
+    
+    # Legacy aliases for backward compatibility (pointing to Grid model)
+    INVERTER_MODEL_BASE = GRID_MODEL_BASE
+    INVERTER_MODEL_ID = GRID_MODEL_ID
+    INVERTER_MODEL_LENGTH = GRID_MODEL_LENGTH
+    INV_AC_TYPE = GRID_AC_TYPE
+    INV_OPERATING_STATE = GRID_OPERATING_STATE
+    INV_STATUS = GRID_STATUS
+    INV_GRID_CONNECTION = GRID_CONNECTION
+    INV_ALARM = GRID_ALARM
+    INV_DER_MODE = GRID_DER_MODE
+    INV_AC_POWER = GRID_AC_POWER
+    INV_AC_VA = GRID_AC_VA
+    INV_AC_VAR = GRID_AC_VAR
+    INV_AC_PF = GRID_AC_PF
+    INV_AC_CURRENT = GRID_AC_CURRENT
+    INV_AC_VOLTAGE_LL = GRID_AC_VOLTAGE_LL
+    INV_AC_VOLTAGE_LN = GRID_AC_VOLTAGE_LN
+    INV_AC_FREQUENCY = GRID_AC_FREQUENCY
 
 
 class SunSpecMapper:
-    """Maps Sol-Ark data to SunSpec models"""
+    """Maps Sol-Ark data to SunSpec models with dual 701 instances"""
     
     def __init__(self, device_info):
         """
@@ -184,15 +320,21 @@ class SunSpecMapper:
         if "serial_number" in device_info:
             self.common_model.serial_number = device_info["serial_number"]
         
-        self.inverter_model = SunSpecInverterModel()
+        # Initialize dual 701 models
+        self.grid_model = SunSpecGridModel()
+        self.load_model = SunSpecLoadModel()
         self.battery_model = SunSpecBatteryModel()
+        self.dc_model = SunSpec714Model()
+        
+        # Legacy compatibility
+        self.inverter_model = self.grid_model
         
         # Register map for Modbus server
         self.registers = {}
         self._initialize_registers()
     
     def _initialize_registers(self):
-        """Initialize the Modbus register map"""
+        """Initialize the Modbus register map with dual 701 instances"""
         
         # Common Model registers
         self._set_register_32bit(SunSpecRegisterMap.SUNSPEC_ID, self.common_model.sunspec_id)
@@ -205,31 +347,93 @@ class SunSpecMapper:
         self._set_string_registers(SunSpecRegisterMap.SERIAL_NUMBER, self.common_model.serial_number, 16)
         self._set_register(SunSpecRegisterMap.DEVICE_ADDRESS, self.common_model.device_address)
         
-        # Inverter Model header
-        self._set_register(SunSpecRegisterMap.INVERTER_MODEL_ID, self.inverter_model.model_id)
-        self._set_register(SunSpecRegisterMap.INVERTER_MODEL_LENGTH, self.inverter_model.model_length)
+        ###############################################
+        # Grid Model (701) header - First instance
+        ###############################################
+        self._set_register(SunSpecRegisterMap.GRID_MODEL_ID, self.grid_model.model_id)
+        self._set_register(SunSpecRegisterMap.GRID_MODEL_LENGTH, self.grid_model.model_length)
         
-        # Initialize all inverter model values to "not implemented" (0xFFFF)
-        for i in range(2, self.inverter_model.model_length + 2):  # +2 for header
-            self._set_register(SunSpecRegisterMap.INVERTER_MODEL_BASE + i, 0xFFFF)
+        # Initialize all grid model values to "not implemented" (0xFFFF)
+        for i in range(2, self.grid_model.model_length + 2):  # +2 for header
+            self._set_register(SunSpecRegisterMap.GRID_MODEL_BASE + i, 0xFFFF)
         
-        self._set_register(SunSpecRegisterMap.INVERTER_MODEL_BASE + 35, 0x7FFF) #set TmpAmb to null
+         # Initialize 701 model signed int values to "not implemented" (0x8000)
+        self._set_register(SunSpecRegisterMap.GRID_MODEL_BASE + 35, 0x8000) #set TmpAmb to null
+        self._set_register(SunSpecRegisterMap.GRID_MODEL_BASE + 36, 0x8000) #set TmpCab to null
+        self._set_register(SunSpecRegisterMap.GRID_MODEL_BASE + 39, 0x8000) #set TmpSw to null
+        self._set_register(SunSpecRegisterMap.GRID_MODEL_BASE + 40, 0x8000) #set TmpOt to null
+        self._set_register(SunSpecRegisterMap.GRID_MODEL_BASE + 42, 0x8000) #set to null
+        self._set_register(SunSpecRegisterMap.GRID_MODEL_BASE + 43, 0x8000) #set to null
+        self._set_register(SunSpecRegisterMap.GRID_MODEL_BASE + 44, 0x8000) #set to null
+
+        self._set_register(SunSpecRegisterMap.GRID_MODEL_BASE + 65, 0x8000) #set to null
+        self._set_register(SunSpecRegisterMap.GRID_MODEL_BASE + 66, 0x8000) #set to null
+        self._set_register(SunSpecRegisterMap.GRID_MODEL_BASE + 67, 0x8000) #set to null
+        self._set_register(SunSpecRegisterMap.GRID_MODEL_BASE + 69, 0x8000) #set to null
+
+        self._set_register(SunSpecRegisterMap.GRID_MODEL_BASE + 87, 0x8000) #set to null
+        self._set_register(SunSpecRegisterMap.GRID_MODEL_BASE + 88, 0x8000) #set to null
+        self._set_register(SunSpecRegisterMap.GRID_MODEL_BASE + 89, 0x8000) #set to null
+        self._set_register(SunSpecRegisterMap.GRID_MODEL_BASE + 90, 0x8000) #set to null
+        self._set_register(SunSpecRegisterMap.GRID_MODEL_BASE + 91, 0x8000) #set to null
+        self._set_register(SunSpecRegisterMap.GRID_MODEL_BASE + 92, 0x8000) #set to null
+        self._set_register(SunSpecRegisterMap.GRID_MODEL_BASE + 93, 0x8000) #set to null
         
-        # Set scale factors 
-        self._set_register(SunSpecRegisterMap.INVERTER_MODEL_BASE + 113, -2)  # Current scale factor: -2 (0.01)
-        self._set_register(SunSpecRegisterMap.INVERTER_MODEL_BASE + 114, -1)  # Voltage scale factor: -1 (0.1)
-        self._set_register(SunSpecRegisterMap.INVERTER_MODEL_BASE + 115, -2)  # Frequency scale factor: -2 (0.01)
-        self._set_register(SunSpecRegisterMap.INVERTER_MODEL_BASE + 116, 0)   # Power scale factor: 0 (1)
-        self._set_register(SunSpecRegisterMap.INVERTER_MODEL_BASE + 117, -2)  # Power factor scale factor: -2 (0.01)
-        self._set_register(SunSpecRegisterMap.INVERTER_MODEL_BASE + 118, 0)   # Apparent power scale factor: 0 (1)
-        self._set_register(SunSpecRegisterMap.INVERTER_MODEL_BASE + 119, 0)   # Reactive power scale factor: 0 (1)
-        self._set_register(SunSpecRegisterMap.INVERTER_MODEL_BASE + 120, -3)  # Energy scale factor: -3 (0.001)
-        self._set_register(SunSpecRegisterMap.INVERTER_MODEL_BASE + 121, -3)  # Reactive energy scale factor: -3 (0.001)
-        self._set_register(SunSpecRegisterMap.INVERTER_MODEL_BASE + 122, -1)  # Temperature scale factor: -1 (0.1)
+        # Set scale factors for Grid model
+        self._set_register(SunSpecRegisterMap.GRID_MODEL_BASE + 113, -2)  # Current scale factor: -2 (0.01)
+        self._set_register(SunSpecRegisterMap.GRID_MODEL_BASE + 114, -1)  # Voltage scale factor: -1 (0.1)
+        self._set_register(SunSpecRegisterMap.GRID_MODEL_BASE + 115, -2)  # Frequency scale factor: -2 (0.01)
+        self._set_register(SunSpecRegisterMap.GRID_MODEL_BASE + 116, 0)   # Power scale factor: 0 (1)
+        self._set_register(SunSpecRegisterMap.GRID_MODEL_BASE + 117, -2)  # Power factor scale factor: -2 (0.01)
+        self._set_register(SunSpecRegisterMap.GRID_MODEL_BASE + 118, 0)   # Apparent power scale factor: 0 (1)
+        self._set_register(SunSpecRegisterMap.GRID_MODEL_BASE + 119, 0)   # Reactive power scale factor: 0 (1)
+        self._set_register(SunSpecRegisterMap.GRID_MODEL_BASE + 120, -3)  # Energy scale factor: -3 (0.001)
+        self._set_register(SunSpecRegisterMap.GRID_MODEL_BASE + 121, -3)  # Reactive energy scale factor: -3 (0.001)
+        self._set_register(SunSpecRegisterMap.GRID_MODEL_BASE + 122, -1)  # Temperature scale factor: -1 (0.1)
+
+        ###############################################
+        # Load Model (701) header - Second instance
+        ###############################################
+        self._set_register(SunSpecRegisterMap.LOAD_MODEL_ID, self.load_model.model_id)
+        self._set_register(SunSpecRegisterMap.LOAD_MODEL_LENGTH, self.load_model.model_length)
         
-        # Initialize string fields to empty/null instead of 0xFFFF
-        # INV_ALARM_INFO (32 registers starting at offset 123)
-        self._set_string_registers(SunSpecRegisterMap.INVERTER_MODEL_BASE + 123, "", 32)
+        # Initialize all load model values to "not implemented" (0xFFFF)
+        for i in range(2, self.load_model.model_length + 2):  # +2 for header
+            self._set_register(SunSpecRegisterMap.LOAD_MODEL_BASE + i, 0xFFFF)
+        
+        # Initialize 701 model signed int values to "not implemented" (0x8000)
+        self._set_register(SunSpecRegisterMap.LOAD_MODEL_BASE + 35, 0x8000) #set TmpAmb to null
+        self._set_register(SunSpecRegisterMap.LOAD_MODEL_BASE + 36, 0x8000) #set TmpCab to null
+        self._set_register(SunSpecRegisterMap.LOAD_MODEL_BASE + 39, 0x8000) #set TmpSw to null
+        self._set_register(SunSpecRegisterMap.LOAD_MODEL_BASE + 40, 0x8000) #set TmpOt to null
+        self._set_register(SunSpecRegisterMap.LOAD_MODEL_BASE + 42, 0x8000) #set to null
+        self._set_register(SunSpecRegisterMap.LOAD_MODEL_BASE + 43, 0x8000) #set to null
+        self._set_register(SunSpecRegisterMap.LOAD_MODEL_BASE + 44, 0x8000) #set to null
+
+        self._set_register(SunSpecRegisterMap.LOAD_MODEL_BASE + 65, 0x8000) #set to null
+        self._set_register(SunSpecRegisterMap.LOAD_MODEL_BASE + 66, 0x8000) #set to null
+        self._set_register(SunSpecRegisterMap.LOAD_MODEL_BASE + 67, 0x8000) #set to null
+        self._set_register(SunSpecRegisterMap.LOAD_MODEL_BASE + 69, 0x8000) #set to null
+
+        self._set_register(SunSpecRegisterMap.LOAD_MODEL_BASE + 87, 0x8000) #set to null
+        self._set_register(SunSpecRegisterMap.LOAD_MODEL_BASE + 88, 0x8000) #set to null
+        self._set_register(SunSpecRegisterMap.LOAD_MODEL_BASE + 89, 0x8000) #set to null
+        self._set_register(SunSpecRegisterMap.LOAD_MODEL_BASE + 90, 0x8000) #set to null
+        self._set_register(SunSpecRegisterMap.LOAD_MODEL_BASE + 91, 0x8000) #set to null
+        self._set_register(SunSpecRegisterMap.LOAD_MODEL_BASE + 92, 0x8000) #set to null
+        self._set_register(SunSpecRegisterMap.LOAD_MODEL_BASE + 93, 0x8000) #set to null
+        
+        # Set scale factors for Load model
+        self._set_register(SunSpecRegisterMap.LOAD_MODEL_BASE + 113, -2)  # Current scale factor: -2 (0.01)
+        self._set_register(SunSpecRegisterMap.LOAD_MODEL_BASE + 114, -1)  # Voltage scale factor: -1 (0.1)
+        self._set_register(SunSpecRegisterMap.LOAD_MODEL_BASE + 115, -2)  # Frequency scale factor: -2 (0.01)
+        self._set_register(SunSpecRegisterMap.LOAD_MODEL_BASE + 116, 0)   # Power scale factor: 0 (1)
+        self._set_register(SunSpecRegisterMap.LOAD_MODEL_BASE + 117, -2)  # Power factor scale factor: -2 (0.01)
+        self._set_register(SunSpecRegisterMap.LOAD_MODEL_BASE + 118, 0)   # Apparent power scale factor: 0 (1)
+        self._set_register(SunSpecRegisterMap.LOAD_MODEL_BASE + 119, 0)   # Reactive power scale factor: 0 (1)
+        self._set_register(SunSpecRegisterMap.LOAD_MODEL_BASE + 120, -3)  # Energy scale factor: -3 (0.001)
+        self._set_register(SunSpecRegisterMap.LOAD_MODEL_BASE + 121, -3)  # Reactive energy scale factor: -3 (0.001)
+        self._set_register(SunSpecRegisterMap.LOAD_MODEL_BASE + 122, -1)  # Temperature scale factor: -1 (0.1)
         
         # Storage Model header
         self._set_register(SunSpecRegisterMap.STORAGE_MODEL_ID, self.battery_model.model_id)
@@ -239,9 +443,75 @@ class SunSpecMapper:
         for i in range(2, self.battery_model.model_length + 2):  # +2 for header
             self._set_register(SunSpecRegisterMap.STORAGE_MODEL_BASE + i, 0xFFFF)
         
-        # Set scale factors for storage model 
+        # Set scale factors for storage model
         self._set_register(SunSpecRegisterMap.STORAGE_SF_ENERGY, -3)  # Energy scale factor: -3 (0.001)
         self._set_register(SunSpecRegisterMap.STORAGE_SF_PERCENT, -1)  # Percentage scale factor: -1 (0.1)
+        
+        # DC Model (714) header
+        self._set_register(SunSpecRegisterMap.DC_MODEL_ID, self.dc_model.model_id)
+        self._set_register(SunSpecRegisterMap.DC_MODEL_LENGTH, self.dc_model.model_length)
+        
+        # Initialize DC model general registers
+        self._set_register_32bit(SunSpecRegisterMap.DC_PORT_ALARMS, 0)  # No port alarms initially
+        self._set_register(SunSpecRegisterMap.DC_NUM_PORTS, self.dc_model.num_ports)
+        self._set_register(SunSpecRegisterMap.DC_TOTAL_CURRENT, 0)  # Will be updated with real data
+        self._set_register(SunSpecRegisterMap.DC_TOTAL_POWER, 0)  # Will be updated with real data
+        
+        # Initialize total energy registers (64-bit values)
+        for i in range(4):
+            self._set_register(SunSpecRegisterMap.DC_TOTAL_ENERGY_INJ + i, 0)
+            self._set_register(SunSpecRegisterMap.DC_TOTAL_ENERGY_ABS + i, 0)
+        
+        # Set scale factors for DC model
+        self._set_register(SunSpecRegisterMap.DC_CURRENT_SF, self.dc_model.current_sf)
+        self._set_register(SunSpecRegisterMap.DC_VOLTAGE_SF, self.dc_model.voltage_sf)
+        self._set_register(SunSpecRegisterMap.DC_POWER_SF, self.dc_model.power_sf)
+        self._set_register(SunSpecRegisterMap.DC_ENERGY_SF, self.dc_model.energy_sf)
+        self._set_register(SunSpecRegisterMap.DC_TEMP_SF, self.dc_model.temperature_sf)
+        
+        # Initialize DC ports
+        port_bases = [SunSpecRegisterMap.DC_PORT1_BASE, SunSpecRegisterMap.DC_PORT2_BASE,
+                     SunSpecRegisterMap.DC_PORT3_BASE, SunSpecRegisterMap.DC_PORT4_BASE,
+                     SunSpecRegisterMap.DC_PORT5_BASE]
+        
+        for i, port_base in enumerate(port_bases):
+            port = self.dc_model.ports[i]
+            
+            # Port type and ID
+            self._set_register(port_base + 0, port.port_type)  # PrtTyp
+            self._set_register(port_base + 1, port.port_id)    # ID
+            
+            # Port ID string (8 registers)
+            self._set_string_registers(port_base + 2, port.port_id_string, 8)
+            
+            # Initialize port measurements (will be updated with real data)
+            if i == 3:  # Port 4 (PV4) - set as uninitialized
+                self._set_register(port_base + 10, 0xFFFF)  # DCA - uninitialized
+                self._set_register(port_base + 11, 0xFFFF)  # DCV - uninitialized
+                self._set_register(port_base + 12, 0xFFFF)  # DCW - uninitialized
+                self._set_register(port_base + 21, 0x8000)  # Tmp - uninitialized (signed)
+                self._set_register(port_base + 22, 0xFFFF)  # DCSta - uninitialized
+            else:
+                self._set_register(port_base + 10, 0)  # DCA
+                self._set_register(port_base + 11, 0)  # DCV
+                self._set_register(port_base + 12, 0)  # DCW
+                self._set_register(port_base + 21, 0)  # Tmp
+                self._set_register(port_base + 22, 0)  # DCSta - OFF
+            
+            # Initialize energy registers (64-bit values)
+            for j in range(4):
+                if i == 3:  # Port 4 - uninitialized
+                    self._set_register(port_base + 13 + j, 0xFFFF)  # DCWhInj
+                    self._set_register(port_base + 17 + j, 0xFFFF)  # DCWhAbs
+                else:
+                    self._set_register(port_base + 13 + j, 0)  # DCWhInj
+                    self._set_register(port_base + 17 + j, 0)  # DCWhAbs
+            
+            # Initialize alarm register (32-bit)
+            if i == 3:  # Port 4 - uninitialized
+                self._set_register_32bit(port_base + 23, 0xFFFFFFFF)  # DCAlrm
+            else:
+                self._set_register_32bit(port_base + 23, 0)  # DCAlrm
         
         # End-of-map marker (Model ID 65535, Length 0)
         self._set_register(SunSpecRegisterMap.END_MODEL_ID, 65535)  # 0xFFFF
@@ -277,26 +547,50 @@ class SunSpecMapper:
     def update_from_solark(self, solark_data):
         """Update SunSpec models with Sol-Ark data"""
         try:
-            # Update inverter model
-            self.inverter_model.ac_current = abs(solark_data.inverter_current_l1 + solark_data.inverter_current_l2)
-            self.inverter_model.ac_current_a = solark_data.inverter_current_l1
-            self.inverter_model.ac_current_b = solark_data.inverter_current_l2
-            self.inverter_model.ac_voltage_ab = solark_data.inverter_voltage
-            self.inverter_model.ac_power = solark_data.inverter_output_power
-            self.inverter_model.ac_frequency = solark_data.inverter_frequency
-            self.inverter_model.ac_energy = solark_data.pv_energy * 1000  # Convert kWh to Wh
+            # Update Grid model with grid-side measurements
+            self.grid_model.ac_current = abs(solark_data.grid_current_l1 + solark_data.grid_current_l2)
+            self.grid_model.ac_current_a = solark_data.grid_current_l1
+            self.grid_model.ac_current_b = solark_data.grid_current_l2
+            self.grid_model.ac_voltage_ab = solark_data.grid_voltage
+            self.grid_model.ac_power = solark_data.grid_power
+            self.grid_model.ac_frequency = solark_data.grid_frequency
+            self.grid_model.ac_energy = solark_data.grid_sell_energy * 1000  # Convert kWh to Wh
             
-            # DC measurements (battery side)
-            self.inverter_model.dc_current = abs(solark_data.battery_current)
-            self.inverter_model.dc_voltage = solark_data.battery_voltage
-            self.inverter_model.dc_power = abs(solark_data.battery_power)
+            # Update Load model with load-side measurements
+            self.load_model.ac_current = abs(solark_data.load_current_l1 + solark_data.load_current_l2)
+            self.load_model.ac_current_a = solark_data.load_current_l1
+            self.load_model.ac_current_b = solark_data.load_current_l2
+            self.load_model.ac_voltage_ab = solark_data.inverter_voltage  # Load voltage from inverter side
+            self.load_model.ac_power = solark_data.load_power_total
+            self.load_model.ac_frequency = solark_data.load_frequency
+            self.load_model.ac_energy = solark_data.load_energy * 1000  # Convert kWh to Wh
             
-            # Temperature
-            self.inverter_model.cabinet_temperature = 0x7FFF
+            # DC measurements (battery side) - shared between models
+            dc_current = abs(solark_data.battery_current)
+            dc_voltage = solark_data.battery_voltage
+            dc_power = abs(solark_data.battery_power)
             
-            # Operating state mapping
-            self.inverter_model.operating_state = self._map_inverter_state(solark_data.inverter_status)
-            self.inverter_model.vendor_operating_state = self._map_vendor_state(solark_data)
+            self.grid_model.dc_current = dc_current
+            self.grid_model.dc_voltage = dc_voltage
+            self.grid_model.dc_power = dc_power
+            
+            self.load_model.dc_current = dc_current
+            self.load_model.dc_voltage = dc_voltage
+            self.load_model.dc_power = dc_power
+            
+            # Temperature - shared between models
+            # cabinet_temp = 0x8000  # Not available
+            # self.grid_model.cabinet_temperature = cabinet_temp
+            # self.load_model.cabinet_temperature = cabinet_temp
+            
+            # Operating state mapping - shared between models
+            operating_state = self._map_inverter_state(solark_data.inverter_status)
+            vendor_state = self._map_vendor_state(solark_data)
+            
+            self.grid_model.operating_state = operating_state
+            self.grid_model.vendor_operating_state = vendor_state
+            self.load_model.operating_state = operating_state
+            self.load_model.vendor_operating_state = vendor_state
             
             # Update battery model
             self.battery_model.battery_voltage = solark_data.battery_voltage
@@ -308,11 +602,16 @@ class SunSpecMapper:
             self.battery_model.battery_energy_capacity = solark_data.battery_capacity * solark_data.battery_voltage
             self.battery_model.battery_status = self._map_storage_status(solark_data)
             
-            # Update Modbus registers
-            self.update_inverter_from_solark(solark_data)
+            # Update Modbus registers for both models
+            self.update_grid_registers_from_solark(solark_data)
+            self.update_load_registers_from_solark(solark_data)
             self._update_battery_registers()
+            self._update_dc_model_from_solark(solark_data)
             
-            self.logger.debug("Updated SunSpec models with Sol-Ark data")
+            # Legacy compatibility
+            self.update_inverter_from_solark(solark_data)
+            
+            self.logger.debug("Updated SunSpec Grid, Load, and DC models with Sol-Ark data")
             
         except Exception as e:
             self.logger.error(f"Error updating SunSpec models: {e}")
@@ -371,6 +670,208 @@ class SunSpecMapper:
         else:
             return 0  # OK
     
+    def update_grid_registers_from_solark(self, solark_data):
+        """Update Grid model registers with Sol-Ark grid-side data based on CSV mapping"""
+        # Set AC wiring type based on Sol-Ark register 286 (Grid Type)
+        sunspec_ac_type = 0  # Default to Unknown
+        if solark_data.grid_type == 0x00:  # Single-phase
+            sunspec_ac_type = 2  # Single Phase
+        elif solark_data.grid_type == 0x01:  # Split-phase
+            sunspec_ac_type = 1  # Split Phase
+        elif solark_data.grid_type == 0x02:  # Three-phase Wye
+            sunspec_ac_type = 3  # Three Phase Wye
+        
+        self._set_register(SunSpecRegisterMap.GRID_AC_TYPE, sunspec_ac_type)
+        
+        # Operating state based on Sol-Ark inverter status
+        self._set_register(SunSpecRegisterMap.GRID_OPERATING_STATE, 1 if solark_data.inverter_status == 2 else 0)
+        
+        # Inverter state mapping
+        inv_state = 0  # Default to OFF
+        if solark_data.inverter_status == 1:  # Self-test
+            inv_state = 2  # STARTING
+        elif solark_data.inverter_status == 2:  # Normal
+            if solark_data.grid_power > 100:
+                inv_state = 3  # RUNNING
+            else:
+                inv_state = 7  # STANDBY
+        elif solark_data.inverter_status == 3:  # Alarm
+            inv_state = 4  # THROTTLED
+        elif solark_data.inverter_status == 4:  # Fault
+            inv_state = 6  # FAULT
+        else:
+            inv_state = 0  # OFF
+        
+        self._set_register(SunSpecRegisterMap.GRID_STATUS, inv_state)
+        
+        # Grid connection state
+        grid_connected = 1 if solark_data.grid_relay_status == 1 else 0
+        self._set_register(SunSpecRegisterMap.GRID_CONNECTION, grid_connected)
+        
+        # DER operational characteristics
+        der_mode = 0
+        if solark_data.grid_relay_status == 2:  # Connected to grid
+            der_mode |= 0x0000  # Grid Following
+        else:  # Disconnected from grid
+            der_mode |= 0x0001  # Grid Forming
+        
+        self._set_register(SunSpecRegisterMap.GRID_DER_MODE, (der_mode >> 16) & 0xFFFF)
+        self._set_register(SunSpecRegisterMap.GRID_DER_MODE + 1, der_mode & 0xFFFF)
+        
+        # Alarm bitfield
+        self._set_register(SunSpecRegisterMap.GRID_ALARM, 0)
+        self._set_register(SunSpecRegisterMap.GRID_ALARM + 1, 0)
+        
+        # Power measurements - Grid CSV mapping uses register 169 (Total power of grid side L1L2)
+        self._set_register(SunSpecRegisterMap.GRID_AC_POWER, int(solark_data.grid_power))
+        self._set_register(SunSpecRegisterMap.GRID_AC_VA, int(abs(solark_data.grid_power)))  # Approximation
+        self._set_register(SunSpecRegisterMap.GRID_AC_VAR, 0)  # Not available
+        self._set_register(SunSpecRegisterMap.GRID_AC_PF, 100)  # Power factor 1.0 (scaled by 100)
+        
+        # Current and voltage measurements - Grid CSV mapping uses registers 160/161, 152, 150
+        grid_current_total = abs(solark_data.grid_current_l1 + solark_data.grid_current_l2)
+        self._set_register(SunSpecRegisterMap.GRID_AC_CURRENT, int(grid_current_total * 100))  # Scale by 100
+        self._set_register(SunSpecRegisterMap.GRID_AC_VOLTAGE_LL, int(solark_data.grid_voltage * 10))  # Register 152
+        self._set_register(SunSpecRegisterMap.GRID_AC_VOLTAGE_LN, int(solark_data.grid_voltage * 10))  # Register 150 (approximation)
+        
+        # Frequency - Grid CSV mapping uses register 79 (Grid frequency)
+        frequency_scaled = int(solark_data.grid_frequency * 100)
+        self._set_register(SunSpecRegisterMap.GRID_AC_FREQUENCY, (frequency_scaled >> 16) & 0xFFFF)
+        self._set_register(SunSpecRegisterMap.GRID_AC_FREQUENCY + 1, frequency_scaled & 0xFFFF)
+        
+        # Energy measurements - Grid CSV mapping uses registers 77 (Day Grid Sell), 76 (Day Grid Buy)
+        energy_injected_wh = int(solark_data.grid_sell_energy * 1000)  # Convert kWh to Wh
+        energy_absorbed_wh = int(solark_data.grid_buy_energy * 1000)   # Convert kWh to Wh
+        
+        # Total Energy Injected (TotWhInj) - 4 registers for uint64
+        self._set_register(SunSpecRegisterMap.GRID_MODEL_BASE + 19, 0)  # High 32 bits (upper 16)
+        self._set_register(SunSpecRegisterMap.GRID_MODEL_BASE + 20, 0)  # High 32 bits (lower 16)
+        self._set_register(SunSpecRegisterMap.GRID_MODEL_BASE + 21, (energy_injected_wh >> 16) & 0xFFFF)
+        self._set_register(SunSpecRegisterMap.GRID_MODEL_BASE + 22, energy_injected_wh & 0xFFFF)
+        
+        # Total Energy Absorbed (TotWhAbs) - 4 registers for uint64
+        self._set_register(SunSpecRegisterMap.GRID_MODEL_BASE + 23, 0)  # High 32 bits (upper 16)
+        self._set_register(SunSpecRegisterMap.GRID_MODEL_BASE + 24, 0)  # High 32 bits (lower 16)
+        self._set_register(SunSpecRegisterMap.GRID_MODEL_BASE + 25, (energy_absorbed_wh >> 16) & 0xFFFF)
+        self._set_register(SunSpecRegisterMap.GRID_MODEL_BASE + 26, energy_absorbed_wh & 0xFFFF)
+        
+        # Temperature measurements - shared with Load model
+        self._set_register(SunSpecRegisterMap.GRID_MODEL_BASE + 37, int(solark_data.igbt_temp * 10))  # Heat Sink temp
+        self._set_register(SunSpecRegisterMap.GRID_MODEL_BASE + 38, int(solark_data.dcdc_xfrmr_temp * 10))  # Transformer temp
+        
+        # Phase L1 measurements - Grid CSV mapping uses registers 167 (Grid side L1 power), 160 (Grid side current L1)
+        self._set_register(SunSpecRegisterMap.GRID_MODEL_BASE + 41, int(solark_data.grid_power / 2))  # WL1: Approximate L1 power
+        self._set_register(SunSpecRegisterMap.GRID_MODEL_BASE + 45, int(solark_data.grid_current_l1 * 100))  # Current L1
+        self._set_register(SunSpecRegisterMap.GRID_MODEL_BASE + 46, int(solark_data.grid_voltage * 10))  # VL1L2: Grid voltage
+        self._set_register(SunSpecRegisterMap.GRID_MODEL_BASE + 47, int(solark_data.grid_voltage * 10))  # VL1: Grid voltage L1-N
+        
+        # Phase L2 measurements - Grid CSV mapping uses registers 168 (Grid side L2 power), 161 (Grid side current L2)
+        self._set_register(SunSpecRegisterMap.GRID_MODEL_BASE + 64, int(solark_data.grid_power / 2))  # WL2: Approximate L2 power
+        self._set_register(SunSpecRegisterMap.GRID_MODEL_BASE + 68, int(solark_data.grid_current_l2 * 100))  # Current L2
+        self._set_register(SunSpecRegisterMap.GRID_MODEL_BASE + 70, int(solark_data.grid_voltage * 10))  # VL2: Grid voltage L2-N
+        
+        # Vendor-specific status information
+        alarm_info = f"Grid Model - Status:{'Connected' if solark_data.grid_relay_status == 2 else 'Disconnected'} Power:{solark_data.grid_power:.0f}W"
+        self._set_string_registers(SunSpecRegisterMap.GRID_MODEL_BASE + 123, alarm_info, 32)
+    
+    def update_load_registers_from_solark(self, solark_data):
+        """Update Load model registers with Sol-Ark load-side data based on CSV mapping"""
+        # Set AC wiring type based on Sol-Ark register 286 (Grid Type) - same as Grid
+        sunspec_ac_type = 0  # Default to Unknown
+        if solark_data.grid_type == 0x00:  # Single-phase
+            sunspec_ac_type = 2  # Single Phase
+        elif solark_data.grid_type == 0x01:  # Split-phase
+            sunspec_ac_type = 1  # Split Phase
+        elif solark_data.grid_type == 0x02:  # Three-phase Wye
+            sunspec_ac_type = 3  # Three Phase Wye
+        
+        self._set_register(SunSpecRegisterMap.LOAD_AC_TYPE, sunspec_ac_type)
+        
+        # Operating state based on Sol-Ark inverter status
+        self._set_register(SunSpecRegisterMap.LOAD_OPERATING_STATE, 1 if solark_data.inverter_status == 2 else 0)
+        
+        # Inverter state mapping
+        inv_state = 0  # Default to OFF
+        if solark_data.inverter_status == 1:  # Self-test
+            inv_state = 2  # STARTING
+        elif solark_data.inverter_status == 2:  # Normal
+            if solark_data.load_power_total > 100:
+                inv_state = 3  # RUNNING
+            else:
+                inv_state = 7  # STANDBY
+        elif solark_data.inverter_status == 3:  # Alarm
+            inv_state = 4  # THROTTLED
+        elif solark_data.inverter_status == 4:  # Fault
+            inv_state = 6  # FAULT
+        else:
+            inv_state = 0  # OFF
+        
+        self._set_register(SunSpecRegisterMap.LOAD_STATUS, inv_state)
+        
+        # Grid connection state - same as Grid model
+        grid_connected = 1 if solark_data.grid_relay_status == 2 else 0
+        self._set_register(SunSpecRegisterMap.LOAD_CONNECTION, grid_connected)
+        
+        # DER operational characteristics - same as Grid model
+        der_mode = 0
+        if solark_data.grid_relay_status == 2:  # Connected to grid
+            der_mode |= 0x0000  # Grid Following
+        else:  # Disconnected from grid
+            der_mode |= 0x0001  # Grid Forming
+        
+        self._set_register(SunSpecRegisterMap.LOAD_DER_MODE, (der_mode >> 16) & 0xFFFF)
+        self._set_register(SunSpecRegisterMap.LOAD_DER_MODE + 1, der_mode & 0xFFFF)
+        
+        # Alarm bitfield
+        self._set_register(SunSpecRegisterMap.LOAD_ALARM, 0)
+        self._set_register(SunSpecRegisterMap.LOAD_ALARM + 1, 0)
+        
+        # Power measurements - Load CSV mapping uses register 178 (Load side total power)
+        self._set_register(SunSpecRegisterMap.LOAD_AC_POWER, int(solark_data.load_power_total))
+        self._set_register(SunSpecRegisterMap.LOAD_AC_VA, int(solark_data.load_power_total))  # Approximation
+        self._set_register(SunSpecRegisterMap.LOAD_AC_VAR, 0)  # Not available
+        self._set_register(SunSpecRegisterMap.LOAD_AC_PF, 100)  # Power factor 1.0 (scaled by 100)
+        
+        # Current and voltage measurements - Load CSV mapping uses registers 179/180, 157/158, 157
+        load_current_total = abs(solark_data.load_current_l1 + solark_data.load_current_l2)
+        self._set_register(SunSpecRegisterMap.LOAD_AC_CURRENT, int(load_current_total * 100))  # Scale by 100
+        # Using inverter voltage as approximation for load voltage (registers 157/158 not directly available)
+        self._set_register(SunSpecRegisterMap.LOAD_AC_VOLTAGE_LL, int(solark_data.inverter_voltage * 10))  # Registers 157+158
+        self._set_register(SunSpecRegisterMap.LOAD_AC_VOLTAGE_LN, int(solark_data.inverter_voltage_ln * 10))  # Register 157
+        
+        # Frequency - Load CSV mapping uses register 192 (Load frequency)
+        frequency_scaled = int(solark_data.load_frequency * 100)
+        self._set_register(SunSpecRegisterMap.LOAD_AC_FREQUENCY, (frequency_scaled >> 16) & 0xFFFF)
+        self._set_register(SunSpecRegisterMap.LOAD_AC_FREQUENCY + 1, frequency_scaled & 0xFFFF)
+        
+        # Energy measurements - Load CSV mapping uses registers 60 (Day Active Power Wh), 61 (Day Reactive Power Wh)
+        energy_injected_wh = int(solark_data.load_energy * 1000)  # Convert kWh to Wh
+        
+        # Total Energy Injected (TotWhInj) - 4 registers for uint64
+        self._set_register(SunSpecRegisterMap.LOAD_MODEL_BASE + 19, 0)  # High 32 bits (upper 16)
+        self._set_register(SunSpecRegisterMap.LOAD_MODEL_BASE + 20, 0)  # High 32 bits (lower 16)
+        self._set_register(SunSpecRegisterMap.LOAD_MODEL_BASE + 21, (energy_injected_wh >> 16) & 0xFFFF)
+        self._set_register(SunSpecRegisterMap.LOAD_MODEL_BASE + 22, energy_injected_wh & 0xFFFF)
+        
+        # Temperature measurements - shared with Grid model
+        self._set_register(SunSpecRegisterMap.LOAD_MODEL_BASE + 37, int(solark_data.igbt_temp * 10))  # Heat Sink temp
+        self._set_register(SunSpecRegisterMap.LOAD_MODEL_BASE + 38, int(solark_data.dcdc_xfrmr_temp * 10))  # Transformer temp
+        
+        # Phase L1 measurements - Load CSV mapping uses registers 176 (Load side L1 Power), 179 (Load current L1)
+        self._set_register(SunSpecRegisterMap.LOAD_MODEL_BASE + 41, int(solark_data.load_power_l1))  # WL1: Load L1 power
+        self._set_register(SunSpecRegisterMap.LOAD_MODEL_BASE + 45, int(solark_data.load_current_l1 * 100))  # Current L1
+        self._set_register(SunSpecRegisterMap.LOAD_MODEL_BASE + 46, int(solark_data.inverter_voltage * 10))  # VL1L2: Load voltage
+        self._set_register(SunSpecRegisterMap.LOAD_MODEL_BASE + 47, int(solark_data.inverter_voltage_ln * 10))  # VL1: Load voltage L1
+        
+        # Phase L2 measurements - Load CSV mapping uses registers 177 (Load side L2 power), 180 (Load current L2)
+        self._set_register(SunSpecRegisterMap.LOAD_MODEL_BASE + 64, int(solark_data.load_power_l2))  # WL2: Load L2 power
+        self._set_register(SunSpecRegisterMap.LOAD_MODEL_BASE + 68, int(solark_data.load_current_l2 * 100))  # Current L2
+        self._set_register(SunSpecRegisterMap.LOAD_MODEL_BASE + 70, int(solark_data.inverter_voltage_l2n * 10))  # VL2: Load voltage L2
+        
+        # Vendor-specific status information
+        alarm_info = f"Load Model - Power:{solark_data.load_power_total:.0f}W L1:{solark_data.load_power_l1:.0f}W L2:{solark_data.load_power_l2:.0f}W"
+        self._set_string_registers(SunSpecRegisterMap.LOAD_MODEL_BASE + 123, alarm_info, 32)
+    
     def _update_inverter_registers(self):
         """Update inverter model registers"""
         # This method should be called with actual Sol-Ark data
@@ -414,7 +915,7 @@ class SunSpecMapper:
         
         self._set_register(SunSpecRegisterMap.INV_STATUS, inv_state)
         
-        # Grid connection state 
+        # Grid connection state
         # Sol-Ark register 194: 1 = Open (Disconnected), 2 = Closed (Connected)
         grid_connected = 1 if solark_data.grid_relay_status == 2 else 0
         self._set_register(SunSpecRegisterMap.INV_GRID_CONNECTION, grid_connected)
@@ -427,7 +928,7 @@ class SunSpecMapper:
         else:  # Sol-Ark relay open (Disconnected from grid)
             der_mode |= 0x0001  # Set Grid Forming
         
-        # Store 32-bit DER mode across two registers 
+        # Store 32-bit DER mode across two registers
         self._set_register(SunSpecRegisterMap.INV_DER_MODE, (der_mode >> 16) & 0xFFFF)
         self._set_register(SunSpecRegisterMap.INV_DER_MODE + 1, der_mode & 0xFFFF)
         
@@ -461,12 +962,13 @@ class SunSpecMapper:
         self._set_register(SunSpecRegisterMap.INVERTER_MODEL_BASE + 21, (energy_low32 >> 16) & 0xFFFF)  # Low 32 bits (upper 16)
         self._set_register(SunSpecRegisterMap.INVERTER_MODEL_BASE + 22, energy_low32 & 0xFFFF)  # Low 32 bits (lower 16)
         
-        # Temperature measurements 
-        self._set_register(SunSpecRegisterMap.INVERTER_MODEL_BASE + 36, int(solark_data.battery_temperature * 10))  # Cabinet temp
+        # Temperature measurements
+        ##COMEBACK TO DELETE
+        ##self._set_register(SunSpecRegisterMap.INVERTER_MODEL_BASE + 36, int(solark_data.battery_temperature * 10))  # Cabinet temp
         self._set_register(SunSpecRegisterMap.INVERTER_MODEL_BASE + 38, int(solark_data.dcdc_xfrmr_temp * 10))  # Transformer temp
         self._set_register(SunSpecRegisterMap.INVERTER_MODEL_BASE + 39, int(solark_data.igbt_temp * 10))  # IGBT temp
         
-        # Phase L1 measurements 
+        # Phase L1 measurements
         self._set_register(SunSpecRegisterMap.INVERTER_MODEL_BASE + 41, int(solark_data.inverter_power_l1))  # WL1: AC Power L1 from register 173
         self._set_register(SunSpecRegisterMap.INVERTER_MODEL_BASE + 45, int(solark_data.inverter_current_l1 * 100))  # Current L1
         self._set_register(SunSpecRegisterMap.INVERTER_MODEL_BASE + 46, int(solark_data.inverter_voltage_ln * 10))  # VL1: Line1-to-Neutral voltage
@@ -476,7 +978,7 @@ class SunSpecMapper:
         self._set_register(SunSpecRegisterMap.INVERTER_MODEL_BASE + 68, int(solark_data.inverter_current_l2 * 100))  # Current L2
         self._set_register(SunSpecRegisterMap.INVERTER_MODEL_BASE + 69, int(solark_data.inverter_voltage_l2n * 10))  # VL2: Line2-to-Neutral voltage from register 155
         
-        # Vendor-specific status information in the alarm info field 
+        # Vendor-specific status information in the alarm info field
         alarm_info = f"Grid:{'Connected' if solark_data.grid_relay_status == 2 else 'Disconnected'} Batt:{'Charging' if solark_data.battery_power < 0 else ('Discharging' if solark_data.battery_power > 0 else 'Idle')}"
         self._set_string_registers(SunSpecRegisterMap.INVERTER_MODEL_BASE + 123, alarm_info, 32)
     
@@ -507,9 +1009,114 @@ class SunSpecMapper:
         # Storage status - use the corrected enumerated values (0=OK, 1=Warning, 2=Error)
         self._set_register(SunSpecRegisterMap.STORAGE_STATUS, self.battery_model.battery_status)
         
-        # Scale factors 
+        # Scale factors
         self._set_register(SunSpecRegisterMap.STORAGE_SF_ENERGY, -3)  # Energy scale factor: -3 (0.001)
         self._set_register(SunSpecRegisterMap.STORAGE_SF_PERCENT, -1)  # Percentage scale factor: -1 (0.1)
+    
+    def _update_dc_model_from_solark(self, solark_data):
+        """Update DC model (714) registers with Sol-Ark data"""
+        try:
+            # Update DC model data from Sol-Ark registers
+            # PV Port 1 - Sol-Ark registers 109 (DC voltage 1), 110 (DC current 1), 186 (PV1 input power)
+            if hasattr(solark_data, 'pv1_voltage') and hasattr(solark_data, 'pv1_current') and hasattr(solark_data, 'pv1_power'):
+                self.dc_model.ports[0].dc_voltage = solark_data.pv1_voltage
+                self.dc_model.ports[0].dc_current = solark_data.pv1_current
+                self.dc_model.ports[0].dc_power = solark_data.pv1_power
+                self.dc_model.ports[0].dc_status = 1 if solark_data.pv1_power > 10 else 0  # ON if power > 10W
+                self.dc_model.ports[0].temperature = solark_data.igbt_temp if hasattr(solark_data, 'igbt_temp') else 25.0
+            
+            # PV Port 2 - Sol-Ark registers 111 (DC voltage 2), 112 (DC current 2), 187 (PV2 input power)
+            if hasattr(solark_data, 'pv2_voltage') and hasattr(solark_data, 'pv2_current') and hasattr(solark_data, 'pv2_power'):
+                self.dc_model.ports[1].dc_voltage = solark_data.pv2_voltage
+                self.dc_model.ports[1].dc_current = solark_data.pv2_current
+                self.dc_model.ports[1].dc_power = solark_data.pv2_power
+                self.dc_model.ports[1].dc_status = 1 if solark_data.pv2_power > 10 else 0  # ON if power > 10W
+                self.dc_model.ports[1].temperature = solark_data.igbt_temp if hasattr(solark_data, 'igbt_temp') else 25.0
+            
+            # PV Port 3 - Sol-Ark registers 113 (DC voltage 3), 114 (DC current 3), 188 (PV3 input power)
+            if hasattr(solark_data, 'pv3_voltage') and hasattr(solark_data, 'pv3_current') and hasattr(solark_data, 'pv3_power'):
+                self.dc_model.ports[2].dc_voltage = solark_data.pv3_voltage
+                self.dc_model.ports[2].dc_current = solark_data.pv3_current
+                self.dc_model.ports[2].dc_power = solark_data.pv3_power
+                self.dc_model.ports[2].dc_status = 1 if solark_data.pv3_power > 10 else 0  # ON if power > 10W
+                self.dc_model.ports[2].temperature = solark_data.igbt_temp if hasattr(solark_data, 'igbt_temp') else 25.0
+            
+            # PV Port 4 - Keep uninitialized as requested
+            # No updates for port 4 - it remains uninitialized
+            
+            # ESS Port 1 - Sol-Ark registers 183 (Battery voltage), 191 (Battery current), 190 (Battery power)
+            self.dc_model.ports[4].dc_voltage = solark_data.battery_voltage
+            self.dc_model.ports[4].dc_current = solark_data.battery_current
+            self.dc_model.ports[4].dc_power = solark_data.battery_power
+            self.dc_model.ports[4].dc_status = 1 if abs(solark_data.battery_power) > 10 else 0  # ON if power > 10W
+            self.dc_model.ports[4].temperature = solark_data.battery_temperature
+            
+            # Calculate totals for all active ports (excluding port 4 which is uninitialized)
+            total_current = 0.0
+            total_power = 0.0
+            
+            for i, port in enumerate(self.dc_model.ports):
+                if i != 3:  # Skip port 4 (uninitialized)
+                    total_current += abs(port.dc_current)
+                    total_power += port.dc_power
+            
+            self.dc_model.total_dc_current = total_current
+            self.dc_model.total_dc_power = total_power
+            
+            # Update DC model registers
+            self._update_dc_registers()
+            
+            self.logger.debug("Updated SunSpec DC model (714) with Sol-Ark data")
+            
+        except Exception as e:
+            self.logger.error(f"Error updating DC model: {e}")
+    
+    def _update_dc_registers(self):
+        """Update DC model (714) registers"""
+        # Update total measurements
+        self._set_register(SunSpecRegisterMap.DC_TOTAL_CURRENT, int(self.dc_model.total_dc_current * 100))  # Scale by 100
+        self._set_register(SunSpecRegisterMap.DC_TOTAL_POWER, int(self.dc_model.total_dc_power))
+        
+        # Update port alarms (none for now)
+        self._set_register_32bit(SunSpecRegisterMap.DC_PORT_ALARMS, 0)
+        
+        # Update individual port registers
+        port_bases = [SunSpecRegisterMap.DC_PORT1_BASE, SunSpecRegisterMap.DC_PORT2_BASE,
+                     SunSpecRegisterMap.DC_PORT3_BASE, SunSpecRegisterMap.DC_PORT4_BASE,
+                     SunSpecRegisterMap.DC_PORT5_BASE]
+        
+        for i, port_base in enumerate(port_bases):
+            port = self.dc_model.ports[i]
+            
+            # Skip port 4 (PV4) - keep it uninitialized
+            if i == 3:
+                continue
+            
+            # Update port measurements
+            self._set_register(port_base + 10, int(port.dc_current * 100))  # DCA - scale by 100
+            self._set_register(port_base + 11, int(port.dc_voltage * 10))   # DCV - scale by 10
+            self._set_register(port_base + 12, int(port.dc_power))          # DCW
+            self._set_register(port_base + 21, int(port.temperature * 10))  # Tmp - scale by 10
+            self._set_register(port_base + 22, port.dc_status)              # DCSta
+            
+            # Update energy registers (simplified - could be enhanced with actual energy tracking)
+            energy_injected = int(port.dc_energy_injected)
+            energy_absorbed = int(port.dc_energy_absorbed)
+            
+            # DCWhInj (4 registers for uint64)
+            self._set_register(port_base + 13, 0)  # High 32 bits (upper 16)
+            self._set_register(port_base + 14, 0)  # High 32 bits (lower 16)
+            self._set_register(port_base + 15, (energy_injected >> 16) & 0xFFFF)  # Low 32 bits (upper 16)
+            self._set_register(port_base + 16, energy_injected & 0xFFFF)  # Low 32 bits (lower 16)
+            
+            # DCWhAbs (4 registers for uint64)
+            self._set_register(port_base + 17, 0)  # High 32 bits (upper 16)
+            self._set_register(port_base + 18, 0)  # High 32 bits (lower 16)
+            self._set_register(port_base + 19, (energy_absorbed >> 16) & 0xFFFF)  # Low 32 bits (upper 16)
+            self._set_register(port_base + 20, energy_absorbed & 0xFFFF)  # Low 32 bits (lower 16)
+            
+            # Update alarm register (32-bit) - no alarms for now
+            self._set_register_32bit(port_base + 23, port.dc_alarm)
     
     def get_register_value(self, address):
         """Get register value by address"""
