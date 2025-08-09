@@ -79,10 +79,8 @@ class SunSpecModbusServer:
         )
         
         # Create server context
-        self.server_context = ModbusServerContext(
-            slaves={self.config.unit_id: self.slave_context},
-            single=False
-        )
+        self.server_context = ModbusServerContext()
+        self.server_context[self.config.unit_id] = self.slave_context
         
         # Initialize SunSpec registers
         self._update_sunspec_registers()
@@ -251,10 +249,8 @@ class AsyncSunSpecModbusServer:
         )
         
         # Create server context
-        self.server_context = ModbusServerContext(
-            slaves={self.config.unit_id: self.slave_context},
-            single=False
-        )
+        self.server_context = ModbusServerContext()
+        self.server_context[self.config.unit_id] = self.slave_context
         
         # Initialize SunSpec registers
         self._update_sunspec_registers()
