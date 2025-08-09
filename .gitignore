@@ -11,3 +11,4 @@ venv
 ems-dev.service
 ems.log
 .vscode
+_pycache_

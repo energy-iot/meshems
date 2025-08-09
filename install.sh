@@ -15,9 +15,9 @@ fi
 # Check Python version
 echo "Checking Python version..."
 python_version=$(python3 -c 'import sys; print(".".join(map(str, sys.version_info[:2])))')
-required_version="3.8"
+required_version="3.11"
 
-if python3 -c "import sys; exit(0 if sys.version_info >= (3, 8) else 1)"; then
+if python3.11 -c "import sys; exit(0 if sys.version_info >= (3, 11) else 1)"; then
     echo "✓ Python $python_version found (>= $required_version required)"
 else
     echo "✗ Python $required_version or higher is required. Found: $python_version"
@@ -36,7 +36,7 @@ echo "✓ pip3 found"
 # Create virtual environment
 echo "Creating virtual environment..."
 if [ ! -d "venv" ]; then
-    python3 -m venv venv
+    python3.11 -m venv venv
     echo "✓ Virtual environment created"
 else
     echo "✓ Virtual environment already exists"
