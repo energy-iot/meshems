@@ -168,7 +168,7 @@ class EMSApplication:
             raise
     
     def _create_status_display(self, solark_data: SolArkData) -> Layout:
-        """Create rich status display"""
+        """Create rich status display with all available data values"""
         layout = Layout()
         
         # Create main sections
@@ -186,10 +186,36 @@ class EMSApplication:
             )
         )
         
-        # Main content - split into columns
-        layout["main"].split_row(
-            Layout(name="left"),
-            Layout(name="right")
+        # Main content - split into multiple rows for better organization
+        layout["main"].split_column(
+            Layout(name="row1", size=12),
+            Layout(name="row2", size=12),
+            Layout(name="row3", size=12),
+            Layout(name="row4", size=12)
+        )
+        
+        # Row 1 - Battery and BMS data
+        layout["row1"].split_row(
+            Layout(name="battery"),
+            Layout(name="bms")
+        )
+        
+        # Row 2 - Power/Grid and Inverter data
+        layout["row2"].split_row(
+            Layout(name="power"),
+            Layout(name="inverter")
+        )
+        
+        # Row 3 - Energy counters and Diagnostics
+        layout["row3"].split_row(
+            Layout(name="energy"),
+            Layout(name="diagnostics")
+        )
+        
+        # Row 4 - Additional data
+        layout["row4"].split_row(
+            Layout(name="additional_left"),
+            Layout(name="additional_right")
         )
         
         # Battery status table
@@ -203,6 +229,16 @@ class EMSApplication:
         battery_table.add_row("SOC", f"{solark_data.battery_soc:.0f}%")
         battery_table.add_row("Temperature", f"{solark_data.battery_temperature:.1f}°C")
         battery_table.add_row("Capacity", f"{solark_data.battery_capacity:.1f} Ah")
+        battery_table.add_row("Charge Energy", f"{solark_data.battery_charge_energy:.2f} kWh")
+        battery_table.add_row("Discharge Energy", f"{solark_data.battery_discharge_energy:.2f} kWh")
+        battery_table.add_row("Corrected Capacity", f"{solark_data.corrected_battery_capacity:.1f} Ah")
+        battery_table.add_row("Empty Voltage", f"{solark_data.battery_empty_voltage:.2f} V")
+        battery_table.add_row("Shutdown Voltage", f"{solark_data.battery_shutdown_voltage:.2f} V")
+        battery_table.add_row("Restart Voltage", f"{solark_data.battery_restart_voltage:.2f} V")
+        battery_table.add_row("Low Voltage", f"{solark_data.battery_low_voltage:.2f} V")
+        battery_table.add_row("Shutdown Percent", f"{solark_data.battery_shutdown_percent}%")
+        battery_table.add_row("Restart Percent", f"{solark_data.battery_restart_percent}%")
+        battery_table.add_row("Low Percent", f"{solark_data.battery_low_percent}%")
         
         # Status indicators
         status = "IDLE"
@@ -213,18 +249,45 @@ class EMSApplication:
         
         battery_table.add_row("Status", status)
         
+        # BMS data table
+        bms_table = Table(title="BMS Data", show_header=True, header_style="bold magenta")
+        bms_table.add_column("Parameter", style="cyan")
+        bms_table.add_column("Value", style="green")
+        
+        bms_table.add_row("Charging Voltage", f"{solark_data.bms_charging_voltage:.2f} V")
+        bms_table.add_row("Discharge Voltage", f"{solark_data.bms_discharge_voltage:.2f} V")
+        bms_table.add_row("Charge Current Limit", f"{solark_data.bms_charging_current_limit:.1f} A")
+        bms_table.add_row("Discharge Current Limit", f"{solark_data.bms_discharge_current_limit:.1f} A")
+        bms_table.add_row("SOC", f"{solark_data.bms_real_time_soc:.0f}%")
+        bms_table.add_row("Voltage", f"{solark_data.bms_real_time_voltage:.2f} V")
+        bms_table.add_row("Current", f"{solark_data.bms_real_time_current:.2f} A")
+        bms_table.add_row("Temperature", f"{solark_data.bms_real_time_temp:.1f}°C")
+        bms_table.add_row("Warning", f"{solark_data.bms_warning}")
+        bms_table.add_row("Fault", f"{solark_data.bms_fault}")
+        
         # Grid/Power table
         power_table = Table(title="Power & Grid", show_header=True, header_style="bold magenta")
         power_table.add_column("Parameter", style="cyan")
         power_table.add_column("Value", style="green")
         
         power_table.add_row("Grid Power", f"{solark_data.grid_power:.1f} W")
-        power_table.add_row("Grid Voltage", f"{solark_data.grid_voltage:.1f} V")
+        power_table.add_row("Grid Voltage (L1-L2)", f"{solark_data.grid_voltage_l1l2:.1f} V")
+        power_table.add_row("Grid Voltage (L1-N)", f"{solark_data.grid_voltage_l1n:.1f} V")
+        power_table.add_row("Grid Voltage (L2-N)", f"{solark_data.grid_voltage_l2n:.1f} V")
+        power_table.add_row("Grid Current L1", f"{solark_data.grid_current_l1:.2f} A")
+        power_table.add_row("Grid Current L2", f"{solark_data.grid_current_l2:.2f} A")
+        power_table.add_row("Grid CT Current L1", f"{solark_data.grid_ct_current_l1:.2f} A")
+        power_table.add_row("Grid CT Current L2", f"{solark_data.grid_ct_current_l2:.2f} A")
         power_table.add_row("Grid Frequency", f"{solark_data.grid_frequency:.2f} Hz")
         power_table.add_row("Load Power", f"{solark_data.load_power_total:.1f} W")
+        power_table.add_row("Load Power L1", f"{solark_data.load_power_l1:.1f} W")
+        power_table.add_row("Load Power L2", f"{solark_data.load_power_l2:.1f} W")
         power_table.add_row("PV1 Power", f"{solark_data.pv1_power:.1f} W")
         power_table.add_row("PV2 Power", f"{solark_data.pv2_power:.1f} W")
         power_table.add_row("PV Total", f"{solark_data.pv_power_total:.3f} kW")
+        power_table.add_row("Apparent Power", f"{solark_data.apparent_power:.1f} VA")
+        power_table.add_row("Power Factor", f"{solark_data.grid_power_factor:.2f}")
+        power_table.add_row("Smart Load Power", f"{solark_data.smart_load_power:.1f} W")
         
         # Grid status
         grid_status = "DISCONNECTED"
@@ -238,8 +301,78 @@ class EMSApplication:
         
         power_table.add_row("Grid Status", grid_status)
         
-        layout["left"].update(Panel(battery_table, border_style="blue"))
-        layout["right"].update(Panel(power_table, border_style="green"))
+        # Inverter data table
+        inverter_table = Table(title="Inverter Data", show_header=True, header_style="bold magenta")
+        inverter_table.add_column("Parameter", style="cyan")
+        inverter_table.add_column("Value", style="green")
+        
+        inverter_table.add_row("Output Power", f"{solark_data.inverter_output_power:.1f} W")
+        inverter_table.add_row("Voltage (L1-L2)", f"{solark_data.inverter_voltage:.1f} V")
+        inverter_table.add_row("Voltage (L1-N)", f"{solark_data.inverter_voltage_ln:.1f} V")
+        inverter_table.add_row("Voltage (L2-N)", f"{solark_data.inverter_voltage_l2n:.1f} V")
+        inverter_table.add_row("Current L1", f"{solark_data.inverter_current_l1:.2f} A")
+        inverter_table.add_row("Current L2", f"{solark_data.inverter_current_l2:.2f} A")
+        inverter_table.add_row("Frequency", f"{solark_data.inverter_frequency:.2f} Hz")
+        inverter_table.add_row("Status", f"{solark_data.inverter_status}")
+        inverter_table.add_row("Power L1", f"{solark_data.inverter_power_l1:.1f} W")
+        inverter_table.add_row("Power L2", f"{solark_data.inverter_power_l2:.1f} W")
+        
+        # Energy counters table
+        energy_table = Table(title="Energy Counters", show_header=True, header_style="bold magenta")
+        energy_table.add_column("Parameter", style="cyan")
+        energy_table.add_column("Value", style="green")
+        
+        energy_table.add_row("Grid Buy", f"{solark_data.grid_buy_energy:.2f} kWh")
+        energy_table.add_row("Grid Sell", f"{solark_data.grid_sell_energy:.2f} kWh")
+        energy_table.add_row("Load", f"{solark_data.load_energy:.2f} kWh")
+        energy_table.add_row("PV", f"{solark_data.pv_energy:.2f} kWh")
+        
+        # Diagnostic data table
+        diag_table = Table(title="Diagnostics", show_header=True, header_style="bold magenta")
+        diag_table.add_column("Parameter", style="cyan")
+        diag_table.add_column("Value", style="green")
+        
+        diag_table.add_row("Comm Version", f"{solark_data.comm_version}")
+        diag_table.add_row("IGBT Temp", f"{solark_data.igbt_temp:.1f}°C")
+        diag_table.add_row("DCDC XFRMR Temp", f"{solark_data.dcdc_xfrmr_temp:.1f}°C")
+        diag_table.add_row("Grid Type", f"{solark_data.grid_type}")
+        diag_table.add_row("Generator Relay", f"{solark_data.generator_relay_status}")
+        
+        # Additional data tables
+        additional_left_table = Table(title="Load Data", show_header=True, header_style="bold magenta")
+        additional_left_table.add_column("Parameter", style="cyan")
+        additional_left_table.add_column("Value", style="green")
+        
+        additional_left_table.add_row("Load Current L1", f"{solark_data.load_current_l1:.2f} A")
+        additional_left_table.add_row("Load Current L2", f"{solark_data.load_current_l2:.2f} A")
+        additional_left_table.add_row("Load Frequency", f"{solark_data.load_frequency:.2f} Hz")
+        
+        additional_right_table = Table(title="Serial Number", show_header=True, header_style="bold magenta")
+        additional_right_table.add_column("Parameter", style="cyan")
+        additional_right_table.add_column("Value", style="green")
+        
+        serial_number = ""
+        for part in solark_data.serial_number_parts:
+            if part == 0:
+                break
+            char1 = (part >> 8) & 0xFF
+            char2 = part & 0xFF
+            if char1 != 0:
+                serial_number += chr(char1)
+            if char2 != 0:
+                serial_number += chr(char2)
+        
+        additional_right_table.add_row("Serial Number", serial_number)
+        
+        # Update layout with all tables
+        layout["battery"].update(Panel(battery_table, border_style="blue"))
+        layout["bms"].update(Panel(bms_table, border_style="magenta"))
+        layout["power"].update(Panel(power_table, border_style="green"))
+        layout["inverter"].update(Panel(inverter_table, border_style="yellow"))
+        layout["energy"].update(Panel(energy_table, border_style="cyan"))
+        layout["diagnostics"].update(Panel(diag_table, border_style="white"))
+        layout["additional_left"].update(Panel(additional_left_table, border_style="red"))
+        layout["additional_right"].update(Panel(additional_right_table, border_style="purple"))
         
         # Footer with timestamps
         footer_text = f"Last Update: {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(solark_data.last_update))}"
