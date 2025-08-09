@@ -24,7 +24,6 @@ class ModbusServerConfig:
     
     host: str = "0.0.0.0"
     port: int = 8502
-    slave_id: int = 1
     device_info: Dict[str, str] = None
 
 
@@ -200,7 +199,6 @@ class SunSpecModbusServer:
             "running": self.is_running(),
             "host": self.config.host,
             "port": self.config.port,
-            "slave_id": self.config.slave_id,
             "register_count": len(self.sunspec_mapper.get_all_registers())
         }
 
