@@ -13,7 +13,7 @@ from dataclasses import dataclass
 
 from pymodbus.server import StartTcpServer
 from pymodbus import ModbusDeviceIdentification
-from pymodbus.datastore import ModbusSequentialDataBlock, ModbusSlaveContext, ModbusServerContext
+from pymodbus.datastore import ModbusSequentialDataBlock, ModbusDeviceContext, ModbusServerContext
 
 from .sunspec_models import SunSpecMapper
 
@@ -70,8 +70,8 @@ class SunSpecModbusServer:
         # Discrete inputs (0-999) - Not used in SunSpec but available
         discrete_inputs = ModbusSequentialDataBlock(0, [False] * 1000)
         
-        # Create slave context
-        self.slave_context = ModbusSlaveContext(
+        # Create device context
+        self.slave_context = ModbusDeviceContext(
             di=discrete_inputs,
             co=coils,
             hr=holding_registers,
@@ -79,8 +79,10 @@ class SunSpecModbusServer:
         )
         
         # Create server context
-        self.server_context = ModbusServerContext()
-        self.server_context[self.config.unit_id] = self.slave_context
+        self.server_context = ModbusServerContext(
+            slaves={self.config.unit_id: self.slave_context},
+            single=False
+        )
         
         # Initialize SunSpec registers
         self._update_sunspec_registers()
@@ -240,8 +242,8 @@ class AsyncSunSpecModbusServer:
         coils = ModbusSequentialDataBlock(0, [False] * 1000)
         discrete_inputs = ModbusSequentialDataBlock(0, [False] * 1000)
         
-        # Create slave context
-        self.slave_context = ModbusSlaveContext(
+        # Create device context
+        self.slave_context = ModbusDeviceContext(
             di=discrete_inputs,
             co=coils,
             hr=holding_registers,
@@ -249,8 +251,10 @@ class AsyncSunSpecModbusServer:
         )
         
         # Create server context
-        self.server_context = ModbusServerContext()
-        self.server_context[self.config.unit_id] = self.slave_context
+        self.server_context = ModbusServerContext(
+            slaves={self.config.unit_id: self.slave_context},
+            single=False
+        )
         
         # Initialize SunSpec registers
         self._update_sunspec_registers()
