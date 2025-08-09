@@ -24,7 +24,7 @@ sunspec_server:
   #host: "127.0.0.1"  # Listen on all interfaces
   host: "192.168.95.28"
   port: 8502
-  unit_id: 1
+  slave_id: 1
 
 # Logging Configuration
 logging:

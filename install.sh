@@ -99,7 +99,7 @@ sunspec_server:
   enabled: true
   host: "0.0.0.0"
   port: 8502
-  unit_id: 1
+  slave_id: 1
 
 logging:
   level: "INFO"

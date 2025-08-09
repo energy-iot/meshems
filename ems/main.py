@@ -89,7 +89,7 @@ class EMSApplication:
                 "enabled": True,
                 "host": "0.0.0.0",
                 "port": 8502,
-                "unit_id": 1
+                "slave_id": 1
             },
             "logging": {
                 "level": "INFO",
@@ -154,7 +154,7 @@ class EMSApplication:
                 modbus_config = ModbusServerConfig(
                     host=server_config.get("host", "0.0.0.0"),
                     port=server_config.get("port", 8502),
-                    unit_id=server_config.get("unit_id", 1),
+                    slave_id=server_config.get("slave_id", 1),
                     device_info=self.config.get("device_info", {})
                 )
                 
