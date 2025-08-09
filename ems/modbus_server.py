@@ -12,7 +12,11 @@ from typing import Dict, Optional, Any
 from dataclasses import dataclass
 
 from pymodbus.server import StartTcpServer
-from pymodbus.device import ModbusDeviceIdentification
+try:
+    from pymodbus.device import ModbusDeviceIdentification
+except ImportError:
+    from pymodbus.pdu import ModbusDeviceIdentification
+
 from pymodbus.datastore import ModbusSequentialDataBlock, ModbusSlaveContext, ModbusServerContext
 
 from .sunspec_models import SunSpecMapper
