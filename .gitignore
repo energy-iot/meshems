@@ -9,3 +9,4 @@
 ems_dev_python.egg-info
 venv
 ems-dev.service
+ems.log

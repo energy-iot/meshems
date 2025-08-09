@@ -59,13 +59,20 @@ class SolArkData:
     smart_load_power: float = 0.0
     
     # Grid variables
-    grid_voltage: float = 0.0
+    grid_voltage: float = 0.0  # Legacy - will be set to grid_voltage_l1l2 for backward compatibility
+    grid_voltage_l1l2: float = 0.0  # Line1-to-Line2 voltage (register 152)
+    grid_voltage_l1n: float = 0.0   # Line1-to-Neutral voltage (register 150)
+    grid_voltage_l2n: float = 0.0   # Line2-to-Neutral voltage (register 151)
     grid_current_l1: float = 0.0
     grid_current_l2: float = 0.0
     grid_ct_current_l1: float = 0.0
     grid_ct_current_l2: float = 0.0
     grid_frequency: float = 0.0
     grid_relay_status: int = 0
+    
+    # Power quality variables
+    apparent_power: float = 0.0
+    grid_power_factor: float = 0.0
     
     # Inverter variables
     inverter_voltage: float = 0.0      # Line-to-Line voltage
@@ -233,11 +240,30 @@ class SolArkModbusClient:
                 offset = SolArkRegisterMap.IGBT_HEATSINK_TEMP - block.start_register
                 self.data.igbt_temp = (registers[offset] - SolArkScalingFactors.TEMPERATURE_OFFSET) / SolArkScalingFactors.TEMPERATURE_SCALE
             
+            elif block.block_type == SolArkBlockType.APPARENT_POWER_38:
+                # Register 38 (1 reg)
+                self.data.apparent_power = registers[0]
+            
+            elif block.block_type == SolArkBlockType.GRID_POWER_FACTOR_89:
+                # Register 89 (1 reg)
+                self.data.grid_power_factor = registers[0] / SolArkScalingFactors.CURRENT  # Power factor is scaled by 100
+            
             elif block.block_type == SolArkBlockType.GRID_INVERTER_150:
                 # Registers 150-169 (20 regs)
-                offset = SolArkRegisterMap.GRID_VOLTAGE - block.start_register
-                self.data.grid_voltage = registers[offset] / SolArkScalingFactors.VOLTAGE
+                # Grid voltage registers (new specific registers)
+                offset = SolArkRegisterMap.GRID_VOLTAGE_L1N - block.start_register
+                self.data.grid_voltage_l1n = registers[offset] / SolArkScalingFactors.VOLTAGE
                 
+                offset = SolArkRegisterMap.GRID_VOLTAGE_L2N - block.start_register
+                self.data.grid_voltage_l2n = registers[offset] / SolArkScalingFactors.VOLTAGE
+                
+                offset = SolArkRegisterMap.GRID_VOLTAGE_L1L2 - block.start_register
+                self.data.grid_voltage_l1l2 = registers[offset] / SolArkScalingFactors.VOLTAGE
+                
+                # Legacy grid_voltage for backward compatibility - use L1L2 voltage
+                self.data.grid_voltage = self.data.grid_voltage_l1l2
+                
+                # Inverter voltage registers
                 offset = SolArkRegisterMap.INVERTER_VOLTAGE_LN - block.start_register
                 self.data.inverter_voltage_ln = registers[offset] / SolArkScalingFactors.VOLTAGE
                 

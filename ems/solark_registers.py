@@ -30,8 +30,15 @@ class SolArkRegisterMap:
     LOAD_ENERGY = 84
     PV_ENERGY = 108
     
+    # Power quality registers
+    APPARENT_POWER = 38
+    GRID_POWER_FACTOR = 89
+    
     # Grid and inverter registers
-    GRID_VOLTAGE = 152
+    GRID_VOLTAGE_L1L2 = 152 #Line1-to-Line2 voltage
+    GRID_VOLTAGE_L1N = 150 #Line1-to-Neutral voltage 
+    GRID_VOLTAGE_L2N = 151 #Line2-to-Neutral voltage
+
     INVERTER_VOLTAGE_LN = 154  # Line1-to-Neutral voltage (VL1)
     INVERTER_VOLTAGE_L2N = 155  # Line2-to-Neutral voltage (VL2)
     INVERTER_VOLTAGE = 156     # Line-to-Line voltage
@@ -117,6 +124,8 @@ class SolArkBlockType(Enum):
     PV_ENERGY = "pv_energy"
     INVERTER_STATUS = "inverter_status"
     TEMPERATURES = "temperatures"
+    APPARENT_POWER_38 = "apparent_power_38"
+    GRID_POWER_FACTOR_89 = "grid_power_factor_89"
     GRID_INVERTER_150 = "grid_inverter_150"
     POWER_BATTERY_170 = "power_battery_170"
     BATTERY_STATUS_190 = "battery_status_190"
@@ -165,6 +174,18 @@ SOLARK_READ_BLOCKS: List[ModbusReadBlock] = [
         SolArkRegisterMap.DCDC_XFRMR_TEMP,
         2,
         "Temperatures (90-91)"
+    ),
+    ModbusReadBlock(
+        SolArkBlockType.APPARENT_POWER_38,
+        SolArkRegisterMap.APPARENT_POWER,
+        1,
+        "Apparent Power (38)"
+    ),
+    ModbusReadBlock(
+        SolArkBlockType.GRID_POWER_FACTOR_89,
+        SolArkRegisterMap.GRID_POWER_FACTOR,
+        1,
+        "Grid Power Factor (89)"
     ),
     ModbusReadBlock(
         SolArkBlockType.GRID_INVERTER_150,
