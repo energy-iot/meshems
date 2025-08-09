@@ -4,7 +4,8 @@
 # Serial/RS485 Configuration
 serial:
   # Primary RS485 port for Sol-Ark communication
-  port: "/dev/tty.usbserial-A10OGBLS"  # Change to your actual RS485 device
+  #port: "/dev/tty.usbserial-A10OGBLS"  # Change to your actual RS485 device
+  port: "/dev/ttyRS485"
   baudrate: 9600
   bytesize: 8
   parity: "N"  # None
@@ -21,8 +22,8 @@ solark:
 # SunSpec Modbus TCP Server Configuration
 sunspec_server:
   enabled: true
-  #host: "127.0.0.1"  # Listen on all interfaces
-  host: "192.168.95.28"
+  host: "127.0.0.1"  # Listen on all interfaces
+  #host: "192.168.95.28"
   port: 8502
   slave_id: 1
 
