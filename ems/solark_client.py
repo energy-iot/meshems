@@ -185,7 +185,7 @@ class SolArkModbusClient:
             result = self.client.read_holding_registers(
                 address=start_register,
                 count=num_registers,
-                slave_id=self.modbus_address
+                device_id=self.modbus_address
             )
             
             if result.isError():

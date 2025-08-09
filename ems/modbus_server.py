@@ -23,7 +23,7 @@ class ModbusServerConfig:
     
     host: str = "0.0.0.0"
     port: int = 8502
-    slave_id: int = 1
+    device_id: int = 1
     device_info: Dict[str, str] = None
 
 
@@ -67,7 +67,7 @@ class SunSpecModbusServer:
         
         # Create server context
         self.server_context = ModbusServerContext()
-        self.server_context[self.config.slave_id] = self.slave_context
+        self.server_context[self.config.device_id] = self.slave_context
         
         # Initialize SunSpec registers
         self._update_sunspec_registers()
