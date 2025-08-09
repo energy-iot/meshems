@@ -12,12 +12,8 @@ from typing import Dict, Optional, Any
 from dataclasses import dataclass
 
 from pymodbus.server import StartTcpServer
-try:
-    from pymodbus.device import ModbusDeviceIdentification
-except ImportError:
-    from pymodbus.pdu import ModbusDeviceIdentification
-
-from pymodbus.datastore import ModbusSequentialDataBlock, ModbusSlaveContext, ModbusServerContext
+from pymodbus import ModbusDeviceIdentification
+from pymodbus.datastore import ModbusSequentialDataBlock, ModbusDeviceContext, ModbusServerContext
 
 from .sunspec_models import SunSpecMapper
 
@@ -74,8 +70,8 @@ class SunSpecModbusServer:
         # Discrete inputs (0-999) - Not used in SunSpec but available
         discrete_inputs = ModbusSequentialDataBlock(0, [False] * 1000)
         
-        # Create slave context
-        self.slave_context = ModbusSlaveContext(
+        # Create device context
+        self.slave_context = ModbusDeviceContext(
             di=discrete_inputs,
             co=coils,
             hr=holding_registers,
@@ -246,8 +242,8 @@ class AsyncSunSpecModbusServer:
         coils = ModbusSequentialDataBlock(0, [False] * 1000)
         discrete_inputs = ModbusSequentialDataBlock(0, [False] * 1000)
         
-        # Create slave context
-        self.slave_context = ModbusSlaveContext(
+        # Create device context
+        self.slave_context = ModbusDeviceContext(
             di=discrete_inputs,
             co=coils,
             hr=holding_registers,
