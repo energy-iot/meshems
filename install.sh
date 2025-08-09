@@ -145,8 +145,8 @@ EOF
 echo "✓ Systemd service file created (ems-dev.service)"
 
 # Make scripts executable
-chmod +x examples/test_client.py
-chmod +x examples/test_sunspec_server.py
+# chmod +x examples/test_client.py
+# chmod +x examples/test_sunspec_server.py
 
 echo ""
 echo "Installation completed successfully!"
