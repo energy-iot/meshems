@@ -6,7 +6,6 @@ Sol-Ark inverter data in standardized SunSpec format.
 """
 
 import logging
-import asyncio
 import threading
 from typing import Dict, Optional, Any
 from dataclasses import dataclass
@@ -24,6 +23,7 @@ class ModbusServerConfig:
     
     host: str = "0.0.0.0"
     port: int = 8502
+    slave_id: int = 1
     device_info: Dict[str, str] = None
 
 
@@ -60,21 +60,9 @@ class SunSpecModbusServer:
         # Holding registers (0-9999) - SunSpec models live here (40000+ addressing handled by client)
         holding_registers = ModbusSequentialDataBlock(0, [0] * 10000)
         
-        # Input registers (0-999) - Not used in SunSpec but available
-        input_registers = ModbusSequentialDataBlock(0, [0] * 1000)
-        
-        # Coils (0-999) - Not used in SunSpec but available
-        coils = ModbusSequentialDataBlock(0, [False] * 1000)
-        
-        # Discrete inputs (0-999) - Not used in SunSpec but available
-        discrete_inputs = ModbusSequentialDataBlock(0, [False] * 1000)
-        
         # Create device context
         self.slave_context = ModbusDeviceContext(
-            di=discrete_inputs,
-            co=coils,
-            hr=holding_registers,
-            ir=input_registers
+            hr=holding_registers
         )
         
         # Create server context
@@ -201,121 +189,3 @@ class SunSpecModbusServer:
             "port": self.config.port,
             "register_count": len(self.sunspec_mapper.get_all_registers())
         }
-
-
-class AsyncSunSpecModbusServer:
-    """Async version of SunSpec Modbus server using asyncio"""
-    
-    def __init__(self, config: ModbusServerConfig):
-        """
-        Initialize async Modbus TCP server
-        
-        Args:
-            config: Server configuration
-        """
-        self.logger = logging.getLogger(__name__)
-        self.config = config
-        self.server = None
-        self.running = False
-        
-        # Initialize SunSpec mapper
-        device_info = config.device_info or {}
-        self.sunspec_mapper = SunSpecMapper(device_info)
-        
-        # Initialize Modbus data store
-        self._setup_datastore()
-        
-        # Setup device identification
-        self._setup_device_identification()
-        
-        self.logger.info(f"Initialized async SunSpec Modbus server on {config.host}:{config.port}")
-    
-    def _setup_datastore(self):
-        """Setup Modbus data store with SunSpec registers"""
-        # Create data blocks for different register types
-        holding_registers = ModbusSequentialDataBlock(0, [0] * 10000)
-        input_registers = ModbusSequentialDataBlock(0, [0] * 1000)
-        coils = ModbusSequentialDataBlock(0, [False] * 1000)
-        discrete_inputs = ModbusSequentialDataBlock(0, [False] * 1000)
-        
-        # Create device context
-        self.slave_context = ModbusDeviceContext(
-            di=discrete_inputs,
-            co=coils,
-            hr=holding_registers,
-            ir=input_registers
-        )
-        
-        # Create server context
-        self.server_context = ModbusServerContext()
-        self.server_context[self.config.slave_id] = self.slave_context
-        
-        # Initialize SunSpec registers
-        self._update_sunspec_registers()
-    
-    def _setup_device_identification(self):
-        """Setup Modbus device identification"""
-        device_info = self.config.device_info or {}
-        
-        self.device_identity = ModbusDeviceIdentification()
-        self.device_identity.VendorName = device_info.get("manufacturer", "Energy IoT Open Source")
-        self.device_identity.ProductCode = device_info.get("model", "EMS-Dev Python")
-        self.device_identity.VendorUrl = "https://github.com/energy-iot/ems-dev"
-        self.device_identity.ProductName = "EMS-Dev Python Gateway"
-        self.device_identity.ModelName = device_info.get("model", "EMS-Dev Python")
-        self.device_identity.MajorMinorRevision = device_info.get("version", "1.0.0")
-    
-    def _update_sunspec_registers(self):
-        """Update Modbus registers with SunSpec data"""
-        try:
-            sunspec_registers = self.sunspec_mapper.get_all_registers()
-            
-            for address, value in sunspec_registers.items():
-                register_address = address - 40000
-                if 0 <= register_address < 10000:
-                    self.slave_context.setValues(3, register_address, [value])
-            
-            self.logger.debug(f"Updated {len(sunspec_registers)} SunSpec registers")
-            
-        except Exception as e:
-            self.logger.error(f"Error updating SunSpec registers: {e}")
-    
-    async def update_from_solark(self, solark_data):
-        """Update SunSpec models with Sol-Ark data (async)"""
-        try:
-            self.sunspec_mapper.update_from_solark(solark_data)
-            self._update_sunspec_registers()
-            self.logger.debug("Updated async Modbus server with Sol-Ark data")
-        except Exception as e:
-            self.logger.error(f"Error updating async Modbus server: {e}")
-    
-    async def start(self):
-        """Start the async Modbus TCP server"""
-        if self.running:
-            self.logger.warning("Async Modbus server is already running")
-            return
-        
-        try:
-            # Note: This is a simplified async implementation
-            # For full async support, you would need to use an async Modbus library
-            # or implement custom async handling
-            
-            self.running = True
-            self.logger.info(f"Started async SunSpec Modbus TCP server on {self.config.host}:{self.config.port}")
-            
-            # Keep the server running
-            while self.running:
-                await asyncio.sleep(1)
-                
-        except Exception as e:
-            self.logger.error(f"Error running async Modbus server: {e}")
-            self.running = False
-    
-    async def stop(self):
-        """Stop the async Modbus TCP server"""
-        self.running = False
-        self.logger.info("Stopped async SunSpec Modbus TCP server")
-    
-    def is_running(self) -> bool:
-        """Check if server is running"""
-        return self.running
