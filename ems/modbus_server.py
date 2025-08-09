@@ -13,7 +13,7 @@ from dataclasses import dataclass
 
 from pymodbus.server import StartTcpServer
 from pymodbus import ModbusDeviceIdentification
-from pymodbus.datastore import ModbusSequentialDataBlock, ModbusDeviceContext, ModbusServerContext
+from pymodbus.datastore import ModbusSequentialDataBlock, ModbusSlaveContext, ModbusServerContext
 
 from .sunspec_models import SunSpecMapper
 
@@ -22,9 +22,9 @@ from .sunspec_models import SunSpecMapper
 class ModbusServerConfig:
     """Configuration for Modbus TCP server"""
     
-    host = "0.0.0.0"
-    port = 8502
-    slave_id = 1
+    host: str = "0.0.0.0"
+    port: int = 8502
+    unit_id: int = 1
     device_info: Dict[str, str] = None
 
 
@@ -71,7 +71,7 @@ class SunSpecModbusServer:
         discrete_inputs = ModbusSequentialDataBlock(0, [False] * 1000)
         
         # Create device context
-        self.slave_context = ModbusDeviceContext(
+        self.slave_context = ModbusSlaveContext(
             di=discrete_inputs,
             co=coils,
             hr=holding_registers,
@@ -79,8 +79,10 @@ class SunSpecModbusServer:
         )
         
         # Create server context
-        self.server_context = ModbusServerContext()
-        self.server_context[self.config.slave_id] = self.slave_context
+        self.server_context = ModbusServerContext(
+            slaves={self.config.unit_id: self.slave_context},
+            single=False
+        )
         
         # Initialize SunSpec registers
         self._update_sunspec_registers()
@@ -200,7 +202,7 @@ class SunSpecModbusServer:
             "running": self.is_running(),
             "host": self.config.host,
             "port": self.config.port,
-            "slave_id": self.config.slave_id,
+            "unit_id": self.config.unit_id,
             "register_count": len(self.sunspec_mapper.get_all_registers())
         }
 
@@ -241,7 +243,7 @@ class AsyncSunSpecModbusServer:
         discrete_inputs = ModbusSequentialDataBlock(0, [False] * 1000)
         
         # Create device context
-        self.slave_context = ModbusDeviceContext(
+        self.slave_context = ModbusSlaveContext(
             di=discrete_inputs,
             co=coils,
             hr=holding_registers,
@@ -249,8 +251,10 @@ class AsyncSunSpecModbusServer:
         )
         
         # Create server context
-        self.server_context = ModbusServerContext()
-        self.server_context[self.config.slave_id] = self.slave_context
+        self.server_context = ModbusServerContext(
+            slaves={self.config.unit_id: self.slave_context},
+            single=False
+        )
         
         # Initialize SunSpec registers
         self._update_sunspec_registers()
