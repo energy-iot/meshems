@@ -18,6 +18,7 @@ class InverterData(ABC):
     
     timestamp: float = time.time()
     grid_type: int = 0  # 0=Single, 1=Split, 2=Three-phase
+    phase_type: str = "single_phase"  # "single_phase", "split_phase", "three_phase"
     
     # Grid measurements (supports single-phase, split-phase, and three-phase)
     grid_power: float = 0.0

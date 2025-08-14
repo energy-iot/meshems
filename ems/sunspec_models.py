@@ -526,6 +526,8 @@ class SunSpecMapper:
         self._set_string_registers(SunSpecRegisterMap.SERIAL_NUMBER, self.common_model.serial_number, 16)
         self._set_register(SunSpecRegisterMap.DEVICE_ADDRESS, self.common_model.device_address)
         
+        self.logger.debug(f"Initialized Common Model with manufacturer='{self.common_model.manufacturer}', model='{self.common_model.model}'")
+        
         ###############################################
         # Grid Model (701) header - First instance
         ###############################################
@@ -670,27 +672,40 @@ class SunSpecMapper:
     
     def _set_string_registers(self, base_address, text, num_registers):
         """Set string value across multiple registers (2 chars per register)"""
-        # Ensure text is a string and handle None values
-        if text is None:
-            text = ""
-        text = str(text)
-        
-        # Truncate if too long, then pad with null bytes to fill exactly the allocated space
-        max_chars = num_registers * 2
-        if len(text) >= max_chars:
-            # If text is too long, truncate and ensure null termination
-            padded_text = text[:max_chars-1] + '\0'
-        else:
-            # If text fits, null-terminate and pad with null bytes
-            padded_text = text + '\0' + '\0' * (max_chars - len(text) - 1)
-        
-        # Ensure we have exactly the right number of characters
-        padded_text = padded_text[:max_chars]
-        
-        for i in range(num_registers):
-            char1 = ord(padded_text[i * 2]) if i * 2 < len(padded_text) else 0
-            char2 = ord(padded_text[i * 2 + 1]) if i * 2 + 1 < len(padded_text) else 0
-            self.registers[base_address + i] = (char1 << 8) | char2
+        try:
+            # Ensure text is a string and handle None values
+            if text is None:
+                text = ""
+            text = str(text)
+            
+            # Ensure text contains only ASCII characters to avoid UTF-8 issues
+            text = text.encode('ascii', errors='replace').decode('ascii')
+            
+            # Truncate if too long, then pad with null bytes to fill exactly the allocated space
+            max_chars = num_registers * 2
+            if len(text) >= max_chars:
+                # If text is too long, truncate and ensure null termination
+                padded_text = text[:max_chars-1] + '\0'
+            else:
+                # If text fits, null-terminate and pad with null bytes
+                padded_text = text + '\0' + '\0' * (max_chars - len(text) - 1)
+            
+            # Ensure we have exactly the right number of characters
+            padded_text = padded_text[:max_chars]
+            
+            self.logger.debug(f"Setting string registers at {base_address}: '{text}' -> '{padded_text.replace(chr(0), '<NULL>')}'")
+            
+            for i in range(num_registers):
+                char1 = ord(padded_text[i * 2]) if i * 2 < len(padded_text) else 0
+                char2 = ord(padded_text[i * 2 + 1]) if i * 2 + 1 < len(padded_text) else 0
+                register_value = (char1 << 8) | char2
+                self.registers[base_address + i] = register_value
+                
+        except Exception as e:
+            self.logger.error(f"Error setting string registers at {base_address}: {e}")
+            # Fallback: fill with null bytes
+            for i in range(num_registers):
+                self.registers[base_address + i] = 0
     
     def _set_signed_registers_to_null(self, base_address, offsets):
         """Set multiple signed registers to NULL_INT16 value"""
@@ -705,6 +720,8 @@ class SunSpecMapper:
             inverter_data: InverterData instance containing current measurements
         """
         try:
+            self.logger.debug(f"Updating SunSpec models with data: grid_type={getattr(inverter_data, 'grid_type', 'None')}, phase_type={getattr(inverter_data, 'phase_type', 'None')}")
+            
             # Update Grid Model (701) - First instance
             self._update_grid_model(inverter_data)
             
@@ -721,6 +738,8 @@ class SunSpecMapper:
             
         except Exception as e:
             self.logger.error(f"Error updating SunSpec models: {e}")
+            import traceback
+            self.logger.error(f"Traceback: {traceback.format_exc()}")
     
     def _update_grid_model(self, data: InverterData):
         """Update Grid Model (701) registers"""
@@ -728,17 +747,22 @@ class SunSpecMapper:
         
         # Determine AC Type based on grid type
         ac_type = 101  # Single-phase default
-        if hasattr(data, 'grid_type'):
-            if data.grid_type == 1:
+        if hasattr(data, 'grid_type') and data.grid_type is not None:
+            if data.grid_type == 0:
+                ac_type = 101  # Single-phase
+            elif data.grid_type == 1:
                 ac_type = 102  # Split-phase
             elif data.grid_type == 2:
                 ac_type = 103  # Three-phase Wye
-        elif hasattr(data, 'phase_type'):
-            if data.phase_type == 'split_phase':
+        elif hasattr(data, 'phase_type') and data.phase_type is not None:
+            if data.phase_type == 'single_phase':
+                ac_type = 101
+            elif data.phase_type == 'split_phase':
                 ac_type = 102
             elif data.phase_type == 'three_phase':
                 ac_type = 103
         
+        self.logger.debug(f"Grid model AC type: {ac_type} (grid_type={getattr(data, 'grid_type', 'None')}, phase_type={getattr(data, 'phase_type', 'None')})")
         self._set_register(base + 2, ac_type)
         
         # Operating state (4 = MPPT, 5 = Throttled, 7 = Shutting down, 8 = Fault)
@@ -810,17 +834,22 @@ class SunSpecMapper:
         
         # Determine AC Type based on grid type
         ac_type = 101  # Single-phase default
-        if hasattr(data, 'grid_type'):
-            if data.grid_type == 1:
+        if hasattr(data, 'grid_type') and data.grid_type is not None:
+            if data.grid_type == 0:
+                ac_type = 101  # Single-phase
+            elif data.grid_type == 1:
                 ac_type = 102  # Split-phase
             elif data.grid_type == 2:
                 ac_type = 103  # Three-phase Wye
-        elif hasattr(data, 'phase_type'):
-            if data.phase_type == 'split_phase':
+        elif hasattr(data, 'phase_type') and data.phase_type is not None:
+            if data.phase_type == 'single_phase':
+                ac_type = 101
+            elif data.phase_type == 'split_phase':
                 ac_type = 102
             elif data.phase_type == 'three_phase':
                 ac_type = 103
         
+        self.logger.debug(f"Load model AC type: {ac_type} (grid_type={getattr(data, 'grid_type', 'None')}, phase_type={getattr(data, 'phase_type', 'None')})")
         self._set_register(base + 2, ac_type)
         
         # Operating state

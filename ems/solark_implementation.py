@@ -82,8 +82,12 @@ class SolArkModbusClient(InverterClient):
         self.register_mapping = GenericRegisterMapping(config_file)
         self.data = SolArkData()
         
-        # Set Sol-Ark specific defaults
-        self.data.phase_type = 'split_phase'  # Sol-Ark is typically split-phase
+        # Set Sol-Ark specific defaults from JSON config
+        phase_config = self.register_mapping.config.get("phase_configuration", {})
+        self.data.grid_type = phase_config.get("grid_type", 1)  # Default to split-phase
+        self.data.phase_type = phase_config.get("type", "split_phase")
+        
+        self.logger.debug(f"Sol-Ark configured for grid_type={self.data.grid_type}, phase_type={self.data.phase_type}")
     
     def connect(self) -> bool:
         try:
@@ -183,8 +187,11 @@ class SolArkModbusClient(InverterClient):
         # Set legacy grid_voltage for backward compatibility
         self.data.grid_voltage = self.data.grid_voltage_l1l2
         
-        # Ensure phase type is set
-        self.data.phase_type = 'split_phase'  # Sol-Ark is typically split-phase
+        # Ensure phase configuration is maintained (don't override what was set from JSON config)
+        if not hasattr(self.data, 'grid_type') or self.data.grid_type == 0:
+            phase_config = self.register_mapping.config.get("phase_configuration", {})
+            self.data.grid_type = phase_config.get("grid_type", 1)  # Default to split-phase
+            self.data.phase_type = phase_config.get("type", "split_phase")
     
     def _correct_signed_value(self, value: int) -> int:
         """Convert unsigned 16-bit value to signed if necessary"""
