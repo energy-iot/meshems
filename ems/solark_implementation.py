@@ -7,6 +7,7 @@ All Sol-Ark inverters now use JSON register mapping for consistency and extensib
 from typing import List, Dict, Any, Optional
 from dataclasses import dataclass, field
 import time
+import logging
 from pymodbus.client import ModbusSerialClient
 from pymodbus.exceptions import ModbusException
 
@@ -67,6 +68,7 @@ class SolArkModbusClient(InverterClient):
     def __init__(self, port: str, baudrate: int = 9600, modbus_address: int = 1,
                  config_file: str = "solark_registers.json"):
         super().__init__(port, baudrate, modbus_address)
+        self.logger = logging.getLogger(__name__)
         self.client = ModbusSerialClient(
             port=port,
             baudrate=baudrate,
@@ -101,41 +103,40 @@ class SolArkModbusClient(InverterClient):
             success_count = 0
             read_blocks = self.register_mapping.get_read_blocks()
             
-            # Debug: Log the number of read blocks
-            print(f"DEBUG: Found {len(read_blocks)} read blocks")
+            self.logger.debug(f"Found {len(read_blocks)} read blocks")
             
             for block in read_blocks:
-                print(f"DEBUG: Reading block {block['start']}-{block['start'] + block['count'] - 1}")
+                self.logger.debug(f"Reading block {block['start']}-{block['start'] + block['count'] - 1}")
                 registers = self._read_holding_registers(block["start"], block["count"])
                 
                 if registers is not None:
-                    print(f"DEBUG: Successfully read {len(registers)} registers")
+                    self.logger.debug(f"Successfully read {len(registers)} registers")
                     self._process_json_block(block, registers)
                     success_count += 1
                 else:
-                    print(f"DEBUG: Failed to read block {block['start']}")
+                    self.logger.warning(f"Failed to read block {block['start']}")
             
             if success_count > 0:
                 self.data.last_update = time.time()
                 self._calculate_derived_values()
-                print(f"DEBUG: Poll successful, updated {success_count} blocks")
-                print(f"DEBUG: Sample data - Grid Power: {self.data.grid_power}, Battery SOC: {self.data.battery_soc}")
+                self.logger.debug(f"Poll successful, updated {success_count} blocks")
+                self.logger.debug(f"Sample data - Grid Power: {self.data.grid_power}, Battery SOC: {self.data.battery_soc}")
                 return True
             else:
                 self.data.last_failure = time.time()
-                print("DEBUG: Poll failed - no blocks read successfully")
+                self.logger.error("Poll failed - no blocks read successfully")
                 return False
                 
         except Exception as e:
             self.data.last_failure = time.time()
-            print(f"DEBUG: Poll exception: {e}")
+            self.logger.error(f"Poll exception: {e}")
             return False
     
     def _process_json_block(self, block: Dict[str, Any], registers: List[int]):
         """Process data from a JSON-defined read block"""
         try:
             start_register = block["start"]
-            print(f"DEBUG: Processing block starting at {start_register} with {len(registers)} registers")
+            self.logger.debug(f"Processing block starting at {start_register} with {len(registers)} registers")
             
             # For each register in the block, find the corresponding data points
             for i, register_value in enumerate(registers):
@@ -143,7 +144,7 @@ class SolArkModbusClient(InverterClient):
                 data_points = self.register_mapping.get_data_points_for_register(register_address)
                 
                 if data_points:
-                    print(f"DEBUG: Register {register_address} = {register_value}, found {len(data_points)} data points")
+                    self.logger.debug(f"Register {register_address} = {register_value}, found {len(data_points)} data points")
                 
                 # Process each data point for this register
                 for point in data_points:
@@ -163,16 +164,16 @@ class SolArkModbusClient(InverterClient):
                         # Apply scaling - divide by scaling factor for Sol-Ark (opposite of generic)
                         scaled_value = register_value / scaling_factor if scaling_factor != 0 else register_value
                     
-                    print(f"DEBUG: Setting {point_name} = {scaled_value} (raw: {register_value}, scale: {scaling_factor})")
+                    self.logger.debug(f"Setting {point_name} = {scaled_value} (raw: {register_value}, scale: {scaling_factor})")
                     
                     # Update the corresponding field in self.data
                     if hasattr(self.data, point_name):
                         setattr(self.data, point_name, scaled_value)
                     else:
-                        print(f"DEBUG: Warning - data object has no attribute '{point_name}'")
+                        self.logger.warning(f"Data object has no attribute '{point_name}'")
                         
         except Exception as e:
-            print(f"DEBUG: Exception in _process_json_block: {e}")
+            self.logger.error(f"Exception in _process_json_block: {e}")
     
     def _calculate_derived_values(self):
         """Calculate derived values from raw measurements"""

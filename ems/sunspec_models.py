@@ -670,8 +670,22 @@ class SunSpecMapper:
     
     def _set_string_registers(self, base_address, text, num_registers):
         """Set string value across multiple registers (2 chars per register)"""
-        # Pad or truncate to fit exactly in the allocated registers
-        padded_text = text.ljust(num_registers * 2)[:num_registers * 2]
+        # Ensure text is a string and handle None values
+        if text is None:
+            text = ""
+        text = str(text)
+        
+        # Truncate if too long, then pad with null bytes to fill exactly the allocated space
+        max_chars = num_registers * 2
+        if len(text) >= max_chars:
+            # If text is too long, truncate and ensure null termination
+            padded_text = text[:max_chars-1] + '\0'
+        else:
+            # If text fits, null-terminate and pad with null bytes
+            padded_text = text + '\0' + '\0' * (max_chars - len(text) - 1)
+        
+        # Ensure we have exactly the right number of characters
+        padded_text = padded_text[:max_chars]
         
         for i in range(num_registers):
             char1 = ord(padded_text[i * 2]) if i * 2 < len(padded_text) else 0

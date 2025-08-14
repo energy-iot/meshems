@@ -61,10 +61,10 @@ data:
 # Device Information (for SunSpec Common Model)
 device_info:
   manufacturer: "Ampra Grid"
-  model: "SOLARK-SUNSPEC GATEWAY"
-  version: "1.0"
+  model: "pysunspec-gateway"
+  version: "1.1"
   serial_number: "JOULE-EMS-001"
-  options: "Generic Inverter Gateway"
+  options: "Inverter Gateway"
 
 # Monitoring and Alerts
 monitoring:

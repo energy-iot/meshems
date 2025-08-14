@@ -4,6 +4,7 @@ Generic register mapping system for configurable inverter support
 
 import json
 import os
+import logging
 from typing import List, Dict, Any, Optional
 from .base import RegisterMapping
 
@@ -13,25 +14,26 @@ class GenericRegisterMapping(RegisterMapping):
     
     def __init__(self, config_file: str):
         super().__init__("generic")
+        self.logger = logging.getLogger(__name__)
         self.config = self._load_config(config_file)
         self.models = self.config.get("models", {})
         
-        print(f"DEBUG: Loaded config from {config_file}")
-        print(f"DEBUG: Found {len(self.models)} models: {list(self.models.keys())}")
+        self.logger.debug(f"Loaded config from {config_file}")
+        self.logger.debug(f"Found {len(self.models)} models: {list(self.models.keys())}")
         
         # Build registers and scaling factors from the JSON structure
         self.registers = {}
         self.scaling_factors = {}
         self._build_register_mappings()
         
-        print(f"DEBUG: Built {len(self.registers)} register mappings")
-        print(f"DEBUG: Sample registers: {dict(list(self.registers.items())[:5])}")
+        self.logger.debug(f"Built {len(self.registers)} register mappings")
+        self.logger.debug(f"Sample registers: {dict(list(self.registers.items())[:5])}")
         
         # Build read blocks from the data points
         self.read_blocks = self._build_read_blocks()
-        print(f"DEBUG: Built {len(self.read_blocks)} read blocks")
+        self.logger.debug(f"Built {len(self.read_blocks)} read blocks")
         for block in self.read_blocks:
-            print(f"DEBUG: Block {block['start']}-{block['start'] + block['count'] - 1}: {block['description']}")
+            self.logger.debug(f"Block {block['start']}-{block['start'] + block['count'] - 1}: {block['description']}")
     
     def _load_config(self, config_file: str) -> Dict:
         # Handle relative paths
