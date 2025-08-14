@@ -742,7 +742,7 @@ class SunSpecMapper:
             self.logger.error(f"Traceback: {traceback.format_exc()}")
     
     def _update_grid_model(self, data: InverterData):
-        """Update Grid Model (701) registers"""
+        """Update Grid Model (701) registers - SunSpec DER AC Measurement Model"""
         base = SunSpecRegisterMap.GRID_MODEL_BASE
         
         # Determine AC Type based on grid type
@@ -763,73 +763,102 @@ class SunSpecMapper:
                 ac_type = 103
         
         self.logger.debug(f"Grid model AC type: {ac_type} (grid_type={getattr(data, 'grid_type', 'None')}, phase_type={getattr(data, 'phase_type', 'None')})")
+        
+        # SunSpec 701 Model Register Layout (offsets from base)
+        # 0: Model ID (701)
+        # 1: Model Length (153)
+        # 2: AcType - AC connection type
         self._set_register(base + 2, ac_type)
         
-        # Operating state (4 = MPPT, 5 = Throttled, 7 = Shutting down, 8 = Fault)
-        self._set_register(base + 3, 4)  # Default to MPPT
+        # 3: St - Operating State (1=OFF, 2=SLEEPING, 3=STARTING, 4=MPPT, 5=THROTTLED, 6=SHUTTING_DOWN, 7=FAULT, 8=STANDBY)
+        self._set_register(base + 3, 4)  # MPPT
         
-        # Status and connection
-        self._set_register(base + 4, 1)  # Status: Connected
-        self._set_register(base + 5, 1)  # Connection: Connected
+        # 4: StVnd - Vendor Operating State
+        self._set_register(base + 4, 0)  # No vendor state
         
-        # AC measurements with scaling
+        # 5: Conn - Connection State (0=DISCONNECTED, 1=CONNECTED)
+        connection_state = 1 if hasattr(data, 'grid_relay_status') and data.grid_relay_status > 0 else 0
+        self._set_register(base + 5, connection_state)
+        
+        # 6-7: Alrm - Alarm bitfield (32-bit)
+        self._set_register_32bit(base + 6, 0)  # No alarms
+        
+        # 8-9: DERTyp - DER Type (32-bit) - 4 = PV
+        self._set_register_32bit(base + 8, 4)  # PV system
+        
+        # 10: W - AC Power (W) - Total real power
         if hasattr(data, 'grid_power') and data.grid_power is not None:
-            self._set_register(base + 10, int(data.grid_power))  # AC Power (W)
+            self._set_register(base + 10, int(data.grid_power))
+            self.logger.debug(f"Grid model: Set power to {int(data.grid_power)} W at register {base + 10}")
         
-        # Line-to-line voltages
-        if hasattr(data, 'grid_voltage_l1l2') and data.grid_voltage_l1l2 is not None:
-            self._set_register(base + 15, int(data.grid_voltage_l1l2 * 10))  # AC Voltage L1-L2
-        elif hasattr(data, 'grid_voltage') and data.grid_voltage is not None:
-            # Fallback to legacy grid_voltage
-            self._set_register(base + 15, int(data.grid_voltage * 10))  # AC Voltage LL
+        # 11: VA - AC Apparent Power (VA)
+        if hasattr(data, 'apparent_power') and data.apparent_power is not None:
+            self._set_register(base + 11, int(data.apparent_power))
         
-        # Line-to-neutral voltages
-        if hasattr(data, 'grid_voltage_l1n') and data.grid_voltage_l1n is not None:
-            self._set_register(base + 16, int(data.grid_voltage_l1n * 10))  # AC Voltage L1-N
+        # 12: VAr - AC Reactive Power (VAr)
+        self._set_register(base + 12, 0)  # Not available
         
-        # Phase currents
+        # 13: PF - AC Power Factor (%)
+        if hasattr(data, 'grid_power_factor') and data.grid_power_factor is not None:
+            self._set_register(base + 13, int(data.grid_power_factor * 100))
+        
+        # 14: A - AC Total Current (A)
+        total_current = 0.0
         if hasattr(data, 'grid_current_l1') and data.grid_current_l1 is not None:
-            self._set_register(base + 14, int(data.grid_current_l1 * 100))  # AC Current L1
+            total_current += data.grid_current_l1
+        if hasattr(data, 'grid_current_l2') and data.grid_current_l2 is not None:
+            total_current += data.grid_current_l2
+        if total_current > 0:
+            self._set_register(base + 14, int(total_current * 100))
+            self.logger.debug(f"Grid model: Set current to {total_current:.2f} A at register {base + 14}")
         
-        # For three-phase systems, add L2 and L3 measurements
-        if ac_type == 103:  # Three-phase
-            # L2 measurements
-            if hasattr(data, 'grid_voltage_l2n') and data.grid_voltage_l2n is not None:
-                self._set_register(base + 45, int(data.grid_voltage_l2n * 10))  # VL2N
-            if hasattr(data, 'grid_current_l2') and data.grid_current_l2 is not None:
-                self._set_register(base + 46, int(data.grid_current_l2 * 100))  # AL2
-            if hasattr(data, 'grid_power_l2') and data.grid_power_l2 is not None:
-                self._set_register(base + 47, int(data.grid_power_l2))  # WL2
-            
-            # L3 measurements
-            if hasattr(data, 'grid_voltage_l3n') and data.grid_voltage_l3n is not None:
-                self._set_register(base + 65, int(data.grid_voltage_l3n * 10))  # VL3N
-            if hasattr(data, 'grid_current_l3') and data.grid_current_l3 is not None:
-                self._set_register(base + 66, int(data.grid_current_l3 * 100))  # AL3
-            if hasattr(data, 'grid_power_l3') and data.grid_power_l3 is not None:
-                self._set_register(base + 67, int(data.grid_power_l3))  # WL3
-            
-            # Additional three-phase line-to-line voltages
-            if hasattr(data, 'grid_voltage_l2l3') and data.grid_voltage_l2l3 is not None:
-                self._set_register(base + 68, int(data.grid_voltage_l2l3 * 10))  # VL2L3
-            if hasattr(data, 'grid_voltage_l3l1') and data.grid_voltage_l3l1 is not None:
-                self._set_register(base + 69, int(data.grid_voltage_l3l1 * 10))  # VL3L1
+        # 15: LLV - AC Line-to-Line Voltage (V)
+        if hasattr(data, 'grid_voltage_l1l2') and data.grid_voltage_l1l2 is not None:
+            self._set_register(base + 15, int(data.grid_voltage_l1l2 * 10))
+            self.logger.debug(f"Grid model: Set L1-L2 voltage to {data.grid_voltage_l1l2:.1f} V at register {base + 15}")
+        elif hasattr(data, 'grid_voltage') and data.grid_voltage is not None:
+            self._set_register(base + 15, int(data.grid_voltage * 10))
+            self.logger.debug(f"Grid model: Set voltage to {data.grid_voltage:.1f} V at register {base + 15}")
         
+        # 16: LNV - AC Line-to-Neutral Voltage (V)
+        if hasattr(data, 'grid_voltage_l1n') and data.grid_voltage_l1n is not None:
+            self._set_register(base + 16, int(data.grid_voltage_l1n * 10))
+            self.logger.debug(f"Grid model: Set L1-N voltage to {data.grid_voltage_l1n:.1f} V at register {base + 16}")
+        
+        # 17-18: Hz - AC Frequency (Hz) - 32-bit
         if hasattr(data, 'grid_frequency') and data.grid_frequency is not None:
-            # Frequency with scale factor -2 (0.01Hz resolution)
             freq_32bit = int(data.grid_frequency * 100)
-            self._set_register_32bit(base + 17, freq_32bit)  # AC Frequency
+            self._set_register_32bit(base + 17, freq_32bit)
+            self.logger.debug(f"Grid model: Set frequency to {data.grid_frequency:.2f} Hz at register {base + 17}")
         
-        # Temperature
-        if hasattr(data, 'inverter_temperature') and data.inverter_temperature is not None:
-            # Temperature with scale factor -1 (0.1°C resolution)
-            self._set_register(base + 36, int(data.inverter_temperature * 10))  # Cabinet Temperature
-        elif hasattr(data, 'igbt_temp') and data.igbt_temp is not None:
-            # Use IGBT temperature as fallback
-            self._set_register(base + 36, int(data.igbt_temp * 10))  # Cabinet Temperature
+        # For split-phase (AC Type 102), add L2 measurements
+        if ac_type == 102:  # Split-phase
+            # 19: WL1 - AC Power L1 (W)
+            if hasattr(data, 'grid_power_l1') and data.grid_power_l1 is not None:
+                self._set_register(base + 19, int(data.grid_power_l1))
+            
+            # 20: WL2 - AC Power L2 (W)
+            if hasattr(data, 'grid_power_l2') and data.grid_power_l2 is not None:
+                self._set_register(base + 20, int(data.grid_power_l2))
+            
+            # 25: AL1 - AC Current L1 (A)
+            if hasattr(data, 'grid_current_l1') and data.grid_current_l1 is not None:
+                self._set_register(base + 25, int(data.grid_current_l1 * 100))
+            
+            # 26: AL2 - AC Current L2 (A)
+            if hasattr(data, 'grid_current_l2') and data.grid_current_l2 is not None:
+                self._set_register(base + 26, int(data.grid_current_l2 * 100))
+            
+            # 31: VL1N - AC Voltage L1-N (V)
+            if hasattr(data, 'grid_voltage_l1n') and data.grid_voltage_l1n is not None:
+                self._set_register(base + 31, int(data.grid_voltage_l1n * 10))
+            
+            # 32: VL2N - AC Voltage L2-N (V)
+            if hasattr(data, 'grid_voltage_l2n') and data.grid_voltage_l2n is not None:
+                self._set_register(base + 32, int(data.grid_voltage_l2n * 10))
 
     def _update_load_model(self, data: InverterData):
-        """Update Load Model (701) registers"""
+        """Update Load Model (701) registers - SunSpec DER AC Measurement Model"""
         base = SunSpecRegisterMap.LOAD_MODEL_BASE
         
         # Determine AC Type based on grid type
@@ -850,59 +879,111 @@ class SunSpecMapper:
                 ac_type = 103
         
         self.logger.debug(f"Load model AC type: {ac_type} (grid_type={getattr(data, 'grid_type', 'None')}, phase_type={getattr(data, 'phase_type', 'None')})")
+        
+        # SunSpec 701 Model Register Layout (offsets from base)
+        # 0: Model ID (701)
+        # 1: Model Length (153)
+        # 2: AcType - AC connection type
         self._set_register(base + 2, ac_type)
         
-        # Operating state
-        self._set_register(base + 3, 4)  # Default to MPPT
+        # 3: St - Operating State (1=OFF, 2=SLEEPING, 3=STARTING, 4=MPPT, 5=THROTTLED, 6=SHUTTING_DOWN, 7=FAULT, 8=STANDBY)
+        self._set_register(base + 3, 4)  # MPPT
         
-        # Status and connection
-        self._set_register(base + 4, 1)  # Status: Connected
-        self._set_register(base + 5, 1)  # Connection: Connected
+        # 4: StVnd - Vendor Operating State
+        self._set_register(base + 4, 0)  # No vendor state
         
-        # AC measurements with scaling
+        # 5: Conn - Connection State (0=DISCONNECTED, 1=CONNECTED)
+        self._set_register(base + 5, 1)  # Always connected for load
+        
+        # 6-7: Alrm - Alarm bitfield (32-bit)
+        self._set_register_32bit(base + 6, 0)  # No alarms
+        
+        # 8-9: DERTyp - DER Type (32-bit) - 82 = Load
+        self._set_register_32bit(base + 8, 82)  # Load
+        
+        # 10: W - AC Power (W) - Total real power
         if hasattr(data, 'load_power_total') and data.load_power_total is not None:
-            self._set_register(base + 10, int(data.load_power_total))  # AC Power (W)
+            self._set_register(base + 10, int(data.load_power_total))
+            self.logger.debug(f"Load model: Set power to {int(data.load_power_total)} W at register {base + 10}")
         
-        # Line-to-line voltages
-        if hasattr(data, 'load_voltage_l1l2') and data.load_voltage_l1l2 is not None:
-            self._set_register(base + 15, int(data.load_voltage_l1l2 * 10))  # AC Voltage L1-L2
+        # 11: VA - AC Apparent Power (VA)
+        self._set_register(base + 11, 0)  # Not available for load
         
-        # Line-to-neutral voltages
-        if hasattr(data, 'load_voltage_l1n') and data.load_voltage_l1n is not None:
-            self._set_register(base + 16, int(data.load_voltage_l1n * 10))  # AC Voltage L1-N
+        # 12: VAr - AC Reactive Power (VAr)
+        self._set_register(base + 12, 0)  # Not available
         
-        # Phase currents
+        # 13: PF - AC Power Factor (%)
+        if hasattr(data, 'load_power_factor') and data.load_power_factor is not None:
+            self._set_register(base + 13, int(data.load_power_factor * 100))
+        
+        # 14: A - AC Total Current (A)
+        total_current = 0.0
         if hasattr(data, 'load_current_l1') and data.load_current_l1 is not None:
-            self._set_register(base + 14, int(data.load_current_l1 * 100))  # AC Current L1
+            total_current += data.load_current_l1
+        if hasattr(data, 'load_current_l2') and data.load_current_l2 is not None:
+            total_current += data.load_current_l2
+        if total_current > 0:
+            self._set_register(base + 14, int(total_current * 100))
+            self.logger.debug(f"Load model: Set current to {total_current:.2f} A at register {base + 14}")
         
-        # For three-phase systems, add L2 and L3 measurements
-        if ac_type == 103:  # Three-phase
-            # L2 measurements
-            if hasattr(data, 'load_voltage_l2n') and data.load_voltage_l2n is not None:
-                self._set_register(base + 45, int(data.load_voltage_l2n * 10))  # VL2N
-            if hasattr(data, 'load_current_l2') and data.load_current_l2 is not None:
-                self._set_register(base + 46, int(data.load_current_l2 * 100))  # AL2
-            if hasattr(data, 'load_power_l2') and data.load_power_l2 is not None:
-                self._set_register(base + 47, int(data.load_power_l2))  # WL2
-            
-            # L3 measurements
-            if hasattr(data, 'load_voltage_l3n') and data.load_voltage_l3n is not None:
-                self._set_register(base + 65, int(data.load_voltage_l3n * 10))  # VL3N
-            if hasattr(data, 'load_current_l3') and data.load_current_l3 is not None:
-                self._set_register(base + 66, int(data.load_current_l3 * 100))  # AL3
-            if hasattr(data, 'load_power_l3') and data.load_power_l3 is not None:
-                self._set_register(base + 67, int(data.load_power_l3))  # WL3
-            
-            # Additional three-phase line-to-line voltages
-            if hasattr(data, 'load_voltage_l2l3') and data.load_voltage_l2l3 is not None:
-                self._set_register(base + 68, int(data.load_voltage_l2l3 * 10))  # VL2L3
-            if hasattr(data, 'load_voltage_l3l1') and data.load_voltage_l3l1 is not None:
-                self._set_register(base + 69, int(data.load_voltage_l3l1 * 10))  # VL3L1
+        # 15: LLV - AC Line-to-Line Voltage (V)
+        if hasattr(data, 'load_voltage_l1l2') and data.load_voltage_l1l2 is not None:
+            self._set_register(base + 15, int(data.load_voltage_l1l2 * 10))
+            self.logger.debug(f"Load model: Set L1-L2 voltage to {data.load_voltage_l1l2:.1f} V at register {base + 15}")
+        elif hasattr(data, 'grid_voltage_l1l2') and data.grid_voltage_l1l2 is not None:
+            # Use grid voltage as fallback for load voltage
+            self._set_register(base + 15, int(data.grid_voltage_l1l2 * 10))
+            self.logger.debug(f"Load model: Set voltage (from grid) to {data.grid_voltage_l1l2:.1f} V at register {base + 15}")
         
+        # 16: LNV - AC Line-to-Neutral Voltage (V)
+        if hasattr(data, 'load_voltage_l1n') and data.load_voltage_l1n is not None:
+            self._set_register(base + 16, int(data.load_voltage_l1n * 10))
+            self.logger.debug(f"Load model: Set L1-N voltage to {data.load_voltage_l1n:.1f} V at register {base + 16}")
+        elif hasattr(data, 'grid_voltage_l1n') and data.grid_voltage_l1n is not None:
+            # Use grid voltage as fallback
+            self._set_register(base + 16, int(data.grid_voltage_l1n * 10))
+            self.logger.debug(f"Load model: Set L1-N voltage (from grid) to {data.grid_voltage_l1n:.1f} V at register {base + 16}")
+        
+        # 17-18: Hz - AC Frequency (Hz) - 32-bit
         if hasattr(data, 'load_frequency') and data.load_frequency is not None:
-            # Frequency with scale factor -2 (0.01Hz resolution)
             freq_32bit = int(data.load_frequency * 100)
-            self._set_register_32bit(base + 17, freq_32bit)  # AC Frequency
+            self._set_register_32bit(base + 17, freq_32bit)
+            self.logger.debug(f"Load model: Set frequency to {data.load_frequency:.2f} Hz at register {base + 17}")
+        elif hasattr(data, 'grid_frequency') and data.grid_frequency is not None:
+            # Use grid frequency as fallback
+            freq_32bit = int(data.grid_frequency * 100)
+            self._set_register_32bit(base + 17, freq_32bit)
+            self.logger.debug(f"Load model: Set frequency (from grid) to {data.grid_frequency:.2f} Hz at register {base + 17}")
+        
+        # For split-phase (AC Type 102), add L2 measurements
+        if ac_type == 102:  # Split-phase
+            # 19: WL1 - AC Power L1 (W)
+            if hasattr(data, 'load_power_l1') and data.load_power_l1 is not None:
+                self._set_register(base + 19, int(data.load_power_l1))
+            
+            # 20: WL2 - AC Power L2 (W)
+            if hasattr(data, 'load_power_l2') and data.load_power_l2 is not None:
+                self._set_register(base + 20, int(data.load_power_l2))
+            
+            # 25: AL1 - AC Current L1 (A)
+            if hasattr(data, 'load_current_l1') and data.load_current_l1 is not None:
+                self._set_register(base + 25, int(data.load_current_l1 * 100))
+            
+            # 26: AL2 - AC Current L2 (A)
+            if hasattr(data, 'load_current_l2') and data.load_current_l2 is not None:
+                self._set_register(base + 26, int(data.load_current_l2 * 100))
+            
+            # 31: VL1N - AC Voltage L1-N (V)
+            if hasattr(data, 'load_voltage_l1n') and data.load_voltage_l1n is not None:
+                self._set_register(base + 31, int(data.load_voltage_l1n * 10))
+            elif hasattr(data, 'grid_voltage_l1n') and data.grid_voltage_l1n is not None:
+                self._set_register(base + 31, int(data.grid_voltage_l1n * 10))
+            
+            # 32: VL2N - AC Voltage L2-N (V)
+            if hasattr(data, 'load_voltage_l2n') and data.load_voltage_l2n is not None:
+                self._set_register(base + 32, int(data.load_voltage_l2n * 10))
+            elif hasattr(data, 'grid_voltage_l2n') and data.grid_voltage_l2n is not None:
+                self._set_register(base + 32, int(data.grid_voltage_l2n * 10))
     
     def _update_storage_model(self, data: InverterData):
         """Update Storage Model (713) registers"""
