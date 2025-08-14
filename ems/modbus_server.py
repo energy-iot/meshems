@@ -107,7 +107,7 @@ class SunSpecModbusServer:
         """Update SunSpec models with inverter data"""
         try:
             # Update SunSpec mapper with new data
-            self.sunspec_mapper.update_from_inverter(inverter_data)
+            self.sunspec_mapper.update_from_inverter_data(inverter_data)
             
             # Update Modbus registers
             self._update_sunspec_registers()
