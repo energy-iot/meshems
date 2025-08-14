@@ -1,0 +1,262 @@
+{
+  "inverter_type": "three_phase_generic",
+  "version": "1.0",
+  "description": "Three-phase inverter register mapping with full L1, L2, L3 support",
+  "models": {
+    "grid_model": {
+      "sunspec_model": 701,
+      "instance": 1,
+      "context": "grid",
+      "description": "Grid-side AC measurements for three-phase system",
+      "data_points": {
+        "grid_power": {"register": 100, "scaling": 1.0, "sunspec_point": "W", "description": "Total Grid Power (W)"},
+        "grid_power_l1": {"register": 101, "scaling": 1.0, "sunspec_point": "WL1", "description": "Grid Power L1 (W)"},
+        "grid_power_l2": {"register": 102, "scaling": 1.0, "sunspec_point": "WL2", "description": "Grid Power L2 (W)"},
+        "grid_power_l3": {"register": 103, "scaling": 1.0, "sunspec_point": "WL3", "description": "Grid Power L3 (W)"},
+        "grid_voltage_l1l2": {"register": 110, "scaling": 10.0, "sunspec_point": "LLV", "description": "Grid Voltage L1-L2 (V)"},
+        "grid_voltage_l2l3": {"register": 111, "scaling": 10.0, "sunspec_point": "LLV", "description": "Grid Voltage L2-L3 (V)"},
+        "grid_voltage_l3l1": {"register": 112, "scaling": 10.0, "sunspec_point": "LLV", "description": "Grid Voltage L3-L1 (V)"},
+        "grid_voltage_l1n": {"register": 113, "scaling": 10.0, "sunspec_point": "LNV", "description": "Grid Voltage L1-N (V)"},
+        "grid_voltage_l2n": {"register": 114, "scaling": 10.0, "sunspec_point": "LNV", "description": "Grid Voltage L2-N (V)"},
+        "grid_voltage_l3n": {"register": 115, "scaling": 10.0, "sunspec_point": "LNV", "description": "Grid Voltage L3-N (V)"},
+        "grid_current_l1": {"register": 120, "scaling": 100.0, "sunspec_point": "A", "description": "Grid Current L1 (A)"},
+        "grid_current_l2": {"register": 121, "scaling": 100.0, "sunspec_point": "A", "description": "Grid Current L2 (A)"},
+        "grid_current_l3": {"register": 122, "scaling": 100.0, "sunspec_point": "A", "description": "Grid Current L3 (A)"},
+        "grid_frequency": {"register": 130, "scaling": 100.0, "sunspec_point": "Hz", "description": "Grid Frequency (Hz)"}
+      }
+    },
+    "load_model": {
+      "sunspec_model": 701,
+      "instance": 2,
+      "context": "load",
+      "description": "Load-side AC measurements for three-phase system",
+      "data_points": {
+        "load_power_total": {"register": 200, "scaling": 1.0, "sunspec_point": "W", "description": "Total Load Power (W)"},
+        "load_power_l1": {"register": 201, "scaling": 1.0, "sunspec_point": "WL1", "description": "Load Power L1 (W)"},
+        "load_power_l2": {"register": 202, "scaling": 1.0, "sunspec_point": "WL2", "description": "Load Power L2 (W)"},
+        "load_power_l3": {"register": 203, "scaling": 1.0, "sunspec_point": "WL3", "description": "Load Power L3 (W)"},
+        "load_voltage_l1l2": {"register": 210, "scaling": 10.0, "sunspec_point": "LLV", "description": "Load Voltage L1-L2 (V)"},
+        "load_voltage_l2l3": {"register": 211, "scaling": 10.0, "sunspec_point": "LLV", "description": "Load Voltage L2-L3 (V)"},
+        "load_voltage_l3l1": {"register": 212, "scaling": 10.0, "sunspec_point": "LLV", "description": "Load Voltage L3-L1 (V)"},
+        "load_voltage_l1n": {"register": 213, "scaling": 10.0, "sunspec_point": "LNV", "description": "Load Voltage L1-N (V)"},
+        "load_voltage_l2n": {"register": 214, "scaling": 10.0, "sunspec_point": "LNV", "description": "Load Voltage L2-N (V)"},
+        "load_voltage_l3n": {"register": 215, "scaling": 10.0, "sunspec_point": "LNV", "description": "Load Voltage L3-N (V)"},
+        "load_current_l1": {"register": 220, "scaling": 100.0, "sunspec_point": "A", "description": "Load Current L1 (A)"},
+        "load_current_l2": {"register": 221, "scaling": 100.0, "sunspec_point": "A", "description": "Load Current L2 (A)"},
+        "load_current_l3": {"register": 222, "scaling": 100.0, "sunspec_point": "A", "description": "Load Current L3 (A)"},
+        "load_frequency": {"register": 230, "scaling": 100.0, "sunspec_point": "Hz", "description": "Load Frequency (Hz)"}
+      }
+    },
+    "inverter_model": {
+      "sunspec_model": 701,
+      "instance": 3,
+      "context": "inverter",
+      "description": "Inverter output measurements for three-phase system",
+      "data_points": {
+        "inverter_power_l1": {"register": 301, "scaling": 1.0, "sunspec_point": "WL1", "description": "Inverter Power L1 (W)"},
+        "inverter_power_l2": {"register": 302, "scaling": 1.0, "sunspec_point": "WL2", "description": "Inverter Power L2 (W)"},
+        "inverter_power_l3": {"register": 303, "scaling": 1.0, "sunspec_point": "WL3", "description": "Inverter Power L3 (W)"},
+        "inverter_voltage_l1l2": {"register": 310, "scaling": 10.0, "sunspec_point": "LLV", "description": "Inverter Voltage L1-L2 (V)"},
+        "inverter_voltage_l2l3": {"register": 311, "scaling": 10.0, "sunspec_point": "LLV", "description": "Inverter Voltage L2-L3 (V)"},
+        "inverter_voltage_l3l1": {"register": 312, "scaling": 10.0, "sunspec_point": "LLV", "description": "Inverter Voltage L3-L1 (V)"},
+        "inverter_voltage_l1n": {"register": 313, "scaling": 10.0, "sunspec_point": "LNV", "description": "Inverter Voltage L1-N (V)"},
+        "inverter_voltage_l2n": {"register": 314, "scaling": 10.0, "sunspec_point": "LNV", "description": "Inverter Voltage L2-N (V)"},
+        "inverter_voltage_l3n": {"register": 315, "scaling": 10.0, "sunspec_point": "LNV", "description": "Inverter Voltage L3-N (V)"},
+        "inverter_current_l1": {"register": 320, "scaling": 100.0, "sunspec_point": "A", "description": "Inverter Current L1 (A)"},
+        "inverter_current_l2": {"register": 321, "scaling": 100.0, "sunspec_point": "A", "description": "Inverter Current L2 (A)"},
+        "inverter_current_l3": {"register": 322, "scaling": 100.0, "sunspec_point": "A", "description": "Inverter Current L3 (A)"},
+        "inverter_frequency": {"register": 330, "scaling": 100.0, "sunspec_point": "Hz", "description": "Inverter Frequency (Hz)"}
+      }
+    },
+    "battery_model": {
+      "sunspec_model": 713,
+      "instance": 1,
+      "context": "battery",
+      "description": "Battery storage capacity and status",
+      "data_points": {
+        "battery_soc": {"register": 400, "scaling": 1.0, "sunspec_point": "SoC", "description": "Battery State of Charge (%)"},
+        "battery_power": {"register": 401, "scaling": 1.0, "sunspec_point": "W", "description": "Battery Power (W)"},
+        "battery_voltage": {"register": 402, "scaling": 10.0, "sunspec_point": "V", "description": "Battery Voltage (V)"},
+        "battery_current": {"register": 403, "scaling": 100.0, "sunspec_point": "A", "description": "Battery Current (A)"},
+        "battery_temperature": {"register": 404, "scaling": 10.0, "sunspec_point": "Tmp", "description": "Battery Temperature (°C)"},
+        "battery_capacity": {"register": 405, "scaling": 1.0, "sunspec_point": "AHRtg", "description": "Battery Capacity (Ah)"}
+      }
+    },
+    "dc_model": {
+      "sunspec_model": 714,
+      "instance": 1,
+      "context": "dc_ports",
+      "description": "DC measurement model with PV and battery ports",
+      "configuration": {
+        "num_ports": 5,
+        "port_types": ["PV", "PV", "PV", "PV", "ESS"]
+      },
+      "ports": {
+        "pv_port_1": {
+          "port_index": 0,
+          "port_type": "PV",
+          "port_id": 1,
+          "port_name": "MPPT1",
+          "data_points": {
+            "dc_power": {"register": 500, "scaling": 1.0, "sunspec_point": "DCW", "description": "PV1 Power (W)"},
+            "dc_voltage": {"register": 501, "scaling": 10.0, "sunspec_point": "DCV", "description": "PV1 Voltage (V)"},
+            "dc_current": {"register": 502, "scaling": 100.0, "sunspec_point": "DCA", "description": "PV1 Current (A)"}
+          }
+        },
+        "pv_port_2": {
+          "port_index": 1,
+          "port_type": "PV",
+          "port_id": 2,
+          "port_name": "MPPT2",
+          "data_points": {
+            "dc_power": {"register": 510, "scaling": 1.0, "sunspec_point": "DCW", "description": "PV2 Power (W)"},
+            "dc_voltage": {"register": 511, "scaling": 10.0, "sunspec_point": "DCV", "description": "PV2 Voltage (V)"},
+            "dc_current": {"register": 512, "scaling": 100.0, "sunspec_point": "DCA", "description": "PV2 Current (A)"}
+          }
+        },
+        "pv_port_3": {
+          "port_index": 2,
+          "port_type": "PV",
+          "port_id": 3,
+          "port_name": "MPPT3",
+          "data_points": {
+            "dc_power": {"register": 520, "scaling": 1.0, "sunspec_point": "DCW", "description": "PV3 Power (W)"},
+            "dc_voltage": {"register": 521, "scaling": 10.0, "sunspec_point": "DCV", "description": "PV3 Voltage (V)"},
+            "dc_current": {"register": 522, "scaling": 100.0, "sunspec_point": "DCA", "description": "PV3 Current (A)"}
+          }
+        },
+        "pv_port_4": {
+          "port_index": 3,
+          "port_type": "PV",
+          "port_id": 4,
+          "port_name": "MPPT4",
+          "data_points": {
+            "dc_power": {"register": 530, "scaling": 1.0, "sunspec_point": "DCW", "description": "PV4 Power (W)"},
+            "dc_voltage": {"register": 531, "scaling": 10.0, "sunspec_point": "DCV", "description": "PV4 Voltage (V)"},
+            "dc_current": {"register": 532, "scaling": 100.0, "sunspec_point": "DCA", "description": "PV4 Current (A)"}
+          }
+        },
+        "battery_port": {
+          "port_index": 4,
+          "port_type": "ESS",
+          "port_id": 5,
+          "port_name": "BATT1",
+          "data_points": {
+            "dc_power": {"register": 401, "scaling": 1.0, "sunspec_point": "DCW", "description": "Battery Power (W)"},
+            "dc_voltage": {"register": 402, "scaling": 10.0, "sunspec_point": "DCV", "description": "Battery Voltage (V)"},
+            "dc_current": {"register": 403, "scaling": 100.0, "sunspec_point": "DCA", "description": "Battery Current (A)"}
+          }
+        }
+      }
+    }
+  },
+  "read_blocks": [
+    {
+      "start": 100,
+      "count": 35,
+      "description": "Grid measurements (100-134)",
+      "registers": [
+        {"address": 100, "name": "grid_power", "description": "Total Grid Power"},
+        {"address": 101, "name": "grid_power_l1", "description": "Grid Power L1"},
+        {"address": 102, "name": "grid_power_l2", "description": "Grid Power L2"},
+        {"address": 103, "name": "grid_power_l3", "description": "Grid Power L3"},
+        {"address": 110, "name": "grid_voltage_l1l2", "description": "Grid Voltage L1-L2"},
+        {"address": 111, "name": "grid_voltage_l2l3", "description": "Grid Voltage L2-L3"},
+        {"address": 112, "name": "grid_voltage_l3l1", "description": "Grid Voltage L3-L1"},
+        {"address": 113, "name": "grid_voltage_l1n", "description": "Grid Voltage L1-N"},
+        {"address": 114, "name": "grid_voltage_l2n", "description": "Grid Voltage L2-N"},
+        {"address": 115, "name": "grid_voltage_l3n", "description": "Grid Voltage L3-N"},
+        {"address": 120, "name": "grid_current_l1", "description": "Grid Current L1"},
+        {"address": 121, "name": "grid_current_l2", "description": "Grid Current L2"},
+        {"address": 122, "name": "grid_current_l3", "description": "Grid Current L3"},
+        {"address": 130, "name": "grid_frequency", "description": "Grid Frequency"}
+      ]
+    },
+    {
+      "start": 200,
+      "count": 35,
+      "description": "Load measurements (200-234)",
+      "registers": [
+        {"address": 200, "name": "load_power_total", "description": "Total Load Power"},
+        {"address": 201, "name": "load_power_l1", "description": "Load Power L1"},
+        {"address": 202, "name": "load_power_l2", "description": "Load Power L2"},
+        {"address": 203, "name": "load_power_l3", "description": "Load Power L3"},
+        {"address": 210, "name": "load_voltage_l1l2", "description": "Load Voltage L1-L2"},
+        {"address": 211, "name": "load_voltage_l2l3", "description": "Load Voltage L2-L3"},
+        {"address": 212, "name": "load_voltage_l3l1", "description": "Load Voltage L3-L1"},
+        {"address": 213, "name": "load_voltage_l1n", "description": "Load Voltage L1-N"},
+        {"address": 214, "name": "load_voltage_l2n", "description": "Load Voltage L2-N"},
+        {"address": 215, "name": "load_voltage_l3n", "description": "Load Voltage L3-N"},
+        {"address": 220, "name": "load_current_l1", "description": "Load Current L1"},
+        {"address": 221, "name": "load_current_l2", "description": "Load Current L2"},
+        {"address": 222, "name": "load_current_l3", "description": "Load Current L3"},
+        {"address": 230, "name": "load_frequency", "description": "Load Frequency"}
+      ]
+    },
+    {
+      "start": 300,
+      "count": 35,
+      "description": "Inverter measurements (300-334)",
+      "registers": [
+        {"address": 301, "name": "inverter_power_l1", "description": "Inverter Power L1"},
+        {"address": 302, "name": "inverter_power_l2", "description": "Inverter Power L2"},
+        {"address": 303, "name": "inverter_power_l3", "description": "Inverter Power L3"},
+        {"address": 310, "name": "inverter_voltage_l1l2", "description": "Inverter Voltage L1-L2"},
+        {"address": 311, "name": "inverter_voltage_l2l3", "description": "Inverter Voltage L2-L3"},
+        {"address": 312, "name": "inverter_voltage_l3l1", "description": "Inverter Voltage L3-L1"},
+        {"address": 313, "name": "inverter_voltage_l1n", "description": "Inverter Voltage L1-N"},
+        {"address": 314, "name": "inverter_voltage_l2n", "description": "Inverter Voltage L2-N"},
+        {"address": 315, "name": "inverter_voltage_l3n", "description": "Inverter Voltage L3-N"},
+        {"address": 320, "name": "inverter_current_l1", "description": "Inverter Current L1"},
+        {"address": 321, "name": "inverter_current_l2", "description": "Inverter Current L2"},
+        {"address": 322, "name": "inverter_current_l3", "description": "Inverter Current L3"},
+        {"address": 330, "name": "inverter_frequency", "description": "Inverter Frequency"}
+      ]
+    },
+    {
+      "start": 400,
+      "count": 10,
+      "description": "Battery measurements (400-409)",
+      "registers": [
+        {"address": 400, "name": "battery_soc", "description": "Battery State of Charge"},
+        {"address": 401, "name": "battery_power", "description": "Battery Power"},
+        {"address": 402, "name": "battery_voltage", "description": "Battery Voltage"},
+        {"address": 403, "name": "battery_current", "description": "Battery Current"},
+        {"address": 404, "name": "battery_temperature", "description": "Battery Temperature"},
+        {"address": 405, "name": "battery_capacity", "description": "Battery Capacity"}
+      ]
+    },
+    {
+      "start": 500,
+      "count": 40,
+      "description": "PV measurements (500-539)",
+      "registers": [
+        {"address": 500, "name": "pv1_power", "description": "PV1 Power"},
+        {"address": 501, "name": "pv1_voltage", "description": "PV1 Voltage"},
+        {"address": 502, "name": "pv1_current", "description": "PV1 Current"},
+        {"address": 510, "name": "pv2_power", "description": "PV2 Power"},
+        {"address": 511, "name": "pv2_voltage", "description": "PV2 Voltage"},
+        {"address": 512, "name": "pv2_current", "description": "PV2 Current"},
+        {"address": 520, "name": "pv3_power", "description": "PV3 Power"},
+        {"address": 521, "name": "pv3_voltage", "description": "PV3 Voltage"},
+        {"address": 522, "name": "pv3_current", "description": "PV3 Current"},
+        {"address": 530, "name": "pv4_power", "description": "PV4 Power"},
+        {"address": 531, "name": "pv4_voltage", "description": "PV4 Voltage"},
+        {"address": 532, "name": "pv4_current", "description": "PV4 Current"}
+      ]
+    }
+  ],
+  "scaling_factors": {
+    "voltage": 10.0,
+    "current": 100.0,
+    "frequency": 100.0,
+    "power": 1.0,
+    "temperature": 10.0,
+    "percentage": 1.0
+  },
+  "phase_configuration": {
+    "type": "three_phase",
+    "grid_type": 2,
+    "ac_type": 103
+  }
+}

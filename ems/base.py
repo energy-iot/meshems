@@ -19,13 +19,20 @@ class InverterData(ABC):
     timestamp: float = time.time()
     grid_type: int = 0  # 0=Single, 1=Split, 2=Three-phase
     
-    # Grid measurements
+    # Grid measurements (supports single-phase, split-phase, and three-phase)
     grid_power: float = 0.0
-    grid_voltage_l1l2: float = 0.0
-    grid_voltage_l1n: float = 0.0
-    grid_voltage_l2n: float = 0.0
-    grid_current_l1: float = 0.0
-    grid_current_l2: float = 0.0
+    grid_voltage_l1l2: float = 0.0  # Line-to-line voltage L1-L2
+    grid_voltage_l2l3: float = 0.0  # Line-to-line voltage L2-L3 (3-phase)
+    grid_voltage_l3l1: float = 0.0  # Line-to-line voltage L3-L1 (3-phase)
+    grid_voltage_l1n: float = 0.0   # Line-to-neutral voltage L1-N
+    grid_voltage_l2n: float = 0.0   # Line-to-neutral voltage L2-N
+    grid_voltage_l3n: float = 0.0   # Line-to-neutral voltage L3-N (3-phase)
+    grid_current_l1: float = 0.0    # Grid current L1
+    grid_current_l2: float = 0.0    # Grid current L2
+    grid_current_l3: float = 0.0    # Grid current L3 (3-phase)
+    grid_power_l1: float = 0.0      # Grid power L1
+    grid_power_l2: float = 0.0      # Grid power L2
+    grid_power_l3: float = 0.0      # Grid power L3 (3-phase)
     grid_frequency: float = 0.0
     
     # Battery measurements
@@ -34,10 +41,52 @@ class InverterData(ABC):
     battery_current: float = 0.0
     battery_soc: float = 0.0
     
-    # PV measurements
+    # Load measurements (supports single-phase, split-phase, and three-phase)
+    load_power_total: float = 0.0
+    load_power_l1: float = 0.0      # Load power L1
+    load_power_l2: float = 0.0      # Load power L2
+    load_power_l3: float = 0.0      # Load power L3 (3-phase)
+    load_current_l1: float = 0.0    # Load current L1
+    load_current_l2: float = 0.0    # Load current L2
+    load_current_l3: float = 0.0    # Load current L3 (3-phase)
+    load_voltage_l1l2: float = 0.0  # Load voltage L1-L2
+    load_voltage_l2l3: float = 0.0  # Load voltage L2-L3 (3-phase)
+    load_voltage_l3l1: float = 0.0  # Load voltage L3-L1 (3-phase)
+    load_voltage_l1n: float = 0.0   # Load voltage L1-N
+    load_voltage_l2n: float = 0.0   # Load voltage L2-N
+    load_voltage_l3n: float = 0.0   # Load voltage L3-N (3-phase)
+    load_frequency: float = 0.0
+    
+    # Inverter output measurements (supports single-phase, split-phase, and three-phase)
+    inverter_voltage: float = 0.0       # Legacy field (L1-L2)
+    inverter_voltage_l1l2: float = 0.0  # Inverter voltage L1-L2
+    inverter_voltage_l2l3: float = 0.0  # Inverter voltage L2-L3 (3-phase)
+    inverter_voltage_l3l1: float = 0.0  # Inverter voltage L3-L1 (3-phase)
+    inverter_voltage_ln: float = 0.0    # Inverter voltage L1-N
+    inverter_voltage_l2n: float = 0.0   # Inverter voltage L2-N
+    inverter_voltage_l3n: float = 0.0   # Inverter voltage L3-N (3-phase)
+    inverter_current_l1: float = 0.0    # Inverter current L1
+    inverter_current_l2: float = 0.0    # Inverter current L2
+    inverter_current_l3: float = 0.0    # Inverter current L3 (3-phase)
+    inverter_power_l1: float = 0.0      # Inverter power L1
+    inverter_power_l2: float = 0.0      # Inverter power L2
+    inverter_power_l3: float = 0.0      # Inverter power L3 (3-phase)
+    inverter_frequency: float = 0.0
+    
+    # PV measurements (expandable for more strings)
     pv_power_total: float = 0.0
     pv1_power: float = 0.0
     pv2_power: float = 0.0
+    pv3_power: float = 0.0
+    pv4_power: float = 0.0
+    pv1_voltage: float = 0.0
+    pv2_voltage: float = 0.0
+    pv3_voltage: float = 0.0
+    pv4_voltage: float = 0.0
+    pv1_current: float = 0.0
+    pv2_current: float = 0.0
+    pv3_current: float = 0.0
+    pv4_current: float = 0.0
 
     # Additional fields for extended data
     inverter_status: int = 0
@@ -46,20 +95,6 @@ class InverterData(ABC):
     dcdc_xfrmr_temp: float = 0.0
     grid_relay_status: int = 0
     generator_relay_status: int = 0
-    load_power_total: float = 0.0
-    load_power_l1: float = 0.0
-    load_power_l2: float = 0.0
-    load_current_l1: float = 0.0
-    load_current_l2: float = 0.0
-    load_frequency: float = 0.0
-    inverter_voltage: float = 0.0
-    inverter_voltage_ln: float = 0.0
-    inverter_voltage_l2n: float = 0.0
-    inverter_current_l1: float = 0.0
-    inverter_current_l2: float = 0.0
-    inverter_frequency: float = 0.0
-    inverter_power_l1: float = 0.0
-    inverter_power_l2: float = 0.0
     apparent_power: float = 0.0
     grid_power_factor: float = 0.0
     battery_charge_energy: float = 0.0

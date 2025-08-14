@@ -22,9 +22,9 @@ inverter:
   retry_delay: 0.5  # seconds
   
   # Sol-Ark inverter settings (used when type is "solark")
+  # All inverters now use JSON-based register mapping for consistency
   solark:
     register_mapping_file: "solark_registers.json"
-    use_json_mapping: true  # Set to false to use legacy hardcoded mapping
   
   # Generic inverter settings (used when type is "generic")
   generic:

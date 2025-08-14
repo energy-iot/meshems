@@ -153,10 +153,9 @@ class EMSApplication:
                 "modbus_address": modbus_address
             }
             
-            # Add inverter-specific configuration
+            # Add inverter-specific configuration - all inverters now use JSON mapping
             if inverter_type == "solark":
                 solark_config = inverter_config.get("solark", {})
-                factory_args["use_json_mapping"] = solark_config.get("use_json_mapping", False)
                 factory_args["config_file"] = solark_config.get("register_mapping_file", "solark_registers.json")
             elif inverter_type == "generic":
                 generic_config = inverter_config.get("generic", {})

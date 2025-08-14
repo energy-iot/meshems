@@ -71,13 +71,138 @@ class SunSpecInverterModel:
 @dataclass
 class SunSpecGridModel(SunSpecInverterModel):
     """SunSpec Grid Model (Model 701) - Grid-side measurements"""
-    pass
+    
+    # Grid-specific measurements
+    grid_power: float = 0.0  # W - Total grid power
+    grid_power_l1: float = 0.0  # WL1 - Grid power L1
+    grid_power_l2: float = 0.0  # WL2 - Grid power L2
+    grid_power_l3: float = 0.0  # WL3 - Grid power L3
+    
+    # Grid voltages
+    grid_voltage_l1l2: float = 0.0  # LLV - Line-to-line voltage L1-L2
+    grid_voltage_l2l3: float = 0.0  # LLV - Line-to-line voltage L2-L3
+    grid_voltage_l3l1: float = 0.0  # LLV - Line-to-line voltage L3-L1
+    grid_voltage_l1n: float = 0.0   # LNV - Line-to-neutral voltage L1-N
+    grid_voltage_l2n: float = 0.0   # LNV - Line-to-neutral voltage L2-N
+    grid_voltage_l3n: float = 0.0   # LNV - Line-to-neutral voltage L3-N
+    
+    # Grid currents
+    grid_current_l1: float = 0.0  # AL1 - Grid current L1
+    grid_current_l2: float = 0.0  # AL2 - Grid current L2
+    grid_current_l3: float = 0.0  # AL3 - Grid current L3
+    
+    # Grid frequency and power factor
+    grid_frequency: float = 0.0      # Hz - Grid frequency
+    grid_power_factor: float = 0.0   # PF - Grid power factor
+    
+    # Grid status and connection
+    grid_connection_status: int = 0  # Connection status
+    grid_relay_status: int = 0       # Relay status
+    
+    def update_from_data(self, data):
+        """Update grid model from inverter data"""
+        if hasattr(data, 'grid_power'):
+            self.grid_power = data.grid_power
+        if hasattr(data, 'grid_power_l1'):
+            self.grid_power_l1 = data.grid_power_l1
+        if hasattr(data, 'grid_power_l2'):
+            self.grid_power_l2 = data.grid_power_l2
+        if hasattr(data, 'grid_power_l3'):
+            self.grid_power_l3 = data.grid_power_l3
+            
+        if hasattr(data, 'grid_voltage_l1l2'):
+            self.grid_voltage_l1l2 = data.grid_voltage_l1l2
+        if hasattr(data, 'grid_voltage_l2l3'):
+            self.grid_voltage_l2l3 = data.grid_voltage_l2l3
+        if hasattr(data, 'grid_voltage_l3l1'):
+            self.grid_voltage_l3l1 = data.grid_voltage_l3l1
+        if hasattr(data, 'grid_voltage_l1n'):
+            self.grid_voltage_l1n = data.grid_voltage_l1n
+        if hasattr(data, 'grid_voltage_l2n'):
+            self.grid_voltage_l2n = data.grid_voltage_l2n
+        if hasattr(data, 'grid_voltage_l3n'):
+            self.grid_voltage_l3n = data.grid_voltage_l3n
+            
+        if hasattr(data, 'grid_current_l1'):
+            self.grid_current_l1 = data.grid_current_l1
+        if hasattr(data, 'grid_current_l2'):
+            self.grid_current_l2 = data.grid_current_l2
+        if hasattr(data, 'grid_current_l3'):
+            self.grid_current_l3 = data.grid_current_l3
+            
+        if hasattr(data, 'grid_frequency'):
+            self.grid_frequency = data.grid_frequency
+        if hasattr(data, 'grid_power_factor'):
+            self.grid_power_factor = data.grid_power_factor
+        if hasattr(data, 'grid_relay_status'):
+            self.grid_relay_status = data.grid_relay_status
 
 
 @dataclass
 class SunSpecLoadModel(SunSpecInverterModel):
     """SunSpec Load Model (Model 701) - Load-side measurements"""
-    pass
+    
+    # Load-specific measurements
+    load_power_total: float = 0.0  # W - Total load power
+    load_power_l1: float = 0.0     # WL1 - Load power L1
+    load_power_l2: float = 0.0     # WL2 - Load power L2
+    load_power_l3: float = 0.0     # WL3 - Load power L3
+    
+    # Load voltages
+    load_voltage_l1l2: float = 0.0  # LLV - Line-to-line voltage L1-L2
+    load_voltage_l2l3: float = 0.0  # LLV - Line-to-line voltage L2-L3
+    load_voltage_l3l1: float = 0.0  # LLV - Line-to-line voltage L3-L1
+    load_voltage_l1n: float = 0.0   # LNV - Line-to-neutral voltage L1-N
+    load_voltage_l2n: float = 0.0   # LNV - Line-to-neutral voltage L2-N
+    load_voltage_l3n: float = 0.0   # LNV - Line-to-neutral voltage L3-N
+    
+    # Load currents
+    load_current_l1: float = 0.0  # AL1 - Load current L1
+    load_current_l2: float = 0.0  # AL2 - Load current L2
+    load_current_l3: float = 0.0  # AL3 - Load current L3
+    
+    # Load frequency and power factor
+    load_frequency: float = 0.0      # Hz - Load frequency
+    load_power_factor: float = 0.0   # PF - Load power factor
+    
+    # Load energy counters
+    load_energy_total: float = 0.0   # WH - Total load energy
+    
+    def update_from_data(self, data):
+        """Update load model from inverter data"""
+        if hasattr(data, 'load_power_total'):
+            self.load_power_total = data.load_power_total
+        if hasattr(data, 'load_power_l1'):
+            self.load_power_l1 = data.load_power_l1
+        if hasattr(data, 'load_power_l2'):
+            self.load_power_l2 = data.load_power_l2
+        if hasattr(data, 'load_power_l3'):
+            self.load_power_l3 = data.load_power_l3
+            
+        if hasattr(data, 'load_voltage_l1l2'):
+            self.load_voltage_l1l2 = data.load_voltage_l1l2
+        if hasattr(data, 'load_voltage_l2l3'):
+            self.load_voltage_l2l3 = data.load_voltage_l2l3
+        if hasattr(data, 'load_voltage_l3l1'):
+            self.load_voltage_l3l1 = data.load_voltage_l3l1
+        if hasattr(data, 'load_voltage_l1n'):
+            self.load_voltage_l1n = data.load_voltage_l1n
+        if hasattr(data, 'load_voltage_l2n'):
+            self.load_voltage_l2n = data.load_voltage_l2n
+        if hasattr(data, 'load_voltage_l3n'):
+            self.load_voltage_l3n = data.load_voltage_l3n
+            
+        if hasattr(data, 'load_current_l1'):
+            self.load_current_l1 = data.load_current_l1
+        if hasattr(data, 'load_current_l2'):
+            self.load_current_l2 = data.load_current_l2
+        if hasattr(data, 'load_current_l3'):
+            self.load_current_l3 = data.load_current_l3
+            
+        if hasattr(data, 'load_frequency'):
+            self.load_frequency = data.load_frequency
+        if hasattr(data, 'load_energy'):
+            self.load_energy_total = data.load_energy
 
 
 @dataclass
@@ -89,26 +214,75 @@ class SunSpecBatteryModel:
     model_length = 7  # Match C implementation (DER Storage Capacity Model)
     
     # Battery measurements
-    battery_voltage = 0.0  # V - Battery voltage
-    battery_current = 0.0  # A - Battery current
-    battery_power = 0.0  # W - Battery power
-    battery_soc = 0.0  # SoC - State of charge
-    battery_temperature = 0.0  # Tmp - Battery temperature
+    battery_voltage: float = 0.0  # V - Battery voltage
+    battery_current: float = 0.0  # A - Battery current
+    battery_power: float = 0.0  # W - Battery power
+    battery_soc: float = 0.0  # SoC - State of charge
+    battery_temperature: float = 0.0  # Tmp - Battery temperature
     
     # Battery configuration
-    battery_capacity = 0.0  # AHRtg - Amp-hour rating
-    battery_energy_capacity = 0.0  # WHRtg - Watt-hour rating
+    battery_capacity: float = 0.0  # AHRtg - Amp-hour rating
+    battery_energy_capacity: float = 0.0  # WHRtg - Watt-hour rating
     
-    # Battery status
-    battery_status = 0  # St - Battery status
+    # Battery status and health
+    battery_status: int = 0  # St - Battery status (0=OFF, 1=EMPTY, 2=DISCHARGING, 3=CHARGING, 4=FULL, 5=HOLDING, 6=TESTING)
+    battery_health: float = 100.0  # SoH - State of health (%)
+    
+    # Battery energy counters
+    battery_energy_charged: float = 0.0  # WhCha - Total energy charged
+    battery_energy_discharged: float = 0.0  # WhDisCha - Total energy discharged
     
     # Scale factors
-    voltage_sf = -1  # V_SF
-    current_sf = -2  # A_SF
-    power_sf = 0  # W_SF
-    energy_sf = 0  # WH_SF
-    soc_sf = 0  # SoC_SF
-    temperature_sf = 0  # Tmp_SF
+    voltage_sf: int = -1  # V_SF
+    current_sf: int = -2  # A_SF
+    power_sf: int = 0  # W_SF
+    energy_sf: int = 0  # WH_SF
+    soc_sf: int = 0  # SoC_SF
+    temperature_sf: int = 0  # Tmp_SF
+    
+    def update_from_data(self, data):
+        """Update battery model from inverter data"""
+        if hasattr(data, 'battery_voltage'):
+            self.battery_voltage = data.battery_voltage
+        if hasattr(data, 'battery_current'):
+            self.battery_current = data.battery_current
+        if hasattr(data, 'battery_power'):
+            self.battery_power = data.battery_power
+        if hasattr(data, 'battery_soc'):
+            self.battery_soc = data.battery_soc
+        if hasattr(data, 'battery_temperature'):
+            self.battery_temperature = data.battery_temperature
+            
+        if hasattr(data, 'battery_capacity'):
+            self.battery_capacity = data.battery_capacity
+        if hasattr(data, 'battery_energy_capacity'):
+            self.battery_energy_capacity = data.battery_energy_capacity
+            
+        # Determine battery status based on power flow
+        if hasattr(data, 'battery_power') and data.battery_power is not None:
+            if data.battery_power > 50:
+                self.battery_status = 3  # Charging
+            elif data.battery_power < -50:
+                self.battery_status = 2  # Discharging
+            elif hasattr(data, 'battery_soc') and data.battery_soc is not None:
+                if data.battery_soc >= 95:
+                    self.battery_status = 4  # Full
+                elif data.battery_soc <= 5:
+                    self.battery_status = 1  # Empty
+                else:
+                    self.battery_status = 5  # Holding
+            else:
+                self.battery_status = 5  # Holding (default)
+        
+        # Update energy counters if available
+        if hasattr(data, 'battery_energy_charged'):
+            self.battery_energy_charged = data.battery_energy_charged
+        if hasattr(data, 'battery_energy_discharged'):
+            self.battery_energy_discharged = data.battery_energy_discharged
+            
+        # Update health if available
+        if hasattr(data, 'battery_health'):
+            self.battery_health = data.battery_health
 
 
 @dataclass
@@ -538,8 +712,19 @@ class SunSpecMapper:
         """Update Grid Model (701) registers"""
         base = SunSpecRegisterMap.GRID_MODEL_BASE
         
-        # AC Type (split-phase = 102, three-phase = 103)
-        ac_type = 102 if hasattr(data, 'phase_type') and data.phase_type == 'split_phase' else 103
+        # Determine AC Type based on grid type
+        ac_type = 101  # Single-phase default
+        if hasattr(data, 'grid_type'):
+            if data.grid_type == 1:
+                ac_type = 102  # Split-phase
+            elif data.grid_type == 2:
+                ac_type = 103  # Three-phase Wye
+        elif hasattr(data, 'phase_type'):
+            if data.phase_type == 'split_phase':
+                ac_type = 102
+            elif data.phase_type == 'three_phase':
+                ac_type = 103
+        
         self._set_register(base + 2, ac_type)
         
         # Operating state (4 = MPPT, 5 = Throttled, 7 = Shutting down, 8 = Fault)
@@ -553,14 +738,44 @@ class SunSpecMapper:
         if hasattr(data, 'grid_power') and data.grid_power is not None:
             self._set_register(base + 10, int(data.grid_power))  # AC Power (W)
         
-        if hasattr(data, 'grid_voltage') and data.grid_voltage is not None:
-            # Voltage with scale factor -1 (0.1V resolution)
+        # Line-to-line voltages
+        if hasattr(data, 'grid_voltage_l1l2') and data.grid_voltage_l1l2 is not None:
+            self._set_register(base + 15, int(data.grid_voltage_l1l2 * 10))  # AC Voltage L1-L2
+        elif hasattr(data, 'grid_voltage') and data.grid_voltage is not None:
+            # Fallback to legacy grid_voltage
             self._set_register(base + 15, int(data.grid_voltage * 10))  # AC Voltage LL
-            self._set_register(base + 16, int(data.grid_voltage * 10))  # AC Voltage LN
         
-        if hasattr(data, 'grid_current') and data.grid_current is not None:
-            # Current with scale factor -2 (0.01A resolution)
-            self._set_register(base + 14, int(data.grid_current * 100))  # AC Current
+        # Line-to-neutral voltages
+        if hasattr(data, 'grid_voltage_l1n') and data.grid_voltage_l1n is not None:
+            self._set_register(base + 16, int(data.grid_voltage_l1n * 10))  # AC Voltage L1-N
+        
+        # Phase currents
+        if hasattr(data, 'grid_current_l1') and data.grid_current_l1 is not None:
+            self._set_register(base + 14, int(data.grid_current_l1 * 100))  # AC Current L1
+        
+        # For three-phase systems, add L2 and L3 measurements
+        if ac_type == 103:  # Three-phase
+            # L2 measurements
+            if hasattr(data, 'grid_voltage_l2n') and data.grid_voltage_l2n is not None:
+                self._set_register(base + 45, int(data.grid_voltage_l2n * 10))  # VL2N
+            if hasattr(data, 'grid_current_l2') and data.grid_current_l2 is not None:
+                self._set_register(base + 46, int(data.grid_current_l2 * 100))  # AL2
+            if hasattr(data, 'grid_power_l2') and data.grid_power_l2 is not None:
+                self._set_register(base + 47, int(data.grid_power_l2))  # WL2
+            
+            # L3 measurements
+            if hasattr(data, 'grid_voltage_l3n') and data.grid_voltage_l3n is not None:
+                self._set_register(base + 65, int(data.grid_voltage_l3n * 10))  # VL3N
+            if hasattr(data, 'grid_current_l3') and data.grid_current_l3 is not None:
+                self._set_register(base + 66, int(data.grid_current_l3 * 100))  # AL3
+            if hasattr(data, 'grid_power_l3') and data.grid_power_l3 is not None:
+                self._set_register(base + 67, int(data.grid_power_l3))  # WL3
+            
+            # Additional three-phase line-to-line voltages
+            if hasattr(data, 'grid_voltage_l2l3') and data.grid_voltage_l2l3 is not None:
+                self._set_register(base + 68, int(data.grid_voltage_l2l3 * 10))  # VL2L3
+            if hasattr(data, 'grid_voltage_l3l1') and data.grid_voltage_l3l1 is not None:
+                self._set_register(base + 69, int(data.grid_voltage_l3l1 * 10))  # VL3L1
         
         if hasattr(data, 'grid_frequency') and data.grid_frequency is not None:
             # Frequency with scale factor -2 (0.01Hz resolution)
@@ -571,13 +786,27 @@ class SunSpecMapper:
         if hasattr(data, 'inverter_temperature') and data.inverter_temperature is not None:
             # Temperature with scale factor -1 (0.1°C resolution)
             self._set_register(base + 36, int(data.inverter_temperature * 10))  # Cabinet Temperature
-    
+        elif hasattr(data, 'igbt_temp') and data.igbt_temp is not None:
+            # Use IGBT temperature as fallback
+            self._set_register(base + 36, int(data.igbt_temp * 10))  # Cabinet Temperature
+
     def _update_load_model(self, data: InverterData):
         """Update Load Model (701) registers"""
         base = SunSpecRegisterMap.LOAD_MODEL_BASE
         
-        # AC Type (split-phase = 102, three-phase = 103)
-        ac_type = 102 if hasattr(data, 'phase_type') and data.phase_type == 'split_phase' else 103
+        # Determine AC Type based on grid type
+        ac_type = 101  # Single-phase default
+        if hasattr(data, 'grid_type'):
+            if data.grid_type == 1:
+                ac_type = 102  # Split-phase
+            elif data.grid_type == 2:
+                ac_type = 103  # Three-phase Wye
+        elif hasattr(data, 'phase_type'):
+            if data.phase_type == 'split_phase':
+                ac_type = 102
+            elif data.phase_type == 'three_phase':
+                ac_type = 103
+        
         self._set_register(base + 2, ac_type)
         
         # Operating state
@@ -588,17 +817,44 @@ class SunSpecMapper:
         self._set_register(base + 5, 1)  # Connection: Connected
         
         # AC measurements with scaling
-        if hasattr(data, 'load_power') and data.load_power is not None:
-            self._set_register(base + 10, int(data.load_power))  # AC Power (W)
+        if hasattr(data, 'load_power_total') and data.load_power_total is not None:
+            self._set_register(base + 10, int(data.load_power_total))  # AC Power (W)
         
-        if hasattr(data, 'load_voltage') and data.load_voltage is not None:
-            # Voltage with scale factor -1 (0.1V resolution)
-            self._set_register(base + 15, int(data.load_voltage * 10))  # AC Voltage LL
-            self._set_register(base + 16, int(data.load_voltage * 10))  # AC Voltage LN
+        # Line-to-line voltages
+        if hasattr(data, 'load_voltage_l1l2') and data.load_voltage_l1l2 is not None:
+            self._set_register(base + 15, int(data.load_voltage_l1l2 * 10))  # AC Voltage L1-L2
         
-        if hasattr(data, 'load_current') and data.load_current is not None:
-            # Current with scale factor -2 (0.01A resolution)
-            self._set_register(base + 14, int(data.load_current * 100))  # AC Current
+        # Line-to-neutral voltages
+        if hasattr(data, 'load_voltage_l1n') and data.load_voltage_l1n is not None:
+            self._set_register(base + 16, int(data.load_voltage_l1n * 10))  # AC Voltage L1-N
+        
+        # Phase currents
+        if hasattr(data, 'load_current_l1') and data.load_current_l1 is not None:
+            self._set_register(base + 14, int(data.load_current_l1 * 100))  # AC Current L1
+        
+        # For three-phase systems, add L2 and L3 measurements
+        if ac_type == 103:  # Three-phase
+            # L2 measurements
+            if hasattr(data, 'load_voltage_l2n') and data.load_voltage_l2n is not None:
+                self._set_register(base + 45, int(data.load_voltage_l2n * 10))  # VL2N
+            if hasattr(data, 'load_current_l2') and data.load_current_l2 is not None:
+                self._set_register(base + 46, int(data.load_current_l2 * 100))  # AL2
+            if hasattr(data, 'load_power_l2') and data.load_power_l2 is not None:
+                self._set_register(base + 47, int(data.load_power_l2))  # WL2
+            
+            # L3 measurements
+            if hasattr(data, 'load_voltage_l3n') and data.load_voltage_l3n is not None:
+                self._set_register(base + 65, int(data.load_voltage_l3n * 10))  # VL3N
+            if hasattr(data, 'load_current_l3') and data.load_current_l3 is not None:
+                self._set_register(base + 66, int(data.load_current_l3 * 100))  # AL3
+            if hasattr(data, 'load_power_l3') and data.load_power_l3 is not None:
+                self._set_register(base + 67, int(data.load_power_l3))  # WL3
+            
+            # Additional three-phase line-to-line voltages
+            if hasattr(data, 'load_voltage_l2l3') and data.load_voltage_l2l3 is not None:
+                self._set_register(base + 68, int(data.load_voltage_l2l3 * 10))  # VL2L3
+            if hasattr(data, 'load_voltage_l3l1') and data.load_voltage_l3l1 is not None:
+                self._set_register(base + 69, int(data.load_voltage_l3l1 * 10))  # VL3L1
         
         if hasattr(data, 'load_frequency') and data.load_frequency is not None:
             # Frequency with scale factor -2 (0.01Hz resolution)

@@ -117,19 +117,6 @@ class SunSpecModbusServer:
         except Exception as e:
             self.logger.error(f"Error updating Modbus server: {e}")
     
-    def update_from_solark(self, solark_data):
-        """Update SunSpec models with Sol-Ark data (legacy method)"""
-        try:
-            # Update SunSpec mapper with new data
-            self.sunspec_mapper.update_from_solark(solark_data)
-            
-            # Update Modbus registers
-            self._update_sunspec_registers()
-            
-            self.logger.debug("Updated Modbus server with Sol-Ark data")
-            
-        except Exception as e:
-            self.logger.error(f"Error updating Modbus server: {e}")
     
     def start(self):
         """Start the Modbus TCP server in a separate thread"""
