@@ -3,7 +3,7 @@
 
 # Serial/RS485 Configuration
 serial:
-  # Primary RS485 port for Sol-Ark communication
+  # Primary RS485 port for inverter communication
   #port: "/dev/tty.usbserial-A10OGBLS"  # Change to your actual RS485 device
   port: "/dev/ttyRS485"
   baudrate: 9600
@@ -12,12 +12,24 @@ serial:
   stopbits: 1
   timeout: 2.0
   
-# Sol-Ark Inverter Configuration
-solark:
+# Inverter Configuration
+inverter:
+  # Inverter type: "solark", "generic", or other supported types
+  type: "solark"
   modbus_address: 1
   poll_interval: 1.0  # seconds
   max_retries: 3
   retry_delay: 0.5  # seconds
+  
+  # Sol-Ark inverter settings (used when type is "solark")
+  solark:
+    register_mapping_file: "solark_registers.json"
+    use_json_mapping: true  # Set to false to use legacy hardcoded mapping
+  
+  # Generic inverter settings (used when type is "generic")
+  generic:
+    register_mapping_file: "generic_registers.json"
+    scaling_factors_file: "generic_scaling.json"
 
 # SunSpec Modbus TCP Server Configuration
 sunspec_server:
@@ -51,14 +63,14 @@ device_info:
   model: "SOLARK-SUNSPEC GATEWAY"
   version: "1.0"
   serial_number: "JOULE-EMS-001"
-  options: "Sol-Ark Gateway"
+  options: "Generic Inverter Gateway"
 
 # Monitoring and Alerts
 monitoring:
   # Enable console output
   console_output: true
   # Update interval for console display
-  console_update_interval: 10.0  # seconds
+  console_update_interval: 10.0
   
   # Alert thresholds
   alerts:

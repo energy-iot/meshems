@@ -2,7 +2,7 @@
 Modbus TCP Server Implementation
 
 This module implements a SunSpec-compliant Modbus TCP server that exposes
-Sol-Ark inverter data in standardized SunSpec format.
+inverter data in standardized SunSpec format.
 """
 
 import logging
@@ -15,6 +15,7 @@ from pymodbus import ModbusDeviceIdentification
 from pymodbus.datastore import ModbusSequentialDataBlock, ModbusDeviceContext, ModbusServerContext
 
 from .sunspec_models import SunSpecMapper
+from .base import InverterData
 
 
 @dataclass
@@ -102,8 +103,22 @@ class SunSpecModbusServer:
         except Exception as e:
             self.logger.error(f"Error updating SunSpec registers: {e}")
     
+    def update_from_inverter(self, inverter_data: InverterData):
+        """Update SunSpec models with inverter data"""
+        try:
+            # Update SunSpec mapper with new data
+            self.sunspec_mapper.update_from_inverter(inverter_data)
+            
+            # Update Modbus registers
+            self._update_sunspec_registers()
+            
+            self.logger.debug("Updated Modbus server with inverter data")
+            
+        except Exception as e:
+            self.logger.error(f"Error updating Modbus server: {e}")
+    
     def update_from_solark(self, solark_data):
-        """Update SunSpec models with Sol-Ark data"""
+        """Update SunSpec models with Sol-Ark data (legacy method)"""
         try:
             # Update SunSpec mapper with new data
             self.sunspec_mapper.update_from_solark(solark_data)

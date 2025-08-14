@@ -1,0 +1,65 @@
+{
+  "inverter_type": "generic_example",
+  "version": "1.0",
+  "models": {
+    "grid_model": {
+      "sunspec_model": 701,
+      "instance": 1,
+      "context": "grid",
+      "description": "Grid-side AC measurements",
+      "data_points": {
+        "ac_power": {"register": 169, "scaling": 1.0, "sunspec_point": "W"},
+        "ac_voltage_l1l2": {"register": 152, "scaling": 10.0, "sunspec_point": "LLV"}
+      }
+    },
+    "load_model": {
+      "sunspec_model": 701,
+      "instance": 2,
+      "context": "load",
+      "description": "Load-side AC measurements",
+      "data_points": {
+        "ac_power": {"register": 178, "scaling": 1.0, "sunspec_point": "W"}
+      }
+    },
+    "battery_model": {
+      "sunspec_model": 713,
+      "instance": 1,
+      "context": "battery",
+      "description": "Battery storage capacity",
+      "data_points": {
+        "battery_soc": {"register": 184, "scaling": 1.0, "sunspec_point": "SoC"},
+        "battery_power": {"register": 190, "scaling": 1.0, "sunspec_point": "W"}
+      }
+    },
+    "dc_model": {
+      "sunspec_model": 714,
+      "instance": 1,
+      "context": "dc_ports",
+      "description": "DC measurement model with multiple ports",
+      "configuration": {
+        "num_ports": 5,
+        "port_types": ["PV", "PV", "PV", "PV", "ESS"]
+      },
+      "ports": {
+        "pv_port_1": {
+          "port_index": 0,
+          "port_type": "PV",
+          "port_id": 1,
+          "port_name": "MPPT1",
+          "data_points": {
+            "dc_power": {"register": 186, "scaling": 1.0, "sunspec_point": "DCW"}
+          }
+        },
+        "battery_port": {
+          "port_index": 4,
+          "port_type": "ESS",
+          "port_id": 5,
+          "port_name": "BATT1",
+          "data_points": {
+            "dc_power": {"register": 190, "scaling": 1.0, "sunspec_point": "DCW"}
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,318 +1,140 @@
 # EMS-Dev Python Gateway
 
-A Python implementation of the Energy Management System (EMS) for Sol-Ark inverters, providing SunSpec-compliant Modbus TCP server functionality on Linux systems using `/dev/tty` RS485 ports.
+Energy Management System Python implementation for inverter communication with SunSpec Modbus TCP server.
 
 ## Overview
 
-This project is a Python port of the original C++/Arduino EMS firmware, designed to run on Linux systems. It provides:
-
-- **Modbus RTU Client**: Communicates with Sol-Ark inverters via RS485
-- **SunSpec Modbus TCP Server**: Exposes inverter data in standardized SunSpec format
-- **Real-time Monitoring**: Console display with live data updates
-- **Data Logging**: Historical data storage and export capabilities
-- **Configurable**: YAML-based configuration system
+This project provides a Python-based gateway for communicating with various inverter types over Modbus RTU and exposing the data via a SunSpec-compliant Modbus TCP server. The architecture supports multiple inverter types with different register mappings while maintaining backward compatibility with existing Sol-Ark installations.
 
 ## Features
 
-### Sol-Ark Integration
-- Full register mapping for Sol-Ark LV inverters
-- Battery, grid, PV, and load monitoring
-- BMS data support for lithium batteries
-- Diagnostic information and status monitoring
+- **Multi-Inverter Support**: Supports Sol-Ark and generic inverter types with configurable register mappings
+- **SunSpec Compliance**: Exposes inverter data in standardized SunSpec format over Modbus TCP
+- **Extensible Architecture**: Abstract base classes allow easy addition of new inverter types
+- **Phase Support**: Proper handling of single-phase, split-phase, and three-phase inverters
+- **Multiple Model Instances**: Support for multiple instances of SunSpec models (701, 713, 714)
+- **Configurable Register Mappings**: JSON-based configuration for defining register mappings for different inverter types
 
-### SunSpec Compliance
-- Common Model (1) - Device identification
-- Inverter Model (701) - Single phase with split phase output
-- Battery Model (713) - Battery bank monitoring
-- Standard Modbus TCP server on port 8502
+## Architecture
 
-### Linux Compatibility
-- Uses `/dev/tty` serial ports for RS485 communication
-- Systemd service support
-- Configurable serial parameters
-- Signal handling for graceful shutdown
+The system is built on an extensible architecture with the following components:
 
-## Requirements
+1. **Abstract Base Classes**: Define interfaces for inverter communication, data structures, and register mappings
+2. **Concrete Implementations**: Specific implementations for different inverter types (Sol-Ark, Generic, etc.)
+3. **Inverter Factory**: Creates appropriate inverter clients based on configuration
+4. **Register Mapping System**: Handles different register mappings for various inverter types
+5. **SunSpec Models**: Implements SunSpec-compliant data models for exposing inverter data
+6. **Modbus Server**: SunSpec-compliant Modbus TCP server for external access to inverter data
 
-- Python 3.8 or higher
-- Linux operating system
-- RS485 to USB adapter or built-in RS485 port
-- Sol-Ark inverter with Modbus RTU support
+## Supported Inverter Types
 
-## Installation
+### Sol-Ark Inverters
 
-### From Source
+Native support for Sol-Ark inverters with predefined register mappings.
 
-1. Clone the repository:
-```bash
-git clone https://github.com/energy-iot/ems-dev-python.git
-cd ems-dev-python
-```
+### Generic Inverters
 
-2. Install dependencies:
-```bash
-pip install -r requirements.txt
-```
-
-3. Install the package:
-```bash
-pip install -e .
-```
-
-### Using pip
-
-```bash
-pip install ems-dev-python
-```
+Configurable support for other inverter types through JSON-based register mapping files.
 
 ## Configuration
 
-Create a `config.yaml` file with your settings:
+The system is configured through `config.yaml` which supports:
 
-```yaml
-# Serial/RS485 Configuration
-serial:
-  port: "/dev/ttyUSB0"  # Your RS485 device
-  baudrate: 9600
-  timeout: 1.0
+- Serial port configuration
+- Inverter type and communication settings
+- SunSpec server configuration
+- Device information for SunSpec models
+- Monitoring and alert settings
 
-# Sol-Ark Inverter Configuration
-solark:
-  modbus_address: 1
-  poll_interval: 5.0  # seconds
+## Installation
 
-# SunSpec Modbus TCP Server
-sunspec_server:
-  enabled: true
-  host: "0.0.0.0"
-  port: 8502
+```bash
+# Clone the repository
+git clone https://github.com/energy-iot/ems-dev.git
+cd ems-dev
 
-# Device Information
-device_info:
-  manufacturer: "Energy IoT Open Source"
-  model: "EMS-Dev Python"
-  version: "1.0.0"
-  serial_number: "EMS-PY-001"
+# Install dependencies
+pip install -r requirements.txt
+
+# Run the application
+python -m ems.main
 ```
 
 ## Usage
 
-### Command Line
+### Normal Operation
 
-Run the gateway:
 ```bash
-ems-dev --config config.yaml
+# Run with default configuration
+python -m ems.main
+
+# Run with custom configuration file
+python -m ems.main --config my_config.yaml
+
+# Enable verbose logging
+python -m ems.main --verbose
 ```
 
-Test connection:
+### Test Mode
+
 ```bash
-ems-dev --config config.yaml --test
+# Run in test mode (single poll and exit)
+python -m ems.main --test
 ```
 
-Enable verbose logging:
-```bash
-ems-dev --config config.yaml --verbose
-```
+## SunSpec Model Support
 
-### Python API
+The implementation supports multiple SunSpec models:
 
-```python
-from ems import EMSApplication
+- **Model 1**: Common model for device identification
+- **Model 701**: Inverter model (multiple instances for grid and load)
+- **Model 713**: Battery model for storage capacity monitoring
+- **Model 714**: DC measurement model with multiple ports
 
-# Create and run application
-app = EMSApplication("config.yaml")
-app.run()
-```
+## Register Mapping Configuration
 
-### SunSpec Client Example
+For generic inverters, register mappings are defined in JSON files with the following structure:
 
-Connect to the SunSpec server:
-
-```python
-import sunspec2.modbus.client as client
-
-# Connect to the gateway
-device = client.SunSpecModbusClientDeviceTCP(
-    ipaddr="192.168.1.100",
-    ipport=8502
-)
-
-# Scan for models
-device.scan()
-
-# Read inverter data
-if 701 in device.models:
-    inverter = device.models[701]
-    inverter.read()
-    print(f"AC Power: {inverter.W.value} W")
-    print(f"Battery SOC: {inverter.DCV.value} V")
-```
-
-## Hardware Setup
-
-### RS485 Connection
-
-Connect your RS485 adapter to the Sol-Ark inverter:
-
-1. **A+** (Data+) - Connect to Sol-Ark A+ terminal
-2. **B-** (Data-) - Connect to Sol-Ark B- terminal
-3. **GND** - Connect to Sol-Ark ground if available
-
-### Termination
-
-Add a 120Ω termination resistor across A+ and B- at the far end of the RS485 bus.
-
-### USB Permissions
-
-Add your user to the dialout group:
-```bash
-sudo usermod -a -G dialout $USER
-```
-
-Or set permissions for the device:
-```bash
-sudo chmod 666 /dev/ttyUSB0
-```
-
-## Systemd Service
-
-Create a systemd service for automatic startup:
-
-```ini
-[Unit]
-Description=EMS-Dev Python Gateway
-After=network.target
-
-[Service]
-Type=simple
-User=ems
-WorkingDirectory=/opt/ems-dev
-ExecStart=/usr/local/bin/ems-dev --config /opt/ems-dev/config.yaml
-Restart=always
-RestartSec=10
-
-[Install]
-WantedBy=multi-user.target
-```
-
-Enable and start:
-```bash
-sudo systemctl enable ems-dev
-sudo systemctl start ems-dev
-```
-
-## Monitoring
-
-### Console Output
-
-The application provides a rich console interface showing:
-- Battery status (power, voltage, SOC, temperature)
-- Grid status (power, voltage, frequency)
-- PV generation (PV1, PV2, total)
-- Load consumption
-- System status and timestamps
-
-### Web Interface
-
-Access the SunSpec data via Modbus TCP:
-- **Host**: Your system's IP address
-- **Port**: 8502 (configurable)
-- **Unit ID**: 1 (configurable)
-
-### Data Export
-
-Historical data can be exported to:
-- SQLite database
-- CSV files
-- JSON format
-
-## Troubleshooting
-
-### Serial Port Issues
-
-Check device permissions:
-```bash
-ls -l /dev/ttyUSB*
-sudo dmesg | grep tty
-```
-
-Test serial communication:
-```bash
-sudo minicom -D /dev/ttyUSB0 -b 9600
-```
-
-### Modbus Communication
-
-Enable debug logging:
-```bash
-ems-dev --config config.yaml --verbose
-```
-
-Check Sol-Ark settings:
-- Modbus RTU enabled
-- Correct baud rate (9600)
-- Correct slave address (default: 1)
-
-### Network Issues
-
-Test SunSpec server:
-```bash
-telnet localhost 8502
-```
-
-Check firewall settings:
-```bash
-sudo ufw allow 8502
+```json
+{
+  "inverter_type": "generic_example",
+  "version": "1.0",
+  "models": {
+    "grid_model": {
+      "sunspec_model": 701,
+      "instance": 1,
+      "context": "grid",
+      "description": "Grid-side AC measurements",
+      "data_points": {
+        "ac_power": {"register": 169, "scaling": 1.0, "sunspec_point": "W"}
+      }
+    }
+  }
+}
 ```
 
 ## Development
 
-### Project Structure
+### Adding New Inverter Types
 
-```
-ems/
-├── __init__.py          # Package initialization
-├── main.py              # Main application entry point
-├── solark_client.py     # Sol-Ark Modbus RTU client
-├── solark_registers.py  # Register mappings and constants
-├── sunspec_models.py    # SunSpec model implementations
-└── modbus_server.py     # SunSpec Modbus TCP server
-```
+To add support for a new inverter type:
 
-### Running Tests
+1. Create a new implementation of `InverterClient` and `RegisterMapping`
+2. Add the inverter type to `InverterFactory`
+3. Create register mapping configuration files if needed
 
-```bash
-python -m pytest tests/
-```
+### Extending SunSpec Models
 
-### Code Style
+To add support for additional SunSpec models:
 
-```bash
-black ems/
-flake8 ems/
-mypy ems/
-```
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests
-5. Submit a pull request
+1. Create new data classes for the model
+2. Add register mapping definitions
+3. Update the SunSpec mapper to handle the new model
 
 ## License
 
-This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see the LICENSE file for details.
 
-## Acknowledgments
+## Contributing
 
-- Original C++ EMS firmware by Doug Mendonca and Liam O'Brien
-- SunSpec Alliance for standardized solar data models
-- pymodbus and pysunspec2 library maintainers
-
-## Support
-
-- **Issues**: [GitHub Issues](https://github.com/energy-iot/ems-dev-python/issues)
-- **Documentation**: [Wiki](https://github.com/energy-iot/ems-dev-python/wiki)
-- **Community**: [Discussions](https://github.com/energy-iot/ems-dev-python/discussions)
+Contributions are welcome! Please feel free to submit a Pull Request.

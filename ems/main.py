@@ -2,7 +2,7 @@
 EMS Main Application
 
 Main entry point for the Energy Management System Python implementation.
-Coordinates Sol-Ark data polling and SunSpec Modbus TCP server.
+Coordinates inverter data polling and SunSpec Modbus TCP server.
 """
 
 import asyncio
@@ -21,9 +21,10 @@ from rich.live import Live
 from rich.layout import Layout
 from rich.panel import Panel
 
-from .solark_client import SolArkModbusClient, SolArkData
+from .inverter_factory import InverterFactory
 from .modbus_server import SunSpecModbusServer, ModbusServerConfig
 from .sunspec_models import SunSpecMapper
+from .base import InverterData
 
 
 class EMSApplication:
@@ -41,7 +42,7 @@ class EMSApplication:
         self.running = False
         
         # Components
-        self.solark_client: Optional[SolArkModbusClient] = None
+        self.inverter_client = None
         self.modbus_server: Optional[SunSpecModbusServer] = None
         
         # Console for rich output
@@ -79,11 +80,15 @@ class EMSApplication:
                 "baudrate": 9600,
                 "timeout": 1.0
             },
-            "solark": {
+            "inverter": {
+                "type": "solark",
                 "modbus_address": 1,
                 "poll_interval": 5.0,
                 "max_retries": 3,
-                "retry_delay": 0.5
+                "retry_delay": 0.5,
+                "generic": {
+                    "register_mapping_file": "generic_registers.json"
+                }
             },
             "sunspec_server": {
                 "enabled": True,
@@ -100,7 +105,7 @@ class EMSApplication:
                 "model": "EMS-Dev Python",
                 "version": "1.0.0",
                 "serial_number": "EMS-PY-001",
-                "options": "Sol-Ark Gateway"
+                "options": "Generic Inverter Gateway"
             },
             "monitoring": {
                 "console_output": True,
@@ -134,19 +139,38 @@ class EMSApplication:
     def _initialize_components(self):
         """Initialize all components"""
         try:
-            # Initialize Sol-Ark client
+            # Initialize inverter client
             serial_config = self.config.get("serial", {})
-            solark_config = self.config.get("solark", {})
+            inverter_config = self.config.get("inverter", {})
             
-            self.solark_client = SolArkModbusClient(
-                port=serial_config.get("port", "/dev/ttyUSB0"),
-                baudrate=serial_config.get("baudrate", 9600),
-                modbus_address=solark_config.get("modbus_address", 1)
-            )
+            inverter_type = inverter_config.get("type", "solark")
+            modbus_address = inverter_config.get("modbus_address", 1)
             
-            # Connect to Sol-Ark
-            if not self.solark_client.connect():
-                raise Exception("Failed to connect to Sol-Ark inverter")
+            # Prepare factory arguments
+            factory_args = {
+                "port": serial_config.get("port", "/dev/ttyUSB0"),
+                "baudrate": serial_config.get("baudrate", 9600),
+                "modbus_address": modbus_address
+            }
+            
+            # Add inverter-specific configuration
+            if inverter_type == "solark":
+                solark_config = inverter_config.get("solark", {})
+                factory_args["use_json_mapping"] = solark_config.get("use_json_mapping", False)
+                factory_args["config_file"] = solark_config.get("register_mapping_file", "solark_registers.json")
+            elif inverter_type == "generic":
+                generic_config = inverter_config.get("generic", {})
+                factory_args["config_file"] = generic_config.get("register_mapping_file", "generic_registers.json")
+            
+            # Create inverter client using factory
+            self.inverter_client = InverterFactory.create_inverter(inverter_type, **factory_args)
+            
+            if self.inverter_client is None:
+                raise Exception(f"Failed to create inverter client for type: {inverter_type}")
+            
+            # Connect to inverter
+            if not self.inverter_client.connect():
+                raise Exception(f"Failed to connect to {inverter_type} inverter")
             
             # Initialize Modbus server if enabled
             server_config = self.config.get("sunspec_server", {})
@@ -167,7 +191,7 @@ class EMSApplication:
             self.logger.error(f"Error initializing components: {e}")
             raise
     
-    def _create_status_display(self, solark_data: SolArkData) -> Layout:
+    def _create_status_display(self, inverter_data: InverterData) -> Layout:
         """Create rich status display with all available data values"""
         layout = Layout()
         
@@ -181,7 +205,7 @@ class EMSApplication:
         # Header
         layout["header"].update(
             Panel(
-                f"[bold blue]EMS-Dev Python Gateway[/bold blue] - Sol-Ark Monitor",
+                f"[bold blue]EMS-Dev Python Gateway[/bold blue] - {self.config.get('inverter', {}).get('type', 'Generic')} Inverter Monitor",
                 style="blue"
             )
         )
@@ -223,81 +247,71 @@ class EMSApplication:
         battery_table.add_column("Parameter", style="cyan")
         battery_table.add_column("Value", style="green")
         
-        battery_table.add_row("Power", f"{solark_data.battery_power:.1f} W")
-        battery_table.add_row("Current", f"{solark_data.battery_current:.2f} A")
-        battery_table.add_row("Voltage", f"{solark_data.battery_voltage:.2f} V")
-        battery_table.add_row("SOC", f"{solark_data.battery_soc:.0f}%")
-        battery_table.add_row("Temperature", f"{solark_data.battery_temperature:.1f}°C")
-        battery_table.add_row("Capacity", f"{solark_data.battery_capacity:.1f} Ah")
-        battery_table.add_row("Charge Energy", f"{solark_data.battery_charge_energy:.2f} kWh")
-        battery_table.add_row("Discharge Energy", f"{solark_data.battery_discharge_energy:.2f} kWh")
-        battery_table.add_row("Corrected Capacity", f"{solark_data.corrected_battery_capacity:.1f} Ah")
-        battery_table.add_row("Empty Voltage", f"{solark_data.battery_empty_voltage:.2f} V")
-        battery_table.add_row("Shutdown Voltage", f"{solark_data.battery_shutdown_voltage:.2f} V")
-        battery_table.add_row("Restart Voltage", f"{solark_data.battery_restart_voltage:.2f} V")
-        battery_table.add_row("Low Voltage", f"{solark_data.battery_low_voltage:.2f} V")
-        battery_table.add_row("Shutdown Percent", f"{solark_data.battery_shutdown_percent}%")
-        battery_table.add_row("Restart Percent", f"{solark_data.battery_restart_percent}%")
-        battery_table.add_row("Low Percent", f"{solark_data.battery_low_percent}%")
+        battery_table.add_row("Power", f"{getattr(inverter_data, 'battery_power', 0):.1f} W")
+        battery_table.add_row("Current", f"{getattr(inverter_data, 'battery_current', 0):.2f} A")
+        battery_table.add_row("Voltage", f"{getattr(inverter_data, 'battery_voltage', 0):.2f} V")
+        battery_table.add_row("SOC", f"{getattr(inverter_data, 'battery_soc', 0):.0f}%")
+        battery_table.add_row("Temperature", f"{getattr(inverter_data, 'battery_temperature', 0):.1f}°C")
+        battery_table.add_row("Capacity", f"{getattr(inverter_data, 'battery_capacity', 0):.1f} Ah")
         
         # Status indicators
         status = "IDLE"
-        if solark_data.battery_power < -50:
-            status = "[green]CHARGING[/green]"
-        elif solark_data.battery_power > 50:
-            status = "[red]DISCHARGING[/red]"
+        if hasattr(inverter_data, 'battery_power'):
+            if inverter_data.battery_power < -50:
+                status = "[green]CHARGING[/green]"
+            elif inverter_data.battery_power > 50:
+                status = "[red]DISCHARGING[/red]"
         
         battery_table.add_row("Status", status)
         
-        # BMS data table
+        # BMS data table (if available)
         bms_table = Table(title="BMS Data", show_header=True, header_style="bold magenta")
         bms_table.add_column("Parameter", style="cyan")
         bms_table.add_column("Value", style="green")
         
-        bms_table.add_row("Charging Voltage", f"{solark_data.bms_charging_voltage:.2f} V")
-        bms_table.add_row("Discharge Voltage", f"{solark_data.bms_discharge_voltage:.2f} V")
-        bms_table.add_row("Charge Current Limit", f"{solark_data.bms_charging_current_limit:.1f} A")
-        bms_table.add_row("Discharge Current Limit", f"{solark_data.bms_discharge_current_limit:.1f} A")
-        bms_table.add_row("SOC", f"{solark_data.bms_real_time_soc:.0f}%")
-        bms_table.add_row("Voltage", f"{solark_data.bms_real_time_voltage:.2f} V")
-        bms_table.add_row("Current", f"{solark_data.bms_real_time_current:.2f} A")
-        bms_table.add_row("Temperature", f"{solark_data.bms_real_time_temp:.1f}°C")
-        bms_table.add_row("Warning", f"{solark_data.bms_warning}")
-        bms_table.add_row("Fault", f"{solark_data.bms_fault}")
+        if hasattr(inverter_data, 'bms_real_time_soc'):
+            bms_table.add_row("SOC", f"{inverter_data.bms_real_time_soc:.0f}%")
+        if hasattr(inverter_data, 'bms_real_time_voltage'):
+            bms_table.add_row("Voltage", f"{inverter_data.bms_real_time_voltage:.2f} V")
+        if hasattr(inverter_data, 'bms_real_time_current'):
+            bms_table.add_row("Current", f"{inverter_data.bms_real_time_current:.2f} A")
+        if hasattr(inverter_data, 'bms_real_time_temp'):
+            bms_table.add_row("Temperature", f"{inverter_data.bms_real_time_temp:.1f}°C")
+        if hasattr(inverter_data, 'bms_warning'):
+            bms_table.add_row("Warning", f"{inverter_data.bms_warning}")
+        if hasattr(inverter_data, 'bms_fault'):
+            bms_table.add_row("Fault", f"{inverter_data.bms_fault}")
         
         # Grid/Power table
         power_table = Table(title="Power & Grid", show_header=True, header_style="bold magenta")
         power_table.add_column("Parameter", style="cyan")
         power_table.add_column("Value", style="green")
         
-        power_table.add_row("Grid Power", f"{solark_data.grid_power:.1f} W")
-        power_table.add_row("Grid Voltage (L1-L2)", f"{solark_data.grid_voltage_l1l2:.1f} V")
-        power_table.add_row("Grid Voltage (L1-N)", f"{solark_data.grid_voltage_l1n:.1f} V")
-        power_table.add_row("Grid Voltage (L2-N)", f"{solark_data.grid_voltage_l2n:.1f} V")
-        power_table.add_row("Grid Current L1", f"{solark_data.grid_current_l1:.2f} A")
-        power_table.add_row("Grid Current L2", f"{solark_data.grid_current_l2:.2f} A")
-        power_table.add_row("Grid CT Current L1", f"{solark_data.grid_ct_current_l1:.2f} A")
-        power_table.add_row("Grid CT Current L2", f"{solark_data.grid_ct_current_l2:.2f} A")
-        power_table.add_row("Grid Frequency", f"{solark_data.grid_frequency:.2f} Hz")
-        power_table.add_row("Load Power", f"{solark_data.load_power_total:.1f} W")
-        power_table.add_row("Load Power L1", f"{solark_data.load_power_l1:.1f} W")
-        power_table.add_row("Load Power L2", f"{solark_data.load_power_l2:.1f} W")
-        power_table.add_row("PV1 Power", f"{solark_data.pv1_power:.1f} W")
-        power_table.add_row("PV2 Power", f"{solark_data.pv2_power:.1f} W")
-        power_table.add_row("PV Total", f"{solark_data.pv_power_total:.3f} kW")
-        power_table.add_row("Apparent Power", f"{solark_data.apparent_power:.1f} VA")
-        power_table.add_row("Power Factor", f"{solark_data.grid_power_factor:.2f}")
-        power_table.add_row("Smart Load Power", f"{solark_data.smart_load_power:.1f} W")
+        power_table.add_row("Grid Power", f"{getattr(inverter_data, 'grid_power', 0):.1f} W")
+        power_table.add_row("Grid Voltage (L1-L2)", f"{getattr(inverter_data, 'grid_voltage_l1l2', 0):.1f} V")
+        power_table.add_row("Grid Voltage (L1-N)", f"{getattr(inverter_data, 'grid_voltage_l1n', 0):.1f} V")
+        power_table.add_row("Grid Voltage (L2-N)", f"{getattr(inverter_data, 'grid_voltage_l2n', 0):.1f} V")
+        power_table.add_row("Grid Current L1", f"{getattr(inverter_data, 'grid_current_l1', 0):.2f} A")
+        power_table.add_row("Grid Current L2", f"{getattr(inverter_data, 'grid_current_l2', 0):.2f} A")
+        power_table.add_row("Grid Frequency", f"{getattr(inverter_data, 'grid_frequency', 0):.2f} Hz")
+        power_table.add_row("Load Power", f"{getattr(inverter_data, 'load_power_total', 0):.1f} W")
+        power_table.add_row("Load Power L1", f"{getattr(inverter_data, 'load_power_l1', 0):.1f} W")
+        power_table.add_row("Load Power L2", f"{getattr(inverter_data, 'load_power_l2', 0):.1f} W")
+        power_table.add_row("PV1 Power", f"{getattr(inverter_data, 'pv1_power', 0):.1f} W")
+        power_table.add_row("PV2 Power", f"{getattr(inverter_data, 'pv2_power', 0):.1f} W")
+        power_table.add_row("Apparent Power", f"{getattr(inverter_data, 'apparent_power', 0):.1f} VA")
+        power_table.add_row("Power Factor", f"{getattr(inverter_data, 'grid_power_factor', 0):.2f}")
         
         # Grid status
         grid_status = "DISCONNECTED"
-        if solark_data.grid_relay_status > 0:
-            if solark_data.grid_power < -50:
-                grid_status = "[green]SELLING[/green]"
-            elif solark_data.grid_power > 50:
-                grid_status = "[yellow]BUYING[/yellow]"
-            else:
-                grid_status = "[blue]CONNECTED[/blue]"
+        if hasattr(inverter_data, 'grid_relay_status') and inverter_data.grid_relay_status > 0:
+            if hasattr(inverter_data, 'grid_power'):
+                if inverter_data.grid_power < -50:
+                    grid_status = "[green]SELLING[/green]"
+                elif inverter_data.grid_power > 50:
+                    grid_status = "[yellow]BUYING[/yellow]"
+                else:
+                    grid_status = "[blue]CONNECTED[/blue]"
         
         power_table.add_row("Grid Status", grid_status)
         
@@ -306,63 +320,55 @@ class EMSApplication:
         inverter_table.add_column("Parameter", style="cyan")
         inverter_table.add_column("Value", style="green")
         
-        inverter_table.add_row("Output Power", f"{solark_data.inverter_output_power:.1f} W")
-        inverter_table.add_row("Voltage (L1-L2)", f"{solark_data.inverter_voltage:.1f} V")
-        inverter_table.add_row("Voltage (L1-N)", f"{solark_data.inverter_voltage_ln:.1f} V")
-        inverter_table.add_row("Voltage (L2-N)", f"{solark_data.inverter_voltage_l2n:.1f} V")
-        inverter_table.add_row("Current L1", f"{solark_data.inverter_current_l1:.2f} A")
-        inverter_table.add_row("Current L2", f"{solark_data.inverter_current_l2:.2f} A")
-        inverter_table.add_row("Frequency", f"{solark_data.inverter_frequency:.2f} Hz")
-        inverter_table.add_row("Status", f"{solark_data.inverter_status}")
-        inverter_table.add_row("Power L1", f"{solark_data.inverter_power_l1:.1f} W")
-        inverter_table.add_row("Power L2", f"{solark_data.inverter_power_l2:.1f} W")
+        inverter_table.add_row("Output Power", f"{getattr(inverter_data, 'inverter_output_power', 0):.1f} W")
+        inverter_table.add_row("Voltage (L1-L2)", f"{getattr(inverter_data, 'inverter_voltage', 0):.1f} V")
+        inverter_table.add_row("Voltage (L1-N)", f"{getattr(inverter_data, 'inverter_voltage_ln', 0):.1f} V")
+        inverter_table.add_row("Voltage (L2-N)", f"{getattr(inverter_data, 'inverter_voltage_l2n', 0):.1f} V")
+        inverter_table.add_row("Current L1", f"{getattr(inverter_data, 'inverter_current_l1', 0):.2f} A")
+        inverter_table.add_row("Current L2", f"{getattr(inverter_data, 'inverter_current_l2', 0):.2f} A")
+        inverter_table.add_row("Frequency", f"{getattr(inverter_data, 'inverter_frequency', 0):.2f} Hz")
+        inverter_table.add_row("Status", f"{getattr(inverter_data, 'inverter_status', 0)}")
+        inverter_table.add_row("Power L1", f"{getattr(inverter_data, 'inverter_power_l1', 0):.1f} W")
+        inverter_table.add_row("Power L2", f"{getattr(inverter_data, 'inverter_power_l2', 0):.1f} W")
         
         # Energy counters table
         energy_table = Table(title="Energy Counters", show_header=True, header_style="bold magenta")
         energy_table.add_column("Parameter", style="cyan")
         energy_table.add_column("Value", style="green")
         
-        energy_table.add_row("Grid Buy", f"{solark_data.grid_buy_energy:.2f} kWh")
-        energy_table.add_row("Grid Sell", f"{solark_data.grid_sell_energy:.2f} kWh")
-        energy_table.add_row("Load", f"{solark_data.load_energy:.2f} kWh")
-        energy_table.add_row("PV", f"{solark_data.pv_energy:.2f} kWh")
+        energy_table.add_row("Grid Buy", f"{getattr(inverter_data, 'grid_buy_energy', 0):.2f} kWh")
+        energy_table.add_row("Grid Sell", f"{getattr(inverter_data, 'grid_sell_energy', 0):.2f} kWh")
+        energy_table.add_row("Load", f"{getattr(inverter_data, 'load_energy', 0):.2f} kWh")
+        energy_table.add_row("PV", f"{getattr(inverter_data, 'pv_energy', 0):.2f} kWh")
         
         # Diagnostic data table
         diag_table = Table(title="Diagnostics", show_header=True, header_style="bold magenta")
         diag_table.add_column("Parameter", style="cyan")
         diag_table.add_column("Value", style="green")
         
-        diag_table.add_row("Comm Version", f"{solark_data.comm_version}")
-        diag_table.add_row("IGBT Temp", f"{solark_data.igbt_temp:.1f}°C")
-        diag_table.add_row("DCDC XFRMR Temp", f"{solark_data.dcdc_xfrmr_temp:.1f}°C")
-        diag_table.add_row("Grid Type", f"{solark_data.grid_type}")
-        diag_table.add_row("Generator Relay", f"{solark_data.generator_relay_status}")
+        if hasattr(inverter_data, 'comm_version'):
+            diag_table.add_row("Comm Version", f"{inverter_data.comm_version}")
+        if hasattr(inverter_data, 'igbt_temp'):
+            diag_table.add_row("IGBT Temp", f"{inverter_data.igbt_temp:.1f}°C")
+        if hasattr(inverter_data, 'dcdc_xfrmr_temp'):
+            diag_table.add_row("DCDC XFRMR Temp", f"{inverter_data.dcdc_xfrmr_temp:.1f}°C")
+        if hasattr(inverter_data, 'grid_type'):
+            diag_table.add_row("Grid Type", f"{inverter_data.grid_type}")
+        if hasattr(inverter_data, 'generator_relay_status'):
+            diag_table.add_row("Generator Relay", f"{inverter_data.generator_relay_status}")
         
         # Additional data tables
         additional_left_table = Table(title="Load Data", show_header=True, header_style="bold magenta")
         additional_left_table.add_column("Parameter", style="cyan")
         additional_left_table.add_column("Value", style="green")
         
-        additional_left_table.add_row("Load Current L1", f"{solark_data.load_current_l1:.2f} A")
-        additional_left_table.add_row("Load Current L2", f"{solark_data.load_current_l2:.2f} A")
-        additional_left_table.add_row("Load Frequency", f"{solark_data.load_frequency:.2f} Hz")
+        additional_left_table.add_row("Load Current L1", f"{getattr(inverter_data, 'load_current_l1', 0):.2f} A")
+        additional_left_table.add_row("Load Current L2", f"{getattr(inverter_data, 'load_current_l2', 0):.2f} A")
+        additional_left_table.add_row("Load Frequency", f"{getattr(inverter_data, 'load_frequency', 0):.2f} Hz")
         
-        additional_right_table = Table(title="Serial Number", show_header=True, header_style="bold magenta")
+        additional_right_table = Table(title="System Info", show_header=True, header_style="bold magenta")
         additional_right_table.add_column("Parameter", style="cyan")
         additional_right_table.add_column("Value", style="green")
-        
-        serial_number = ""
-        for part in solark_data.serial_number_parts:
-            if part == 0:
-                break
-            char1 = (part >> 8) & 0xFF
-            char2 = part & 0xFF
-            if char1 != 0:
-                serial_number += chr(char1)
-            if char2 != 0:
-                serial_number += chr(char2)
-        
-        additional_right_table.add_row("Serial Number", serial_number)
         
         # Update layout with all tables
         layout["battery"].update(Panel(battery_table, border_style="blue"))
@@ -375,7 +381,7 @@ class EMSApplication:
         layout["additional_right"].update(Panel(additional_right_table, border_style="purple"))
         
         # Footer with timestamps
-        footer_text = f"Last Update: {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(solark_data.last_update))}"
+        footer_text = f"Last Update: {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(getattr(inverter_data, 'last_update', time.time())))}"
         if self.modbus_server and self.modbus_server.is_running():
             footer_text += f" | SunSpec Server: [green]RUNNING[/green] on port {self.modbus_server.config.port}"
         else:
@@ -385,21 +391,21 @@ class EMSApplication:
         
         return layout
     
-    def _poll_solark(self):
-        """Poll Sol-Ark inverter data"""
+    def _poll_inverter(self):
+        """Poll inverter data"""
         try:
-            if self.solark_client.poll():
+            if self.inverter_client.poll():
                 # Update Modbus server if running
                 if self.modbus_server:
-                    self.modbus_server.update_from_solark(self.solark_client.data)
+                    self.modbus_server.update_from_inverter(self.inverter_client.data)
                 
                 return True
             else:
-                self.logger.warning("Failed to poll Sol-Ark data")
+                self.logger.warning("Failed to poll inverter data")
                 return False
                 
         except Exception as e:
-            self.logger.error(f"Error polling Sol-Ark: {e}")
+            self.logger.error(f"Error polling inverter: {e}")
             return False
     
     def run(self):
@@ -416,7 +422,8 @@ class EMSApplication:
             self.running = True
             
             # Get configuration
-            poll_interval = self.config.get("solark", {}).get("poll_interval", 5.0)
+            inverter_config = self.config.get("inverter", {})
+            poll_interval = inverter_config.get("poll_interval", 5.0)
             console_output = self.config.get("monitoring", {}).get("console_output", True)
             console_update_interval = self.config.get("monitoring", {}).get("console_update_interval", 10.0)
             
@@ -424,7 +431,7 @@ class EMSApplication:
             
             if console_output:
                 self.console.print("[bold green]EMS-Dev Python Gateway Started[/bold green]")
-                self.console.print(f"Polling Sol-Ark every {poll_interval} seconds")
+                self.console.print(f"Polling inverter every {poll_interval} seconds")
                 if self.modbus_server:
                     self.console.print(f"SunSpec server running on port {self.modbus_server.config.port}")
             
@@ -432,13 +439,13 @@ class EMSApplication:
             while self.running:
                 start_time = time.time()
                 
-                # Poll Sol-Ark data
-                poll_success = self._poll_solark()
+                # Poll inverter data
+                poll_success = self._poll_inverter()
                 
                 # Update console display
                 if console_output and (time.time() - last_console_update) >= console_update_interval:
-                    if poll_success:
-                        layout = self._create_status_display(self.solark_client.data)
+                    if poll_success and self.inverter_client:
+                        layout = self._create_status_display(self.inverter_client.data)
                         self.console.clear()
                         self.console.print(layout)
                     last_console_update = time.time()
@@ -469,9 +476,9 @@ class EMSApplication:
         if self.modbus_server:
             self.modbus_server.stop()
         
-        # Disconnect Sol-Ark client
-        if self.solark_client:
-            self.solark_client.disconnect()
+        # Disconnect inverter client
+        if self.inverter_client:
+            self.inverter_client.disconnect()
         
         self.logger.info("EMS application stopped")
 
@@ -484,7 +491,7 @@ def main(config: str, verbose: bool, test: bool):
     """
     EMS-Dev Python Gateway
     
-    Energy Management System for Sol-Ark inverters with SunSpec Modbus TCP server.
+    Energy Management System for inverters with SunSpec Modbus TCP server.
     """
     console = Console()
     
@@ -501,12 +508,13 @@ def main(config: str, verbose: bool, test: bool):
             console.print("[yellow]Running in test mode...[/yellow]")
             app._initialize_components()
             
-            if app._poll_solark():
-                console.print("[green]✓ Sol-Ark poll successful[/green]")
+            if app._poll_inverter():
+                console.print("[green]✓ Inverter poll successful[/green]")
                 
                 # Display data
-                layout = app._create_status_display(app.solark_client.data)
-                console.print(layout)
+                if app.inverter_client:
+                    layout = app._create_status_display(app.inverter_client.data)
+                    console.print(layout)
                 
                 # Test SunSpec server
                 if app.modbus_server and app.modbus_server.is_running():
@@ -515,14 +523,14 @@ def main(config: str, verbose: bool, test: bool):
                     console.print(f"Server stats: {stats}")
                 
             else:
-                console.print("[red]✗ Sol-Ark poll failed[/red]")
+                console.print("[red]✗ Inverter poll failed[/red]")
                 sys.exit(1)
             
             app.stop()
         else:
             # Normal operation
             app.run()
-    
+
     except Exception as e:
         console.print(f"[red]Error: {e}[/red]")
         sys.exit(1)
