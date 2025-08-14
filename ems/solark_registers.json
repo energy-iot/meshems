@@ -9,13 +9,13 @@
       "context": "grid",
       "description": "Grid-side AC measurements",
       "data_points": {
-        "grid_power": {"register": 169, "scaling": 1.0, "sunspec_point": "W", "description": "Grid Power (W)"},
-        "grid_voltage_l1l2": {"register": 152, "scaling": 10.0, "sunspec_point": "LLV", "description": "Grid Voltage L1-L2 (V)"},
         "grid_voltage_l1n": {"register": 150, "scaling": 10.0, "sunspec_point": "LNV", "description": "Grid Voltage L1-N (V)"},
         "grid_voltage_l2n": {"register": 151, "scaling": 10.0, "sunspec_point": "LNV", "description": "Grid Voltage L2-N (V)"},
+        "grid_voltage_l1l2": {"register": 152, "scaling": 10.0, "sunspec_point": "LLV", "description": "Grid Voltage L1-L2 (V)"},
         "grid_current_l1": {"register": 153, "scaling": 100.0, "sunspec_point": "A", "description": "Grid Current L1 (A)"},
         "grid_current_l2": {"register": 154, "scaling": 100.0, "sunspec_point": "A", "description": "Grid Current L2 (A)"},
-        "grid_frequency": {"register": 155, "scaling": 100.0, "sunspec_point": "Hz", "description": "Grid Frequency (Hz)"}
+        "grid_frequency": {"register": 155, "scaling": 100.0, "sunspec_point": "Hz", "description": "Grid Frequency (Hz)"},
+        "grid_power": {"register": 169, "scaling": 1.0, "sunspec_point": "W", "description": "Grid Power (W)"}
       }
     },
     "load_model": {
@@ -39,154 +39,68 @@
       "description": "Battery storage capacity and status",
       "data_points": {
         "battery_soc": {"register": 184, "scaling": 1.0, "sunspec_point": "SoC", "description": "Battery State of Charge (%)"},
+        "battery_voltage": {"register": 185, "scaling": 100.0, "sunspec_point": "V", "description": "Battery Voltage (V)"},
         "battery_power": {"register": 190, "scaling": 1.0, "sunspec_point": "W", "description": "Battery Power (W)"},
-        "battery_voltage": {"register": 185, "scaling": 10.0, "sunspec_point": "V", "description": "Battery Voltage (V)"},
         "battery_current": {"register": 191, "scaling": 100.0, "sunspec_point": "A", "description": "Battery Current (A)"},
-        "battery_temperature": {"register": 192, "scaling": 10.0, "sunspec_point": "Tmp", "description": "Battery Temperature (°C)"},
-        "battery_capacity": {"register": 193, "scaling": 1.0, "sunspec_point": "AHRtg", "description": "Battery Capacity (Ah)"}
+        "battery_temperature": {"register": 192, "scaling": 1.0, "sunspec_point": "Tmp", "description": "Battery Temperature (°C)"},
+        "battery_capacity": {"register": 204, "scaling": 1.0, "sunspec_point": "AHRtg", "description": "Battery Capacity (Ah)"}
       }
     },
-    "dc_model": {
+    "pv_model": {
       "sunspec_model": 714,
       "instance": 1,
       "context": "dc_ports",
-      "description": "DC measurement model with PV and battery ports",
-      "configuration": {
-        "num_ports": 5,
-        "port_types": ["PV", "PV", "PV", "PV", "ESS"]
-      },
-      "ports": {
-        "pv_port_1": {
-          "port_index": 0,
-          "port_type": "PV",
-          "port_id": 1,
-          "port_name": "MPPT1",
-          "data_points": {
-            "dc_power": {"register": 186, "scaling": 1.0, "sunspec_point": "DCW", "description": "PV1 Power (W)"},
-            "dc_voltage": {"register": 194, "scaling": 10.0, "sunspec_point": "DCV", "description": "PV1 Voltage (V)"},
-            "dc_current": {"register": 195, "scaling": 100.0, "sunspec_point": "DCA", "description": "PV1 Current (A)"}
-          }
-        },
-        "pv_port_2": {
-          "port_index": 1,
-          "port_type": "PV",
-          "port_id": 2,
-          "port_name": "MPPT2",
-          "data_points": {
-            "dc_power": {"register": 187, "scaling": 1.0, "sunspec_point": "DCW", "description": "PV2 Power (W)"},
-            "dc_voltage": {"register": 196, "scaling": 10.0, "sunspec_point": "DCV", "description": "PV2 Voltage (V)"},
-            "dc_current": {"register": 197, "scaling": 100.0, "sunspec_point": "DCA", "description": "PV2 Current (A)"}
-          }
-        },
-        "pv_port_3": {
-          "port_index": 2,
-          "port_type": "PV",
-          "port_id": 3,
-          "port_name": "MPPT3",
-          "data_points": {
-            "dc_power": {"register": 188, "scaling": 1.0, "sunspec_point": "DCW", "description": "PV3 Power (W)"},
-            "dc_voltage": {"register": 198, "scaling": 10.0, "sunspec_point": "DCV", "description": "PV3 Voltage (V)"},
-            "dc_current": {"register": 199, "scaling": 100.0, "sunspec_point": "DCA", "description": "PV3 Current (A)"}
-          }
-        },
-        "pv_port_4": {
-          "port_index": 3,
-          "port_type": "PV",
-          "port_id": 4,
-          "port_name": "MPPT4",
-          "data_points": {
-            "dc_power": {"register": 189, "scaling": 1.0, "sunspec_point": "DCW", "description": "PV4 Power (W) - Uninitialized"},
-            "dc_voltage": {"register": 200, "scaling": 10.0, "sunspec_point": "DCV", "description": "PV4 Voltage (V) - Uninitialized"},
-            "dc_current": {"register": 201, "scaling": 100.0, "sunspec_point": "DCA", "description": "PV4 Current (A) - Uninitialized"}
-          }
-        },
-        "battery_port": {
-          "port_index": 4,
-          "port_type": "ESS",
-          "port_id": 5,
-          "port_name": "BATT1",
-          "data_points": {
-            "dc_power": {"register": 190, "scaling": 1.0, "sunspec_point": "DCW", "description": "Battery Power (W)"},
-            "dc_voltage": {"register": 185, "scaling": 10.0, "sunspec_point": "DCV", "description": "Battery Voltage (V)"},
-            "dc_current": {"register": 191, "scaling": 100.0, "sunspec_point": "DCA", "description": "Battery Current (A)"}
-          }
-        }
+      "description": "PV DC measurements",
+      "data_points": {
+        "pv1_power": {"register": 186, "scaling": 1.0, "sunspec_point": "DCW", "description": "PV1 Power (W)"},
+        "pv2_power": {"register": 187, "scaling": 1.0, "sunspec_point": "DCW", "description": "PV2 Power (W)"},
+        "pv3_power": {"register": 188, "scaling": 1.0, "sunspec_point": "DCW", "description": "PV3 Power (W)"},
+        "pv1_voltage": {"register": 194, "scaling": 10.0, "sunspec_point": "DCV", "description": "PV1 Voltage (V)"},
+        "pv1_current": {"register": 195, "scaling": 100.0, "sunspec_point": "DCA", "description": "PV1 Current (A)"},
+        "pv2_voltage": {"register": 196, "scaling": 10.0, "sunspec_point": "DCV", "description": "PV2 Voltage (V)"},
+        "pv2_current": {"register": 197, "scaling": 100.0, "sunspec_point": "DCA", "description": "PV2 Current (A)"},
+        "pv3_voltage": {"register": 198, "scaling": 10.0, "sunspec_point": "DCV", "description": "PV3 Voltage (V)"},
+        "pv3_current": {"register": 199, "scaling": 100.0, "sunspec_point": "DCA", "description": "PV3 Current (A)"}
+      }
+    },
+    "system_model": {
+      "sunspec_model": 1,
+      "instance": 1,
+      "context": "system",
+      "description": "System status and diagnostics",
+      "data_points": {
+        "inverter_status": {"register": 59, "scaling": 1.0, "sunspec_point": "St", "description": "Inverter Status"},
+        "grid_relay_status": {"register": 195, "scaling": 1.0, "sunspec_point": "Conn", "description": "Grid Relay Status"},
+        "generator_relay_status": {"register": 196, "scaling": 1.0, "sunspec_point": "Conn", "description": "Generator Relay Status"},
+        "igbt_temp": {"register": 91, "scaling": 1.0, "sunspec_point": "Tmp", "description": "IGBT Temperature (°C)"},
+        "dcdc_xfrmr_temp": {"register": 90, "scaling": 1.0, "sunspec_point": "Tmp", "description": "DC-DC Transformer Temperature (°C)"},
+        "grid_type": {"register": 286, "scaling": 1.0, "sunspec_point": "AcType", "description": "Grid Type"},
+        "comm_version": {"register": 2, "scaling": 1.0, "sunspec_point": "Vr", "description": "Communication Version"}
+      }
+    },
+    "energy_model": {
+      "sunspec_model": 701,
+      "instance": 3,
+      "context": "energy",
+      "description": "Energy counters and measurements",
+      "data_points": {
+        "battery_charge_energy": {"register": 70, "scaling": 10.0, "sunspec_point": "WH", "description": "Battery Charge Energy (kWh)"},
+        "battery_discharge_energy": {"register": 71, "scaling": 10.0, "sunspec_point": "WH", "description": "Battery Discharge Energy (kWh)"},
+        "grid_buy_energy": {"register": 72, "scaling": 10.0, "sunspec_point": "WH", "description": "Grid Buy Energy (kWh)"},
+        "grid_sell_energy": {"register": 73, "scaling": 10.0, "sunspec_point": "WH", "description": "Grid Sell Energy (kWh)"},
+        "load_energy": {"register": 83, "scaling": 10.0, "sunspec_point": "WH", "description": "Load Energy (kWh)"},
+        "pv_energy": {"register": 108, "scaling": 10.0, "sunspec_point": "WH", "description": "PV Energy (kWh)"}
       }
     }
   },
-  "read_blocks": [
-    {
-      "start": 150,
-      "count": 20,
-      "description": "Grid measurements (150-169)",
-      "registers": [
-        {"address": 150, "name": "grid_voltage_l1n", "description": "Grid Voltage L1-N"},
-        {"address": 151, "name": "grid_voltage_l2n", "description": "Grid Voltage L2-N"},
-        {"address": 152, "name": "grid_voltage_l1l2", "description": "Grid Voltage L1-L2"},
-        {"address": 153, "name": "grid_current_l1", "description": "Grid Current L1"},
-        {"address": 154, "name": "grid_current_l2", "description": "Grid Current L2"},
-        {"address": 155, "name": "grid_frequency", "description": "Grid Frequency"},
-        {"address": 169, "name": "grid_power", "description": "Grid Power"}
-      ]
-    },
-    {
-      "start": 178,
-      "count": 15,
-      "description": "Load measurements (178-192)",
-      "registers": [
-        {"address": 178, "name": "load_power_total", "description": "Total Load Power"},
-        {"address": 179, "name": "load_power_l1", "description": "Load Power L1"},
-        {"address": 180, "name": "load_power_l2", "description": "Load Power L2"},
-        {"address": 181, "name": "load_current_l1", "description": "Load Current L1"},
-        {"address": 182, "name": "load_current_l2", "description": "Load Current L2"},
-        {"address": 183, "name": "load_frequency", "description": "Load Frequency"}
-      ]
-    },
-    {
-      "start": 184,
-      "count": 20,
-      "description": "Battery and PV measurements (184-203)",
-      "registers": [
-        {"address": 184, "name": "battery_soc", "description": "Battery State of Charge"},
-        {"address": 185, "name": "battery_voltage", "description": "Battery Voltage"},
-        {"address": 186, "name": "pv1_power", "description": "PV1 Power"},
-        {"address": 187, "name": "pv2_power", "description": "PV2 Power"},
-        {"address": 188, "name": "pv3_power", "description": "PV3 Power"},
-        {"address": 189, "name": "pv4_power", "description": "PV4 Power"},
-        {"address": 190, "name": "battery_power", "description": "Battery Power"},
-        {"address": 191, "name": "battery_current", "description": "Battery Current"},
-        {"address": 192, "name": "battery_temperature", "description": "Battery Temperature"},
-        {"address": 193, "name": "battery_capacity", "description": "Battery Capacity"},
-        {"address": 194, "name": "pv1_voltage", "description": "PV1 Voltage"},
-        {"address": 195, "name": "pv1_current", "description": "PV1 Current"},
-        {"address": 196, "name": "pv2_voltage", "description": "PV2 Voltage"},
-        {"address": 197, "name": "pv2_current", "description": "PV2 Current"},
-        {"address": 198, "name": "pv3_voltage", "description": "PV3 Voltage"},
-        {"address": 199, "name": "pv3_current", "description": "PV3 Current"},
-        {"address": 200, "name": "pv4_voltage", "description": "PV4 Voltage"},
-        {"address": 201, "name": "pv4_current", "description": "PV4 Current"}
-      ]
-    },
-    {
-      "start": 210,
-      "count": 10,
-      "description": "Additional system data (210-219)",
-      "registers": [
-        {"address": 210, "name": "inverter_status", "description": "Inverter Status"},
-        {"address": 211, "name": "grid_relay_status", "description": "Grid Relay Status"},
-        {"address": 212, "name": "generator_relay_status", "description": "Generator Relay Status"},
-        {"address": 213, "name": "igbt_temp", "description": "IGBT Temperature"},
-        {"address": 214, "name": "dcdc_xfrmr_temp", "description": "DC-DC Transformer Temperature"}
-      ]
-    }
-  ],
   "scaling_factors": {
     "voltage": 10.0,
     "current": 100.0,
     "frequency": 100.0,
     "power": 1.0,
     "temperature": 10.0,
-    "percentage": 1.0
+    "percentage": 1.0,
+    "energy": 10.0
   },
   "phase_configuration": {
     "type": "split_phase",

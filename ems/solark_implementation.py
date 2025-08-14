@@ -101,60 +101,78 @@ class SolArkModbusClient(InverterClient):
             success_count = 0
             read_blocks = self.register_mapping.get_read_blocks()
             
+            # Debug: Log the number of read blocks
+            print(f"DEBUG: Found {len(read_blocks)} read blocks")
+            
             for block in read_blocks:
+                print(f"DEBUG: Reading block {block['start']}-{block['start'] + block['count'] - 1}")
                 registers = self._read_holding_registers(block["start"], block["count"])
                 
                 if registers is not None:
+                    print(f"DEBUG: Successfully read {len(registers)} registers")
                     self._process_json_block(block, registers)
                     success_count += 1
+                else:
+                    print(f"DEBUG: Failed to read block {block['start']}")
             
             if success_count > 0:
                 self.data.last_update = time.time()
                 self._calculate_derived_values()
+                print(f"DEBUG: Poll successful, updated {success_count} blocks")
+                print(f"DEBUG: Sample data - Grid Power: {self.data.grid_power}, Battery SOC: {self.data.battery_soc}")
                 return True
             else:
                 self.data.last_failure = time.time()
+                print("DEBUG: Poll failed - no blocks read successfully")
                 return False
                 
-        except Exception:
+        except Exception as e:
             self.data.last_failure = time.time()
+            print(f"DEBUG: Poll exception: {e}")
             return False
     
     def _process_json_block(self, block: Dict[str, Any], registers: List[int]):
         """Process data from a JSON-defined read block"""
         try:
-            # Get register definitions from the block
-            block_registers = block.get("registers", [])
+            start_register = block["start"]
+            print(f"DEBUG: Processing block starting at {start_register} with {len(registers)} registers")
             
-            for reg_def in block_registers:
-                reg_address = reg_def["address"]
-                reg_name = reg_def["name"]
+            # For each register in the block, find the corresponding data points
+            for i, register_value in enumerate(registers):
+                register_address = start_register + i
+                data_points = self.register_mapping.get_data_points_for_register(register_address)
                 
-                # Calculate offset within the block
-                offset = reg_address - block["start"]
-                if 0 <= offset < len(registers):
-                    raw_value = registers[offset]
+                if data_points:
+                    print(f"DEBUG: Register {register_address} = {register_value}, found {len(data_points)} data points")
+                
+                # Process each data point for this register
+                for point in data_points:
+                    point_name = point["point_name"]
+                    point_config = point["config"]
+                    scaling_factor = point_config.get("scaling", 1.0)
                     
-                    # Apply scaling factor
-                    scaling = self.register_mapping.get_scaling_factor(reg_name)
-                    scaled_value = raw_value / scaling if scaling != 0 else raw_value
+                    # Handle signed values first for certain registers
+                    if point_name in ["grid_power", "battery_power", "battery_current"]:
+                        register_value = self._correct_signed_value(register_value)
                     
-                    # Handle signed values for certain registers
-                    if reg_name in ["grid_power", "battery_power", "battery_current", 
-                                   "inverter_output_power", "inverter_power_l1", "inverter_power_l2"]:
-                        scaled_value = self._correct_signed_value(raw_value) / scaling if scaling != 0 else self._correct_signed_value(raw_value)
-                    
-                    # Handle temperature registers with offset
-                    if reg_name in ["igbt_temp", "dcdc_xfrmr_temp", "battery_temperature", "bms_real_time_temp"]:
+                    # Handle temperature registers with offset (Sol-Ark specific)
+                    if point_name in ["igbt_temp", "dcdc_xfrmr_temp", "battery_temperature"]:
                         # Temperature registers have an offset of 1000 and scale of 10
-                        scaled_value = (raw_value - 1000) / 10.0
+                        scaled_value = (register_value - 1000) / 10.0
+                    else:
+                        # Apply scaling - divide by scaling factor for Sol-Ark (opposite of generic)
+                        scaled_value = register_value / scaling_factor if scaling_factor != 0 else register_value
                     
-                    # Set the value in the data object
-                    if hasattr(self.data, reg_name):
-                        setattr(self.data, reg_name, scaled_value)
+                    print(f"DEBUG: Setting {point_name} = {scaled_value} (raw: {register_value}, scale: {scaling_factor})")
+                    
+                    # Update the corresponding field in self.data
+                    if hasattr(self.data, point_name):
+                        setattr(self.data, point_name, scaled_value)
+                    else:
+                        print(f"DEBUG: Warning - data object has no attribute '{point_name}'")
                         
         except Exception as e:
-            pass  # In a real implementation, we would log this error
+            print(f"DEBUG: Exception in _process_json_block: {e}")
     
     def _calculate_derived_values(self):
         """Calculate derived values from raw measurements"""

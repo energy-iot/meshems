@@ -34,7 +34,8 @@ inverter:
 # SunSpec Modbus TCP Server Configuration
 sunspec_server:
   enabled: true
-  host: "127.0.0.1"  # Listen on all interfaces
+  #host: "127.0.0.1"  # Listen on all interfaces
+  host: "192.168.95.234"
   #host: "192.168.95.28"
   port: 8502
   slave: 1

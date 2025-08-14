@@ -16,13 +16,22 @@ class GenericRegisterMapping(RegisterMapping):
         self.config = self._load_config(config_file)
         self.models = self.config.get("models", {})
         
+        print(f"DEBUG: Loaded config from {config_file}")
+        print(f"DEBUG: Found {len(self.models)} models: {list(self.models.keys())}")
+        
         # Build registers and scaling factors from the JSON structure
         self.registers = {}
         self.scaling_factors = {}
         self._build_register_mappings()
         
+        print(f"DEBUG: Built {len(self.registers)} register mappings")
+        print(f"DEBUG: Sample registers: {dict(list(self.registers.items())[:5])}")
+        
         # Build read blocks from the data points
         self.read_blocks = self._build_read_blocks()
+        print(f"DEBUG: Built {len(self.read_blocks)} read blocks")
+        for block in self.read_blocks:
+            print(f"DEBUG: Block {block['start']}-{block['start'] + block['count'] - 1}: {block['description']}")
     
     def _load_config(self, config_file: str) -> Dict:
         # Handle relative paths

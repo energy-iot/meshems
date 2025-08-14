@@ -100,6 +100,7 @@ class GenericInverterClient(InverterClient):
     
     def poll(self) -> bool:
         try:
+            success_count = 0
             # Read data using register mapping
             blocks = self.register_mapping.get_read_blocks()
             for block in blocks:
@@ -108,8 +109,17 @@ class GenericInverterClient(InverterClient):
                 )
                 if registers:
                     self._process_block(block, registers)
-            return True
+                    success_count += 1
+            
+            if success_count > 0:
+                self.data.last_update = time.time()
+                self._calculate_derived_values()
+                return True
+            else:
+                self.data.last_failure = time.time()
+                return False
         except Exception:
+            self.data.last_failure = time.time()
             return False
     
     def _read_holding_registers(self, start_register: int, num_registers: int) -> Optional[List[int]]:
@@ -147,8 +157,12 @@ class GenericInverterClient(InverterClient):
                     point_config = point["config"]
                     scaling_factor = point_config.get("scaling", 1.0)
                     
-                    # Apply scaling
-                    scaled_value = register_value * scaling_factor
+                    # Handle signed values for certain registers
+                    if point_name in ["grid_power", "battery_power", "battery_current"]:
+                        register_value = self._correct_signed_value(register_value)
+                    
+                    # Apply scaling - divide by scaling factor (consistent with Sol-Ark)
+                    scaled_value = register_value / scaling_factor if scaling_factor != 0 else register_value
                     
                     # Update the corresponding field in self.data
                     if hasattr(self.data, point_name):
@@ -157,3 +171,22 @@ class GenericInverterClient(InverterClient):
         except Exception as e:
             # In a real implementation, we would log this error
             pass
+    
+    def _correct_signed_value(self, value: int) -> int:
+        """Convert unsigned 16-bit value to signed if necessary"""
+        if value > 32767:
+            return value - 65536
+        return value
+    
+    def _calculate_derived_values(self):
+        """Calculate derived values from raw measurements"""
+        # Calculate total PV power
+        self.data.pv_power_total = (self.data.pv1_power + self.data.pv2_power + self.data.pv3_power) / 1000.0
+        
+        # Set legacy grid_voltage for backward compatibility
+        if hasattr(self.data, 'grid_voltage_l1l2'):
+            self.data.grid_voltage = self.data.grid_voltage_l1l2
+    
+    def get_data(self) -> InverterData:
+        """Get the current inverter data"""
+        return self.data
