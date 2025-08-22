@@ -46,13 +46,13 @@ class InverterFactory:
                 return None
         
         if inverter_type == "solark":
-            # Import here to avoid circular imports
-            from .solark_implementation import SolArkModbusClient
-            
-            return SolArkModbusClient(
-                port, baudrate, modbus_address,
-                config_file=config_file
-            )
+            # Use generic implementation with solark register mapping
+            try:
+                register_mapping = GenericRegisterMapping(config_file)
+                return GenericInverterClient(port, baudrate, modbus_address, register_mapping)
+            except Exception:
+                # If we can't load the config file, return None
+                return None
         elif inverter_type == "generic":
             try:
                 register_mapping = GenericRegisterMapping(config_file)

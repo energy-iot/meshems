@@ -1,5 +1,5 @@
 {
-  "inverter_type": "three_phase_generic",
+  "inverter_type": "solark",
   "version": "1.0",
   "description": "Three-phase inverter register mapping with full L1, L2, L3 support",
   "models": {
@@ -10,19 +10,19 @@
       "description": "Grid-side AC measurements for three-phase system",
       "data_points": {
         "grid_power": {"register": 100, "scaling": 1.0, "sunspec_point": "W", "description": "Total Grid Power (W)"},
-        "grid_power_l1": {"register": 101, "scaling": 1.0, "sunspec_point": "WL1", "description": "Grid Power L1 (W)"},
-        "grid_power_l2": {"register": 102, "scaling": 1.0, "sunspec_point": "WL2", "description": "Grid Power L2 (W)"},
-        "grid_power_l3": {"register": 103, "scaling": 1.0, "sunspec_point": "WL3", "description": "Grid Power L3 (W)"},
-        "grid_voltage_l1l2": {"register": 110, "scaling": 10.0, "sunspec_point": "LLV", "description": "Grid Voltage L1-L2 (V)"},
-        "grid_voltage_l2l3": {"register": 111, "scaling": 10.0, "sunspec_point": "LLV", "description": "Grid Voltage L2-L3 (V)"},
-        "grid_voltage_l3l1": {"register": 112, "scaling": 10.0, "sunspec_point": "LLV", "description": "Grid Voltage L3-L1 (V)"},
-        "grid_voltage_l1n": {"register": 113, "scaling": 10.0, "sunspec_point": "LNV", "description": "Grid Voltage L1-N (V)"},
-        "grid_voltage_l2n": {"register": 114, "scaling": 10.0, "sunspec_point": "LNV", "description": "Grid Voltage L2-N (V)"},
-        "grid_voltage_l3n": {"register": 115, "scaling": 10.0, "sunspec_point": "LNV", "description": "Grid Voltage L3-N (V)"},
-        "grid_current_l1": {"register": 120, "scaling": 100.0, "sunspec_point": "A", "description": "Grid Current L1 (A)"},
-        "grid_current_l2": {"register": 121, "scaling": 100.0, "sunspec_point": "A", "description": "Grid Current L2 (A)"},
-        "grid_current_l3": {"register": 122, "scaling": 100.0, "sunspec_point": "A", "description": "Grid Current L3 (A)"},
-        "grid_frequency": {"register": 130, "scaling": 100.0, "sunspec_point": "Hz", "description": "Grid Frequency (Hz)"}
+        "grid_power_l1": {"register": 0, "scaling": 1.0, "sunspec_point": "WL1", "description": "Grid Power L1 (W)"},
+        "grid_power_l2": {"register": 0, "scaling": 1.0, "sunspec_point": "WL2", "description": "Grid Power L2 (W)"},
+        "grid_power_l3": {"register": 0, "scaling": 1.0, "sunspec_point": "WL3", "description": "Grid Power L3 (W)"},
+        "grid_voltage_l1l2": {"register": 0, "scaling": 10.0, "sunspec_point": "LLV", "description": "Grid Voltage L1-L2 (V)"},
+        "grid_voltage_l2l3": {"register": 0, "scaling": 10.0, "sunspec_point": "LLV", "description": "Grid Voltage L2-L3 (V)"},
+        "grid_voltage_l3l1": {"register": 0, "scaling": 10.0, "sunspec_point": "LLV", "description": "Grid Voltage L3-L1 (V)"},
+        "grid_voltage_l1n": {"register": 598, "scaling": 10.0, "sunspec_point": "LNV", "description": "Grid Voltage L1-N (V)"},
+        "grid_voltage_l2n": {"register": 599, "scaling": 10.0, "sunspec_point": "LNV", "description": "Grid Voltage L2-N (V)"},
+        "grid_voltage_l3n": {"register": 600, "scaling": 10.0, "sunspec_point": "LNV", "description": "Grid Voltage L3-N (V)"},
+        "grid_current_l1": {"register": 610, "scaling": 100.0, "sunspec_point": "A", "description": "Grid Current L1 (A)"},
+        "grid_current_l2": {"register": 611, "scaling": 100.0, "sunspec_point": "A", "description": "Grid Current L2 (A)"},
+        "grid_current_l3": {"register": 612, "scaling": 100.0, "sunspec_point": "A", "description": "Grid Current L3 (A)"},
+        "grid_frequency": {"register": 609, "scaling": 100.0, "sunspec_point": "Hz", "description": "Grid Frequency (Hz)"}
       }
     },
     "load_model": {

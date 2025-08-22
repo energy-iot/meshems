@@ -15,7 +15,7 @@ from .base import InverterClient, InverterData, RegisterMapping
 from .inverter_factory import InverterFactory
 from .generic_mapping import GenericRegisterMapping
 from .generic_inverter import GenericInverterClient, GenericInverterData
-from .solark_implementation import SolArkModbusClient, SolArkData
+# from .solark_implementation import SolArkModbusClient, SolArkData  # Module not found, commented out
 from .sunspec_models import SunSpecMapper, SunSpecCommonModel, SunSpecGridModel, SunSpecLoadModel, SunSpecBatteryModel
 from .modbus_server import SunSpecModbusServer, ModbusServerConfig
 from .main import EMSApplication
@@ -33,8 +33,8 @@ __all__ = [
     # Inverter implementations
     'GenericInverterClient',
     'GenericInverterData',
-    'SolArkModbusClient',
-    'SolArkData',
+    # 'SolArkModbusClient',  # Module not found, commented out
+    # 'SolArkData',          # Module not found, commented out
     
     # SunSpec models
     'SunSpecMapper',

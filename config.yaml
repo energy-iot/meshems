@@ -4,8 +4,8 @@
 # Serial/RS485 Configuration
 serial:
   # Primary RS485 port for inverter communication
-  #port: "/dev/tty.usbserial-A10OGBLS"  # Change to your actual RS485 device
-  port: "/dev/ttyRS485"
+  port: "/dev/tty.usbserial-A10OGBLS"  # Change to your actual RS485 device
+  #port: "/dev/ttyRS485"
   baudrate: 9600
   bytesize: 8
   parity: "N"  # None
@@ -24,19 +24,20 @@ inverter:
   # Sol-Ark inverter settings (used when type is "solark")
   # All inverters now use JSON-based register mapping for consistency
   solark:
-    register_mapping_file: "solark_registers.json"
+    #register_mapping_file: "solark_registers.json"
+    register_mapping_file: "three_phase_registers.json"
   
   # Generic inverter settings (used when type is "generic")
-  generic:
-    register_mapping_file: "generic_registers.json"
-    scaling_factors_file: "generic_scaling.json"
+  #generic:
+  #  register_mapping_file: "generic_registers.json"
+  #  scaling_factors_file: "generic_scaling.json"
 
 # SunSpec Modbus TCP Server Configuration
 sunspec_server:
   enabled: true
   #host: "127.0.0.1"  # Listen on all interfaces
-  host: "192.168.95.234"
-  #host: "192.168.95.28"
+  #host: "192.168.95.234"
+  host: "192.168.95.28"
   port: 8502
   slave: 1
 
@@ -61,7 +62,7 @@ data:
 # Device Information (for SunSpec Common Model)
 device_info:
   manufacturer: "Ampra Grid"
-  model: "pysunspec-gateway"
+  model: "3ph-gateway"
   version: "1.1"
   serial_number: "JOULE-EMS-001"
   options: "None"
