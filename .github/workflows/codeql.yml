@@ -84,16 +84,26 @@ jobs:
     # to build your code.
     # ℹ️ Command-line programs to run using the OS shell.
     # 📚 See https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstepsrun
-    - name: Run manual build steps
+    - name: Run manual build steps (PlatformIO)
       if: matrix.build-mode == 'manual'
       shell: bash
       run: |
-        echo 'If you are using a "manual" build mode for one or more of the' \
-          'languages you are analyzing, replace this with the commands to build' \
-          'your code, for example:'
-        echo '  make bootstrap'
-        echo '  make release'
-        exit 1
+        set -euo pipefail
+
+        # Install PlatformIO CLI
+        python -m pip install --upgrade pip
+        pip install -U platformio
+
+        # Verify installation
+        pio --version
+
+        # Build the project with PlatformIO.
+        # - `pio run` will build all environments defined in platformio.ini.
+        # - To build a specific environment, use: `pio run -e <env>`
+        # - If you need verbose output for debugging, use `pio run -v`
+        #
+        # Replace or uncomment the specific env lines below if your repo requires a particular env.
+        pio run
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v4
