@@ -1,5 +1,5 @@
 # EIOT.Energy EMS Dev Kit
-
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/energy-iot/meshems/badge)](https://scorecard.dev/viewer/?uri=github.com/energy-iot/meshems)
 ## Overview
 A development kit based on the ESP32S3 N16R8 DEV KIT C1 for energy management systems (EMS) with support for various communication protocols and peripherals.
 
