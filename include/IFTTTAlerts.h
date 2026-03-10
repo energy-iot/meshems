@@ -94,13 +94,13 @@ void IFTTTAlerts::addIf(bool condition, const String& type, const String& messag
 void IFTTTAlerts::publish() {
   if (_activeAlerts.empty()) return;
 
-  DynamicJsonDocument doc(1024);
+  JsonDocument doc;
   doc["device_id"] = "esp32s3-001";
   doc["timestamp"] = time(nullptr);
-  JsonArray arr = doc.createNestedArray("alerts");
+  JsonArray arr = doc["alerts"].to<JsonArray>();
 
   for (const auto& a : _activeAlerts) {
-    JsonObject obj = arr.createNestedObject();
+    JsonObject obj = arr.add<JsonObject>();
     obj["type"] = a.type;
     obj["message"] = a.message;
   }

@@ -91,7 +91,7 @@ last_bandwidth_report_time  time in secs since last report
 #include <data_model.h>
 #include <config.h>
 #include <ArduinoJson.h>
-#include <modbus_master.h>
+#include <modbus/modbus_master.h>
 #include <sunspec_model_213.h>            // TODO breaks up into base and harmonics separated subtopics for openami
 #include <sunspec_model_213_base.h>       // stays true to Sunspec base 213 data model schema
 #include <sunspec_model_213_harmonics.h>  // TODO confirm if there is a harmonics report for Sunspec model and adapt or change to be flexible
@@ -305,7 +305,7 @@ void mqtt_publish_BWPubOut_stats() {  // outgoing bandwidth used per streetpoleE
     statsDoc["pubout_count"] = mqtt_publish_count;
     statsDoc["payload_bytes"] = mqtt_BWPubOut_payload_bytes;
     statsDoc["tcpip_bytes"] = mqtt_BWPubOut_tcpip_bytes;
-    statsDoc["timestamp"] = now();
+    statsDoc["timestamp"] = millis();
 
     mqtt_publish_json("subpanel_BWPubOut", &statsDoc);
 
@@ -332,7 +332,7 @@ void mqtt_publish_BWPubOut_stats() {
     statsDoc["payload_bytes"] = mqtt_BWPubOut_payload_bytes;
     statsDoc["tcpip_bytes"] = mqtt_BWPubOut_tcpip_bytes;
     statsDoc["avg_bps_out"] = (int)avg_bps_out;
-    statsDoc["timestamp"] = now();
+    statsDoc["timestamp"] = millis();
 
     mqtt_publish_json("subpanel_BWPubOut", &statsDoc);
 
@@ -359,7 +359,7 @@ void mqtt_publish_BWCmdIn_stats() { // incoming bandwidth used per streetpoleEMS
     statsDoc["payload_bytes"] = mqtt_BWCmdIn_payload_bytes;
     statsDoc["tcpip_bytes"] = mqtt_BWCmdIn_tcpip_bytes;
     statsDoc["avg_bps_in"] = (int)avg_bps_in;
-    statsDoc["timestamp"] = now();
+    statsDoc["timestamp"] = millis();
 
     mqtt_publish_json("subpanel_BWCmdIn", &statsDoc);
 
@@ -491,7 +491,7 @@ void setup_mqtt_client() {
       }
     }
   }
-  mqtt_interval_ts = now();
+  mqtt_interval_ts = millis();
 }
 
 void loop_mqtt() {

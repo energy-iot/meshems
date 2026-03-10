@@ -1,6 +1,6 @@
 #pragma once
 
-#include <modbus_master.h>
+#include <modbus/modbus_master.h>
 
 class Modbus_SHT20 : public ModbusMaster {
     public:

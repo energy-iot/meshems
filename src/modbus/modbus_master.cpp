@@ -4,7 +4,7 @@
  */
 
 #include <SoftwareSerial.h>
-#include <modbus.h>
+#include <modbus/modbus.h>
 #include <pins.h>
 #include <data_model.h>
 #include <config.h>

@@ -52,8 +52,8 @@ void DTMPowerCache::addSamples(const std::map<String, String>& raw) {
   }
 }
 
-DynamicJsonDocument DTMPowerCache::buildJson() {
-  DynamicJsonDocument internalDoc(2048);  // Correct and supported
+JsonDocument DTMPowerCache::buildJson() {
+  JsonDocument internalDoc;
 
   JsonObject root = internalDoc.to<JsonObject>();
   root["device_id"] = "esp32s3-001";

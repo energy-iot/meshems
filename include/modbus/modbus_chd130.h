@@ -1,6 +1,6 @@
  #pragma once
 
-#include <modbus_master.h>
+#include <modbus/modbus_master.h>
 #include <data_model.h>
 
 /**

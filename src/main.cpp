@@ -33,7 +33,7 @@
  */
 
 #include <Arduino.h>
-#include <modbus.h>     // Modbus communication protocols
+#include <modbus/modbus.h>     // Modbus communication protocols
 #include <buttons.h>    // Button input handling
 #include <display.h>    // SH1106 OLED display
 #include <console.h>    // Console UI for the display

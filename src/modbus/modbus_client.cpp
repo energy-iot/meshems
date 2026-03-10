@@ -11,7 +11,7 @@
   
   Modified for EMS ModCan Hub by: doug mendonca
 */
-#include <modbus.h>
+#include <modbus/modbus.h>
 #include <SoftwareSerial.h>
 #include <pins.h>
 #include <data_model.h>
