@@ -3,8 +3,8 @@
 #include <wifi.h>
 
 //SF Hackathon
-#define WIFI_PW "connectandcreate"
-#define WIFI_SSID "Informal Spaces Guest"
+#define WIFI_PW "what is the mayanet 123$"
+#define WIFI_SSID "Mayanet"
 
 //Kenya hackathon
 //#define WIFI_PW "E@rthday2025"

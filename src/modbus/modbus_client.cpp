@@ -16,7 +16,7 @@
 #include <pins.h>
 #include <data_model.h>
 
-SoftwareSerial _modbus2(RS485_RX_2, RS485_TX_2); //(rx, tx) corresponds with HW519 rxd txd pins
+SoftwareSerial _modbus2(RS485_RX_B, RS485_TX_B); //(rx, tx) corresponds with HW519 rxd txd pins
 ModbusRTUSlave modbus_client(_modbus2);
 
 void setup_modbus_client() {

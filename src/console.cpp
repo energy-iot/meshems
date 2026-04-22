@@ -20,9 +20,9 @@ void Console::redrawConsole() {
     display->clear();
     display->setTextAlignment(TEXT_ALIGN_LEFT);
     display->setFont(ArialMT_Plain_10);   
-    for(int i=0;i<NUM_LINES;i++) { //if no overla, start at 0
-        int y = i+1 * 10;
-        display->drawString(0, y, consoleLog[i]); 
+    for(int i=0;i<NUM_LINES;i++) {
+        int y = (i+1) * 10;
+        display->drawString(0, y, consoleLog[i]);
         //SerialPins.println(consoleLog[i]);
     }
     getUI()->render();

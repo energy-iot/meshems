@@ -36,8 +36,8 @@
 
 
 // ==================== Serial Interface Setup ====================
-SoftwareSerial _modbus1(RS485_RX_1, RS485_TX_1); // RS485 modbus HW519 module pinout - all meters on a rs485 daisy chain (and door thermostat  and tamper door alarm)
-//SoftwareSerial *modbus2(RS485_RX_2, RS485_TX_2); // uncomment when 2 modbus masters are to be used on the EMS PCB
+SoftwareSerial _modbus1(RS485_RX_A, RS485_TX_A); // RS485 modbus HW519 module pinout - all meters on a rs485 daisy chain (and door thermostat  and tamper door alarm)
+//SoftwareSerial *modbus2(RS485_RX_B, RS485_TX_B); // uncomment when 2 modbus masters are to be used on the EMS PCB
 // TODO merge Canbus support and Modbus Client in other EMS branch to here ModCan
 
 // Temperature/humidity sensor
@@ -112,10 +112,10 @@ void setup_modbus_clients() {
  */
 void setup_modbus_master() {
     // Reset GPIO pins for 2 ports of  RS485
-    gpio_reset_pin(RS485_RX_1);
-    gpio_reset_pin(RS485_TX_1);
-    gpio_reset_pin(RS485_RX_2);
-    gpio_reset_pin(RS485_TX_2);
+    gpio_reset_pin(RS485_RX_A);
+    gpio_reset_pin(RS485_TX_A);
+    gpio_reset_pin(RS485_RX_B);
+    gpio_reset_pin(RS485_TX_B);
 
     // Initialize serial at 9600 baud for now, good for less than 20 modbus nodes of scanning
     _modbus1.begin(9600);

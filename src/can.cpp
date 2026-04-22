@@ -54,8 +54,8 @@ char msgString[128];                     // Buffer for debug messages
 
 // ==================== SPI & CAN Controller Setup ====================
 
-// Create custom SPI instance for CAN controller (ESP32 default SPI may be used by display)
-SPIClass canSPI = SPIClass();
+// Use HSPI bus so CAN does not share the FSPI/VSPI bus used by the display
+SPIClass canSPI(HSPI);
 
 // Initialize CAN controller with the custom SPI instance
 MCP_CAN CAN0(&canSPI, CAN0_CS);

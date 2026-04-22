@@ -53,13 +53,9 @@ void setup() {
 
     generateDeviceID();
     setup_display();
-    _console.addLine(" Display up! next is WiFi/Eth, ");
-    _console.addLine(" NTP, MQTT, Modbus, Buttons... ");
-    // Display startup splash screen (Rick image)
     drawBitmap(40, 5, RICK_WIDTH, RICK_HEIGHT, rick);
     delay(1000);
-    
-    drawBitmap(0, 0, LOGO_WIDTH, LOGO_HEIGHT, eIOT_logo); // Render Logo
+    drawBitmap(0, 0, LOGO_WIDTH, LOGO_HEIGHT, eIOT_logo);
     delay(1000);
 
     setup_wifi();
@@ -70,16 +66,16 @@ void setup() {
     // Initialize Modbus RTU master/client communication
     setup_modbus_master(); // This sets up communication with sensors like the SHT20 temp/humidity sensor or other devices
     setup_modbus_client();
+    
     //setup_gpio  // ssr, temp_humid, door contact/tamper. shock, imaging)
+    
     setup_can(); // Initialize CAN bus communication
 
     setup_buttons();
-    _console.addLine(" EMS In-service Ready!");
-    _console.addLine("  CHECK MQTT @");
-    _console.addLine("  public.cloud.shiftr.io"); //TODO grab the setup strings from the config file
-    _console.addLine("  filter OPENAMI/#");       //TODO grab the setup strings from the config file
-    _console.addLine("  Push a button?");
-
+    _console.addLine("MQTT:");
+    _console.addLine("public.cloud.shiftr.io");
+    _console.addLine("u: public, pw: public");
+    _console.addLine("topic: OPENAMI/#");      
 }
 
 
@@ -108,6 +104,7 @@ void loop() {
         lastModbusMillis = millis();
         loop_modbus_master();
    }
+   loop_buttons();
 
    if (millis() - lastMQTTMillis > MQTTPublish_rootrate) {
         lastMQTTMillis = millis();
@@ -123,7 +120,7 @@ void loop() {
         */
         loop_mqtt();
    }
-  
+    loop_buttons();
     loop_modbus_client();
     loop_buttons(); 
     loop_display();
