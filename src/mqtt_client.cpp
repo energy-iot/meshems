@@ -509,36 +509,36 @@ void loop_mqtt() {
 
         
        // First is to  publish Sunspec model 1 subpanel manufacture details TODO is 1 per day or per hour
-      mqtt_publish_EMS_MFR("", loop_timestamp);  //publish Sunspec model 1 manufacture details
-      Serial.println("Published EMS Model 1 MFR Info");
+      //mqtt_publish_EMS_MFR("", loop_timestamp);  //publish Sunspec model 1 manufacture details
+      //Serial.println("Published EMS Model 1 MFR Info");
 
       // publish real time subpanel cabinet environmetals such as temp/pressure/humid/  tamper and 
       // TODO integrate shock and  loud noise and possily street pole image snapsot on demand from mqtt command
-      mqtt_publish_EMS_ENV("", loop_timestamp);
-      Serial.println("Published subpanel environmental data");
+      //mqtt_publish_EMS_ENV("", loop_timestamp);
+      //Serial.println("Published subpanel environmental data");
       
     // TODO Next publish Sunspec model xyz subpanel DER nameplate capacity  rating 
       // mqtt_publish_EMS_Rated("", readings[0]);  //publish Sunspec model xyza rating details
       // Serial.println("Published EMS nameplate");
        //TODO publish 1 or 3 phase OPENAMI per subpanel peer phase and per meter/tenant energy usage (TODO scope is consumed, generated, stored, transformed, distributed);
         //TODO  IF 3phase phase subpanel setup then - assume 3 phase subpanel 
-      mqtt_publish_EMS_3Ph("", readings[0]);  // publish Sunspec model 213 schema for the 3 phase subpanel
+      //mqtt_publish_EMS_3Ph("", readings[0]);  // publish Sunspec model 213 schema for the 3 phase subpanel
       // TODO else publish single phase subpanel totalizer metrics
       //  mqtt_publish_EMS_1Ph("", readings[0]);  // publish Sunspec model 213 schema for the 3 phase subpanel
-       Serial.println("Published EMS per Phase Totalizers");
+       //Serial.println("Published EMS per Phase Totalizers");
        //next is publish EMS per phase Leakage , TODO adpative rate: if leakage is non zero or leakage fault or leakage changed
-      mqtt_publish_Leakage("", readings[0]);
-      Serial.println("Published per phase leakage");
+      //mqtt_publish_Leakage("", readings[0]);
+      //Serial.println("Published per phase leakage");
 
       //next is publish EMS per phase Harmonics , TODO adpative rate: if leakage is non zero or leakage fault or leakage changed
-      mqtt_publish_Harmonics("", loop_timestamp);
-      Serial.println("Published per phase Harmonics");
+      //mqtt_publish_Harmonics("", loop_timestamp);
+      //Serial.println("Published per phase Harmonics");
 
     // next is loop over the subpanel per tenant meters   
     for(int i=0;i<MODBUS_NUM_METERS;i++) {
-          mqtt_publish_Meter(i, readings[i]);  
+          //mqtt_publish_Meter(i, readings[i]);  
           // TODO add modbus node number and per meter leakage RCD Fault in the readings powerdata
-          Serial.println("Published tenant meter num:");
+          //Serial.println("Published tenant meter num:");
   
         /*char topicId[8];  // debug
         snprintf(topicId, sizeof(topicId), "%d", i);
@@ -552,7 +552,7 @@ void loop_mqtt() {
     if (millis() - last_bandwidth_report_time >= BANDWIDTH_REPORT_INTERVAL_MS) {
      mqtt_publish_BWPubOut_stats();
      mqtt_publish_BWCmdIn_stats();
-     Serial.println("Published stats/bandwidth");
+     //Serial.println("Published stats/bandwidth");
      last_bandwidth_report_time = millis();
     }
     mqttclient.loop();

@@ -12,12 +12,11 @@
   Modified for EMS ModCan Hub by: doug mendonca
 */
 #include <modbus/modbus.h>
-#include <SoftwareSerial.h>
 #include <pins.h>
 #include <data_model.h>
 
-SoftwareSerial _modbus2(RS485_RX_B, RS485_TX_B); //(rx, tx) corresponds with HW519 rxd txd pins
-ModbusRTUSlave modbus_client(_modbus2);
+// HardwareSerial with pin remapping via begin() — ModbusRTUSlave SoftwareSerial ctor is AVR-only
+ModbusRTUSlave modbus_client(Serial2);
 
 void setup_modbus_client() {
   //#if defined ESP32
@@ -29,8 +28,7 @@ void setup_modbus_client() {
   modbus_client.configureHoldingRegisters(holdingRegisters, 2); // unsigned 16 bit integer array of holding register values, number of holding registers
   modbus_client.configureInputRegisters(inputRegisters, 4);     // unsigned 16 bit integer array of input register values, number of input registers
 
-  _modbus2.begin(9600);
-  modbus_client.begin(1, 9600);
+  modbus_client.begin(1, 9600, SERIAL_8N1, RS485_RX_B, RS485_TX_B);
 }
 
 void loop_modbus_client() {
