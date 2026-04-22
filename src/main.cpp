@@ -75,7 +75,7 @@ void setup() {
     _console.addLine("MQTT:");
     _console.addLine("public.cloud.shiftr.io");
     _console.addLine("u: public, pw: public");
-    _console.addLine("topic: OPENAMI/#");      
+    _console.addLine("topic: openami/#");      
 }
 
 
