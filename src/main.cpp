@@ -43,6 +43,7 @@
 #include <mqtt_client.h>
 #include <config.h>
 #include <data_model.h>
+#include <i2c_ssr.h>
 
 void setup() {
     Serial.begin(115200);   // Initialize serial communication for debugging
@@ -67,6 +68,7 @@ void setup() {
     setup_modbus_master(); // This sets up communication with sensors like the SHT20 temp/humidity sensor or other devices
     setup_modbus_client();
     
+    setup_i2c_ssr();
     //setup_gpio  // ssr, temp_humid, door contact/tamper. shock, imaging)
     
     setup_can(); // Initialize CAN bus communication

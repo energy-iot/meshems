@@ -85,6 +85,10 @@
 #define GPS_SERIAL_RX 46
 #define GPS_SERIAL_TX 40
 
+// I2C SSR — repurposed GPS UART pins; TX(40) as SDA (bidirectional), RX(46) as SCL
+#define I2C_SSR_SDA_PIN  GPS_SERIAL_TX   // GPIO 40
+#define I2C_SSR_SCL_PIN  GPS_SERIAL_RX   // GPIO 46
+
 //SSR
 #define SSR1_PIN 20
 
