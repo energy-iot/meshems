@@ -39,5 +39,3 @@ void setup_buttons() {
     pinMode(ANALOG_BTN_PIN, INPUT_PULLUP);
     xTaskCreatePinnedToCore(button_task, "buttons", 2048, NULL, 2, NULL, 0);
 }
-
-void loop_buttons() {}  // scanning runs in task; kept so main.cpp calls compile

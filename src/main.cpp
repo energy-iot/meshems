@@ -98,13 +98,11 @@ unsigned long lastMQTTMillis = 0;
 
 
 void loop() {
-   loop_buttons();
    
    if (millis() - lastModbusMillis > ModbusMaster_pollrate) {
         lastModbusMillis = millis();
         loop_modbus_master();
    }
-   loop_buttons();
 
    if (millis() - lastMQTTMillis > MQTTPublish_rootrate) {
         lastMQTTMillis = millis();
@@ -120,9 +118,7 @@ void loop() {
         */
         loop_mqtt();
    }
-    loop_buttons();
     loop_modbus_client();
-    loop_buttons(); 
     loop_display();
     loop_can();
     // TODO loop_IFTTT();
