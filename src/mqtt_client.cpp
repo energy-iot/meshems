@@ -92,6 +92,7 @@ last_bandwidth_report_time  time in secs since last report
 #include <config.h>
 #include <ArduinoJson.h>
 #include <modbus/modbus_master.h>
+#include <modbus/modbus_nesldtm.h>
 #include <sunspec_model_213.h>            // TODO breaks up into base and harmonics separated subtopics for openami
 #include <sunspec_model_213_base.h>       // stays true to Sunspec base 213 data model schema
 #include <sunspec_model_213_harmonics.h>  // TODO confirm if there is a harmonics report for Sunspec model and adapt or change to be flexible
@@ -494,6 +495,94 @@ void setup_mqtt_client() {
   mqtt_interval_ts = millis();
 }
 
+void mqtt_publish_DTM(const DTMData& dtm) {
+    JsonDocument doc;
+
+    // status
+    doc["board_status"]  = dtm.board_status;
+    doc["meterOK"]       = (dtm.board_status & 0x0001) ? 1 : 0;
+    doc["netUp"]         = (dtm.board_status & 0x0004) ? 1 : 0;
+    doc["sys_status0"]   = dtm.sys_status0;
+    doc["sys_status1"]   = dtm.sys_status1;
+    doc["meter_status0"] = dtm.meter_status0;
+    doc["meter_status1"] = dtm.meter_status1;
+
+    // line
+    doc["V"]    = serialized(String(dtm.voltage,      1));
+    doc["Hz"]   = serialized(String(dtm.frequency,    2));
+    doc["T"]    = serialized(String(dtm.temp,         1));
+    doc["Vdif"] = serialized(String(dtm.voltage_diff, 1));
+
+    // CT1
+    doc["ct1_V"]   = serialized(String(dtm.ct1_voltage,     1));
+    doc["ct1_A"]   = serialized(String(dtm.ct1_current,     2));
+    doc["ct1_W"]   = serialized(String(dtm.ct1_real_power,  0));
+    doc["ct1_VAR"] = serialized(String(dtm.ct1_react_power, 0));
+    doc["ct1_VA"]  = serialized(String(dtm.ct1_va_power,    0));
+    doc["ct1_PF"]  = serialized(String(dtm.ct1_pf,         3));
+    doc["ct1_ph"]  = serialized(String(dtm.ct1_phase,       1));
+
+    // CT2
+    doc["ct2_V"]   = serialized(String(dtm.ct2_voltage,     1));
+    doc["ct2_A"]   = serialized(String(dtm.ct2_current,     2));
+    doc["ct2_W"]   = serialized(String(dtm.ct2_real_power,  0));
+    doc["ct2_VAR"] = serialized(String(dtm.ct2_react_power, 0));
+    doc["ct2_VA"]  = serialized(String(dtm.ct2_va_power,    0));
+    doc["ct2_PF"]  = serialized(String(dtm.ct2_pf,         3));
+    doc["ct2_ph"]  = serialized(String(dtm.ct2_phase,       1));
+
+    // CT3
+    doc["ct3_V"]   = serialized(String(dtm.ct3_voltage,     1));
+    doc["ct3_A"]   = serialized(String(dtm.ct3_current,     2));
+    doc["ct3_W"]   = serialized(String(dtm.ct3_real_power,  0));
+    doc["ct3_VAR"] = serialized(String(dtm.ct3_react_power, 0));
+    doc["ct3_VA"]  = serialized(String(dtm.ct3_va_power,    0));
+    doc["ct3_PF"]  = serialized(String(dtm.ct3_pf,         3));
+    doc["ct3_ph"]  = serialized(String(dtm.ct3_phase,       1));
+
+    // neutral
+    doc["In"] = serialized(String(dtm.current_n, 3));
+
+    // totals
+    doc["totW"]       = serialized(String(dtm.total_active_power,   0));
+    doc["totVAR"]     = serialized(String(dtm.total_reactive_power, 0));
+    doc["totVA"]      = serialized(String(dtm.total_apparent_power, 0));
+    doc["totPF"]      = serialized(String(dtm.total_pf,            3));
+    doc["totFundW"]   = serialized(String(dtm.total_fund_power,     0));
+    doc["totHarW"]    = serialized(String(dtm.total_har_power,      0));
+
+    // energy accumulators (kWh / kVARh / kVAh)
+    doc["impE"]  = serialized(String(dtm.import_energy,          1));
+    doc["expE"]  = serialized(String(dtm.export_energy,          1));
+    doc["impRE"] = serialized(String(dtm.import_reactive_energy, 1));
+    doc["expRE"] = serialized(String(dtm.export_reactive_energy, 1));
+    doc["impAE"] = serialized(String(dtm.import_apparent_energy, 1));
+
+    doc["timestamp"] = dtm.timestamp_last_report;
+
+    // DTM payload exceeds generic 1024-byte limit — use dedicated 2048-byte buffer
+    String jsonString;
+    serializeJson(doc, jsonString);
+    if (jsonString.length() >= 2048) {
+        Serial.println("MQTT DTM: payload too large");
+        return;
+    }
+    String topicBuf = topic_device + "dtm";
+    char data[2048];
+    jsonString.toCharArray(data, sizeof(data));
+    if (mqttclient.publish(topicBuf.c_str(), data)) {
+        size_t len = jsonString.length();
+        mqtt_BWPubOut_payload_bytes += len;
+        mqtt_BWPubOut_tcpip_bytes   += len + 60;
+        mqtt_publish_count++;
+    } else {
+        Serial.println("MQTT DTM: publish failed");
+    }
+#ifdef ENABLE_DEBUG_MQTT
+    Serial.printf("topic: %s, data: %s\n", topicBuf.c_str(), data);
+#endif
+}
+
 void loop_mqtt() {
   uint32_t loop_timestamp = esp_log_timestamp();
 
@@ -534,7 +623,9 @@ void loop_mqtt() {
       //mqtt_publish_Harmonics("", loop_timestamp);
       //Serial.println("Published per phase Harmonics");
 
-    // next is loop over the subpanel per tenant meters   
+      mqtt_publish_DTM(nesldtm_1.last_reading);
+
+    // next is loop over the subpanel per tenant meters
     for(int i=0;i<MODBUS_NUM_METERS;i++) {
           //mqtt_publish_Meter(i, readings[i]);  
           // TODO add modbus node number and per meter leakage RCD Fault in the readings powerdata

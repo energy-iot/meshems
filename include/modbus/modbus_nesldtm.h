@@ -1,6 +1,7 @@
 #pragma once
 
 #include <modbus/modbus_master.h>
+#include <data_model.h>
 
 #define NESLDTM_REG_START  1000
 #define NESLDTM_REG_END    1068
@@ -23,6 +24,7 @@ class Modbus_NESLDTM : public ModbusMaster {
         uint8_t get_modbus_address();
         void set_modbus_address(uint8_t addr);
         void poll();
+        DTMData last_reading;
 
     private:
         uint8_t modbus_address;

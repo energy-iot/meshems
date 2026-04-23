@@ -65,6 +65,7 @@ void mqtt_publish_comma_sep_colon_delim(const char* subtopic, const char * data)
 // -------------------------------------------------------------------
 void mqtt_publish(const char * data);
 void mqtt_publish_evse();
+void mqtt_publish_DTM(const DTMData& dtm);
 void mqtt_publish_door_opened();
 void mqtt_publish_door_closed();
 
