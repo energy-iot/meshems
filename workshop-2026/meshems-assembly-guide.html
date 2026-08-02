@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Energy IoT MeshEMS Assembly Workshop</title>
+<style>
+  :root {
+    /* Energy IoT brand: teal #4ecca3, slate #393e46 */
+    --teal: #4ecca3;
+    --green: #14966c;
+    --green-dark: #0e7253;
+    --ink: #393e46;
+    --muted: #5a6675;
+    --line: #d8dee6;
+    --bg-soft: #edf9f4;
+    --amber: #b45309;
+    --amber-bg: #fef3e2;
+    --blue: #1d4ed8;
+    --blue-bg: #eef3fe;
+    --red: #b91c1c;
+    --red-bg: #fdeeee;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    color: var(--ink);
+    line-height: 1.55;
+    font-size: 15px;
+    background: #fff;
+  }
+  .page {
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 32px 40px 64px;
+  }
+
+  /* ---------- Cover ---------- */
+  .cover { text-align: left; padding-top: 24px; }
+  .cover .brand-logo { height: 72px; width: auto; margin: 0 0 18px; border: none; }
+  .cover .kicker {
+    text-transform: uppercase; letter-spacing: 2.5px; font-size: 12px;
+    font-weight: 700; color: var(--green);
+  }
+  .cover h1 { font-size: 40px; margin: 6px 0 4px; letter-spacing: -0.5px; }
+  .cover .subtitle { font-size: 18px; color: var(--muted); margin: 0 0 20px; }
+  .cover-meta {
+    display: flex; gap: 28px; flex-wrap: wrap; margin: 18px 0 26px;
+    padding: 14px 18px; background: var(--bg-soft); border-radius: 10px;
+  }
+  .cover-meta div { font-size: 13.5px; }
+  .cover-meta .label { color: var(--muted); text-transform: uppercase; font-size: 10.5px; letter-spacing: 1px; font-weight: 700; }
+  .cover-meta .value { font-weight: 600; }
+
+  /* ---------- Headings ---------- */
+  h2 {
+    font-size: 24px; margin: 40px 0 6px; letter-spacing: -0.3px;
+    padding-top: 10px;
+  }
+  h2 .stepnum {
+    display: inline-block; background: var(--green); color: #fff;
+    border-radius: 8px; padding: 1px 12px; margin-right: 10px;
+    font-size: 18px; vertical-align: 2px;
+  }
+  h3 { font-size: 17px; margin: 22px 0 6px; }
+  .step-goal { color: var(--muted); font-size: 15px; margin: 0 0 14px; }
+  hr.sep { border: none; border-top: 1px solid var(--line); margin: 36px 0 0; }
+
+  /* ---------- Images ---------- */
+  figure { margin: 16px 0; }
+  figure img {
+    max-width: 100%; border-radius: 10px; border: 1px solid var(--line);
+    display: block;
+  }
+  figcaption { font-size: 12.5px; color: var(--muted); margin-top: 6px; }
+  .img-row { display: flex; gap: 14px; align-items: flex-start; }
+  .img-row figure { flex: 1; min-width: 0; }
+  .img-row img { width: 100%; height: auto; object-fit: cover; }
+  .img-h340 img { max-height: 340px; width: auto; margin: 0 auto; }
+
+  /* ---------- Lists & tables ---------- */
+  ol.steps { padding-left: 22px; }
+  ol.steps > li { margin: 7px 0; }
+  ul.compact li { margin: 4px 0; }
+  table { border-collapse: collapse; width: 100%; margin: 14px 0; font-size: 13.5px; }
+  th { text-align: left; background: var(--bg-soft); font-size: 12px; text-transform: uppercase; letter-spacing: 0.7px; color: var(--green-dark); }
+  th, td { padding: 7px 10px; border: 1px solid var(--line); vertical-align: top; }
+  td .part { font-weight: 600; }
+
+  /* ---------- Callouts ---------- */
+  .callout {
+    border-radius: 10px; padding: 12px 16px; margin: 16px 0;
+    font-size: 14px; border: 1px solid;
+  }
+  .callout .callout-title {
+    font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;
+    display: block; margin-bottom: 3px;
+  }
+  .tip     { background: var(--blue-bg);  border-color: #c3d4f8; }
+  .tip .callout-title { color: var(--blue); }
+  .warn    { background: var(--amber-bg); border-color: #f3ddb8; }
+  .warn .callout-title { color: var(--amber); }
+  .danger  { background: var(--red-bg);   border-color: #f2c9c9; }
+  .danger .callout-title { color: var(--red); }
+  .check   { background: var(--bg-soft);  border-color: #cfe0d7; }
+  .check .callout-title { color: var(--green-dark); }
+  .check ul { margin: 4px 0 2px; padding-left: 20px; }
+  .check li { margin: 3px 0; }
+
+  .draft {
+    background: #fffbe8; border: 1.5px dashed #d9b52a; border-radius: 10px;
+    padding: 10px 16px; margin: 14px 0; font-size: 13.5px; color: #7a6410;
+  }
+  .draft b { text-transform: uppercase; letter-spacing: 1px; font-size: 11.5px; }
+
+  /* ---------- Solder joint guide ---------- */
+  .joint-grid { display: flex; gap: 12px; margin: 14px 0; flex-wrap: wrap; }
+  .joint {
+    flex: 1; min-width: 150px; border: 1px solid var(--line); border-radius: 10px;
+    padding: 10px 12px; font-size: 13px;
+  }
+  .joint .jt { font-weight: 700; margin-bottom: 2px; }
+  .joint.good .jt { color: var(--green-dark); }
+  .joint.bad .jt { color: var(--red); }
+
+  /* ---------- TOC ---------- */
+  .toc { background: var(--bg-soft); border-radius: 12px; padding: 18px 24px; margin: 22px 0; }
+  .toc h3 { margin: 0 0 8px; font-size: 13px; text-transform: uppercase; letter-spacing: 1.2px; color: var(--green-dark); }
+  .toc ol { margin: 0; padding-left: 20px; columns: 2; column-gap: 36px; font-size: 14px; }
+  .toc li { margin: 3px 0; break-inside: avoid; }
+  .toc a { color: var(--ink); text-decoration: none; }
+
+  footer.docfoot {
+    margin-top: 48px; padding-top: 14px; border-top: 1px solid var(--line);
+    font-size: 12px; color: var(--muted); display: flex; justify-content: space-between;
+  }
+
+  /* ---------- Print / PDF ---------- */
+  @page { size: A4; margin: 16mm 14mm; }
+  @media print {
+    body { font-size: 12.5px; }
+    .page { max-width: none; padding: 0; }
+    .page-break { break-before: page; }
+    h2 { break-after: avoid; }
+    figure, .callout, .joint-grid, .draft { break-inside: avoid; }
+    .img-row { break-inside: avoid; }
+    /* tables may split across pages, but never mid-row; header row repeats */
+    table { break-inside: auto; }
+    tr { break-inside: avoid; }
+    thead { display: table-header-group; }
+    /* cap photo height so tall portrait shots don't consume a whole page */
+    figure img { max-height: 150mm; width: auto; max-width: 100%; margin: 0 auto; }
+    a { color: inherit; }
+    .cover { padding-top: 0; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- ================= COVER ================= -->
+  <section class="cover">
+    <img class="brand-logo" src="images/energy-iot-logo.png" alt="Energy IoT — Democratize the Microgrid">
+    <div class="kicker">Energy IoT Open Source (EIOT) &middot; Hands-on Workshop</div>
+    <h1>Energy IoT MeshEMS Assembly Guide</h1>
+    <p class="subtitle">Build your own energy management system — from a bare NESL PCB hardware controller to a working, hackable open EMS platform.</p>
+
+    <div class="cover-meta">
+      <div><span class="label">Board</span><br><span class="value"><a href="https://newenergysolutionslab.com">Commercial NESL EMS Controller PCB 865B</a></span></div>
+      <div><span class="label">Skill level</span><br><span class="value">Basic soldering</span></div>
+      <div><span class="label">Time</span><br><span class="value">≈ 2–3 hours</span></div>
+      <div><span class="label">Controller</span><br><span class="value">ESP32-S3</span></div>
+    </div>
+
+    <p>Welcome! In this workshop you'll assemble the <strong>Energy IoT MeshEMS controller</strong> — an open, modular energy-management hardware platform from <strong>Energy IoT Open Source (EIOT)</strong>, the Oakland-based 501(c)(3) nonprofit.</p>
+
+    <p>There is an option to start with a bare PCB board. In this guide, we will use the commercially available, pre-wired EMS PCB board from <strong>New Energy Solutions Lab, LLC (NESL)</strong>. NESL commercialized the first version of MeshEMS, removing the need for manual wiring and adding support for hardware expansion.</p>
+
+    <p>Starting from the bare NESL board, you'll solder every component yourself and finish with an assembled controller that can talk <strong>Modbus RS-485</strong>, connect over <strong>Ethernet</strong>, switch loads with <strong>solid-state relays</strong>, log to a <strong>microSD card</strong>, read <strong>GPS</strong> and <strong>temperature sensors</strong> — and grow with whatever you want to build next on its expansion headers.</p>
+
+    <p>No prior electronics-design experience is needed. If you can hold a soldering iron, you can build this. Every step has photos of exactly what your board should look like, plus a checkpoint before you move on.</p>
+
+    <figure>
+      <img src="images/final-front.jpg" alt="Fully assembled Energy IoT MeshEMS board with ESP32-S3 and meter expansion board installed">
+      <figcaption><strong>The goal:</strong> your fully assembled Energy IoT MeshEMS controller — shown here with the optional 6-channel energy-meter expansion board riding on the expansion headers. Every component is installed by you in this workshop.</figcaption>
+    </figure>
+  </section>
+
+  <!-- ================= TOC ================= -->
+  <div class="toc">
+    <h3>Workshop roadmap</h3>
+    <ol>
+      <li><a href="#know">Know your board</a></li>
+      <li><a href="#solder">Soldering crash course</a></li>
+      <li><a href="#tools">Tools &amp; parts checklist</a></li>
+      <li><a href="#step1">Step 1 — Capacitor, resistors, buttons</a></li>
+      <li><a href="#step2">Step 2 — Power jumpers</a></li>
+      <li><a href="#step3">Step 3 — Male &amp; female headers</a></li>
+      <li><a href="#step4">Step 4 — Ethernet</a></li>
+      <li><a href="#step5">Step 5 — Modbus (RS-485) &amp; microSD</a></li>
+      <li><a href="#step6">Step 6 — Terminal connectors</a></li>
+      <li><a href="#step7">Step 7 — Microprocessor (ESP32-S3)</a></li>
+      <li><a href="#step8">Step 8 — Power-up &amp; smoke test</a></li>
+      <li><a href="#step9">Step 9 — Flash your firmware</a></li>
+      <li><a href="#next">What will you build?</a></li>
+    </ol>
+  </div>
+
+  <!-- ================= KNOW YOUR BOARD ================= -->
+  <h2 id="know">Know your board</h2>
+  <p class="step-goal">Two minutes of orientation saves an hour of desoldering. Match each number below to the annotated photo.</p>
+
+  <figure>
+    <img src="images/board-annotated.jpg" alt="Assembled Energy IoT MeshEMS board with all components numbered">
+    <figcaption>The assembled board with every component numbered — refer back to this photo throughout the build.</figcaption>
+  </figure>
+
+  <table>
+    <thead><tr><th style="width:36px">#</th><th style="width:230px">Component</th><th>What it does</th></tr></thead>
+    <tr><td>0</td><td class="part">NESL EMS Controller PCB 865B</td><td>Commercial PCB board with built-in wiring for the required components: MCU, 2 Modbus RS-485 interfaces, Ethernet RJ45, control buttons, power supply, sensor IO, and a 40-pin expansion slot.</td></tr>
+    <tr><td>1</td><td class="part">ESP32-S3 Dual-core microcontroller</td><td>The brain. Dual-core microcontroller with Wi-Fi &amp; Bluetooth. Plugs into female headers — never soldered directly.</td></tr>
+    <tr><td>2</td><td class="part">USB-C port</td><td>Powers the board and programs the ESP32-S3 from your laptop.</td></tr>
+    <tr><td>3</td><td class="part">Ethernet module (RJ45)</td><td>Wired network connection — for sites where Wi-Fi isn't reliable enough for an EMS.</td></tr>
+    <tr><td>4</td><td class="part">RS-485 interface #1</td><td>Modbus RTU bus — talks to energy meters, inverters, and EV chargers.</td></tr>
+    <tr><td>5</td><td class="part">microSD card module</td><td>Local data logging: store measurements even when the network is down.</td></tr>
+    <tr><td>6</td><td class="part">RS-485 interface #2</td><td>Second, independent Modbus bus — e.g. sensors on one bus, an EV charger (EVC) on the other.</td></tr>
+    <tr><td>7</td><td class="part">SW1 / SW2 buttons</td><td>User buttons — reset, mode select, or whatever your firmware assigns.</td></tr>
+    <tr><td>8</td><td class="part">Expansion headers</td><td>Your playground. SPI, IRQ lines, 3.3&nbsp;V and GND broken out for add-on boards.</td></tr>
+    <tr><td>9</td><td class="part">Temp sensor / RS-485 terminals</td><td>Screw terminals for a temperature probe and the sensor-side RS-485 bus (5&nbsp;V, GND, A, B).</td></tr>
+    <tr><td>10</td><td class="part">SSR1 / SSR2 outputs</td><td>Drive two solid-state relays to switch real loads — heaters, pumps, contactors.</td></tr>
+    <tr><td>11</td><td class="part">GPS (TX/RX)</td><td>Serial port for a GPS module — precise time and location stamping.</td></tr>
+    <tr><td>12</td><td class="part">Door switch</td><td>Input for an enclosure tamper/door switch.</td></tr>
+    <tr><td>13</td><td class="part">Ground / power terminal</td><td>5&nbsp;V and GND screw terminal for powering the board in the field (instead of USB-C).</td></tr>
+  </table>
+
+  <!-- ================= SOLDERING CRASH COURSE ================= -->
+  <h2 id="solder">Soldering crash course</h2>
+  <p class="step-goal">Everything on this board is through-hole — the friendliest kind of soldering. Here's the whole technique in four moves.</p>
+
+  <ol class="steps">
+    <li><strong>Heat both.</strong> Touch the iron tip to the pad <em>and</em> the component leg at the same time. Count one second.</li>
+    <li><strong>Feed solder.</strong> Touch solder to the joint (not the iron). It should flow around the leg like water.</li>
+    <li><strong>Remove solder, then iron.</strong> Total contact time: 2–3 seconds. Longer risks lifting a pad.</li>
+    <li><strong>Don't move</strong> the part while the joint cools (~2 seconds), or you'll get a grainy "cold joint".</li>
+  </ol>
+
+  <div class="joint-grid">
+    <div class="joint good"><div class="jt">✓ Good joint</div>Shiny cone, like a tiny volcano hugging the leg. Solder flowed onto both pad and leg.</div>
+    <div class="joint bad"><div class="jt">✗ Cold joint</div>Dull, grainy ball sitting on top. Reheat it and add a touch of flux.</div>
+    <div class="joint bad"><div class="jt">✗ Bridge</div>Solder connecting two neighbouring pads. Wipe the hot iron across to separate, or use solder wick.</div>
+    <div class="joint bad"><div class="jt">✗ Starved joint</div>Pin visible through a thin ring of solder. Just add a little more.</div>
+  </div>
+
+  <div class="danger"><span class="callout-title">Safety</span>
+    The iron tip is ~360&nbsp;°C / 685&nbsp;°F — it looks identical hot or cold, so always return it to its stand. Work in a ventilated area, don't inhale the flux smoke, wear eye protection when clipping leads (they fly!), and wash your hands after handling solder.</div>
+
+  <!-- ================= TOOLS ================= -->
+  <h2 id="tools">Tools &amp; parts checklist</h2>
+
+  <div class="img-row img-h340">
+    <figure><img src="images/img-002-001.jpg" alt="Soldering station set to 685F"><figcaption>Soldering station set to 685&nbsp;°F (~363&nbsp;°C), with brass-wool tip cleaner.</figcaption></figure>
+    <figure><img src="images/img-002-002.jpg" alt="Chip Quik no-clean flux pen"><figcaption>No-clean flux pen (Chip Quik CQ2LF) — your secret weapon for clean joints.</figcaption></figure>
+  </div>
+
+  <h3>On your bench</h3>
+  <ul class="compact">
+    <li><strong>Soldering iron</strong> set to <strong>685&nbsp;°F (~363&nbsp;°C)</strong>, with a damp sponge or brass wool for the tip</li>
+    <li><strong>Solder</strong> (leaded 60/40 or lead-free — thin, 0.8&nbsp;mm works well for through-hole)</li>
+    <li><strong>Flux pen</strong> — apply to pads before soldering; makes solder flow and joints shiny</li>
+    <li><strong>Flush cutters / pliers</strong> — for trimming component legs after soldering</li>
+    <li><strong>Foam block</strong> — holds parts flat against the board while you flip it over to solder</li>
+    <li>Optional but nice: solder wick (for fixing bridges), multimeter (for the smoke test)</li>
+  </ul>
+
+  <h3>In your parts kit</h3>
+  <table>
+    <thead><tr><th>Qty</th><th style="width:250px">Part</th><th>Used in</th></tr></thead>
+    <tr><td>1</td><td class="part">NESL EMS Controller PCB 865B</td><td>All soldering steps</td></tr>
+    <tr><td>1</td><td class="part">Ceramic capacitor</td><td>Step 1 — DC smoothing</td></tr>
+    <tr><td>3</td><td class="part">Resistors</td><td>Step 1 — button pull-ups</td></tr>
+    <tr><td>2</td><td class="part">Tactile push buttons (SW1, SW2)</td><td>Step 1</td></tr>
+    <tr><td>3</td><td class="part">2-pin jumper headers + shunts</td><td>Step 2 — power selection</td></tr>
+    <tr><td>—</td><td class="part">Male pin headers (long strips)</td><td>Step 3 — expansion slot</td></tr>
+    <tr><td>3</td><td class="part">Female headers (2 long + 1 short)</td><td>Step 3 — ESP32 socket + LED/OLED</td></tr>
+    <tr><td>1</td><td class="part">Ethernet module (HanRun RJ45)</td><td>Step 4</td></tr>
+    <tr><td>2</td><td class="part">RS-485 transceiver modules</td><td>Step 5</td></tr>
+    <tr><td>1</td><td class="part">microSD card module</td><td>Step 5</td></tr>
+    <tr><td>2</td><td class="part">Vertical terminal blocks</td><td>Step 5 — RS-485 field wiring</td></tr>
+    <tr><td>5</td><td class="part">Right-angle 2-pin terminal blocks</td><td>Step 6 — power, SSR1, SSR2, GPS, door switch</td></tr>
+    <tr><td>1</td><td class="part">Right-angle 4-pin terminal block</td><td>Step 6 — temp sensor / RS-485</td></tr>
+    <tr><td>1</td><td class="part">ESP32-S3 microprocessor</td><td>Step 7 — plugs in, no soldering</td></tr>
+  </table>
+
+  <div class="tip"><span class="callout-title">Golden rule: flat first, bulky last</span>
+    We solder the flattest parts first so the board sits level when flipped, then the headers, then the modules — and the chunky screw-terminal blocks near the end, where they can no longer get in your iron's way. Follow the step order and the board always lies flat when it matters.</div>
+
+  <hr class="sep">
+
+  <!-- ================= STEP 0 ================= -->
+  <h2 id="step1" class="page-break"><span class="stepnum">Step 1</span>Capacitor, resistors, buttons</h2>
+  <p class="step-goal"><strong>Goal:</strong> the shortest components go in first — one capacitor, three resistors, and the two user buttons in the top-right corner of the board.</p>
+
+  <ol class="steps">
+    <li><strong>Orient the board printing-side up.</strong> The white silkscreen text ("NESL EMS Controller PCB 865B") must face you — all components mount on this side.</li>
+    <li><strong>Insert the capacitor</strong> into its footprint and seat it flush. It smooths the DC supply rail. It's a ceramic capacitor, so it has no polarity — either way round is fine.</li>
+    <li><strong>Insert the three resistors</strong> next to the buttons and bend the legs slightly outward on the back so they stay put. Resistors have no polarity — either way round is fine. (They're the pull-ups for the buttons.)</li>
+    <li><strong>Insert buttons SW1 and SW2.</strong> They click into place; the pins only fit one way.</li>
+    <li><strong>Flip, solder, trim.</strong> Flip the board onto the foam, solder every leg, then clip the excess leads flush with your cutters.</li>
+  </ol>
+
+  <div class="img-row img-h340">
+    <figure><img src="images/empty-pcb-front.jpg" alt="Bare PCB, silkscreen side up"><figcaption>Your starting point: the bare board, silkscreen (printing) side up.</figcaption></figure>
+    <figure><img src="images/empty-pcb-back.jpg" alt="Bare PCB, solder side"><figcaption>The back (solder side) — this is the side you'll solder on all workshop long.</figcaption></figure>
+  </div>
+
+  <div class="img-row img-h340">
+    <figure><img src="images/step1-passives-front.jpg" alt="Close-up of buttons SW1 and SW2, resistors R1-R3 and capacitor C2 installed"><figcaption>Front: buttons SW1/SW2, resistors R1–R3, and capacitor C2 installed in the corner.</figcaption></figure>
+    <figure><img src="images/step1-passives-back.jpg" alt="Back of board showing soldered and trimmed passive component joints"><figcaption>Back: the same corner soldered and trimmed — shiny cones, no bridges.</figcaption></figure>
+  </div>
+
+  <div class="check"><span class="callout-title">✓ Checkpoint before Step 2</span>
+    <ul>
+      <li>Capacitor sits flush against the board</li>
+      <li>Both buttons click when pressed and sit flush against the board</li>
+      <li>All joints are shiny cones; no bridges between neighbouring pads</li>
+      <li>All legs trimmed flush on the back</li>
+    </ul>
+  </div>
+
+  <!-- ================= STEP 1 ================= -->
+  <h2 id="step2"><span class="stepnum">Step 2</span>Power jumpers</h2>
+  <p class="step-goal"><strong>Goal:</strong> install the three 2-pin jumper headers (bottom-left corner) that select how power is routed — labeled <strong>Default&nbsp;3.3V</strong>, <strong>ESP&nbsp;3.3V</strong>, and <strong>EX&nbsp;3.3V</strong> on the silkscreen. These let you choose what supplies the 3.3&nbsp;V rail — e.g. powering the Ethernet module.</p>
+
+  <ol class="steps">
+    <li>Place the three 2-pin headers into the <em>Jumper 1 / Jumper 2 / Jumper 3</em> footprints, short pins into the board, plastic body on top.</li>
+    <li><strong>Press a foam block over them and flip the board</strong> — the foam holds the headers flush while you solder. A header soldered at an angle won't take its shunt properly.</li>
+    <li>Solder one pin of each header first, then check it's sitting straight. If not, reheat that one pin and press gently. Then solder the remaining pins.</li>
+    <li>Place the jumper shunts on according to your power setup (for the workshop: the <strong>Default 3.3V</strong> position).</li>
+  </ol>
+
+  <figure>
+    <img src="images/step2-jumpers.jpg" alt="Close-up of the three power jumper headers Jumper 1, 2 and 3 soldered in">
+    <figcaption>The three jumper headers soldered in — silkscreen labels <em>Jumper 1/2/3</em>: Default&nbsp;3.3V, ESP&nbsp;3.3V, EX&nbsp;3.3V. Shunts not yet placed; yours goes on <strong>Default&nbsp;3.3V</strong>.</figcaption>
+  </figure>
+
+  <div class="check"><span class="callout-title">✓ Checkpoint before Step 3</span>
+    <ul>
+      <li>All three headers stand perfectly vertical</li>
+      <li>Shunts slide on and off smoothly</li>
+      <li>Shunt placed on <strong>Default 3.3V</strong> for the workshop build</li>
+    </ul>
+  </div>
+
+  <!-- ================= STEP 3 ================= -->
+  <h2 id="step3" class="page-break"><span class="stepnum">Step 3</span>Male &amp; female headers</h2>
+  <p class="step-goal"><strong>Goal:</strong> install the pin headers that make the Energy IoT MeshEMS modular — sockets for the ESP32-S3 and display, and expansion pins for everything you'll invent later.</p>
+
+  <ol class="steps">
+    <li><strong>Male headers → expansion slot.</strong> These long pin strips break out SPI, IRQ lines, 3.3&nbsp;V and GND for add-on boards.</li>
+    <li><strong>Female headers → controller side.</strong> Two long ones and one short horizontal one:
+      <ul class="compact">
+        <li>The <strong>2 long female headers</strong> are the socket for the <strong>ESP32-S3 microprocessor</strong> — socketing (instead of soldering the module) means you can swap or upgrade the brain in seconds.</li>
+        <li>The <strong>1 short female header</strong> is for the <strong>LED / OLED display</strong>.</li>
+      </ul></li>
+    <li><strong>Keep them straight — use the mating trick:</strong> for the two long female headers, plug the ESP32-S3 dev board into them <em>before</em> soldering, insert the whole sandwich into the PCB, and solder. The module guarantees both rows are perfectly parallel. (Remove the ESP32 after soldering — it goes back in at Step 7.)</li>
+    <li>As always: solder one end pin, check alignment, solder the other end pin, re-check, then fill in the rest.</li>
+  </ol>
+
+  <div class="img-row img-h340">
+    <figure><img src="images/step3-headers-front.jpg" alt="Board with male expansion headers, ESP32 socket rows and OLED header installed"><figcaption>Front: male expansion rows, the two ESP32-S3 socket rows, and the short OLED header — all standing straight.</figcaption></figure>
+    <figure><img src="images/step3-headers-back.jpg" alt="Back of board showing long straight rows of header joints"><figcaption>Back: long, straight rows of joints — inspect for bridges before moving on.</figcaption></figure>
+  </div>
+
+  <div class="warn"><span class="callout-title">Long headers drift</span>
+    A 20+ pin header WILL lean while you solder pin after pin. Tack the two end pins first and re-check with the mating module before committing to the middle pins. Desoldering a 20-pin header is miserable — ask us how we know.</div>
+
+  <div class="check"><span class="callout-title">✓ Checkpoint before Step 4</span>
+    <ul>
+      <li>ESP32-S3 dev board slides smoothly in and out of the two female rows</li>
+      <li>Male expansion pins are vertical (sight down the rows to check)</li>
+      <li>No solder bridges between adjacent pins — inspect with good light</li>
+    </ul>
+  </div>
+
+  <!-- ================= STEP 4 ================= -->
+  <h2 id="step4"><span class="stepnum">Step 4</span>Ethernet</h2>
+
+  <p class="step-goal"><strong>Goal:</strong> install the Ethernet module (HanRun RJ45) on the left edge — wired networking for installations where Wi-Fi doesn't cut it.</p>
+
+  <ol class="steps">
+    <li>Insert the Ethernet module into its footprint on the left edge, RJ45 jack facing outward so a cable can plug in past the board edge.</li>
+    <li>The module is heavy relative to its pins: hold it firmly flush (foam block again) and tack two diagonal pins first.</li>
+    <li>Verify the jack overhangs the board edge correctly, then solder all remaining pins generously — the jack takes real force every time a cable clicks in.</li>
+    <li>Remember: this module's power comes via the jumpers you installed in Step 2.</li>
+  </ol>
+
+  <div class="img-row img-h340">
+    <figure><img src="images/step4-ethernet-front.jpg" alt="Board with the HanRun Ethernet module installed, jack overhanging the edge"><figcaption>The Ethernet module seated, RJ45 jack overhanging the board edge.</figcaption></figure>
+    <figure><img src="images/step4-ethernet-back.jpg" alt="Back of board after soldering the Ethernet module pins"><figcaption>Back: Ethernet joints soldered generously — the jack takes force with every cable click.</figcaption></figure>
+  </div>
+
+  <div class="check"><span class="callout-title">✓ Checkpoint before Step 5</span>
+    <ul>
+      <li>An Ethernet cable clicks in and releases cleanly</li>
+      <li>Module doesn't flex or lift when you tug the cable gently</li>
+    </ul>
+  </div>
+
+  <!-- ================= STEP 5 ================= -->
+  <h2 id="step5" class="page-break"><span class="stepnum">Step 5</span>Modbus (RS-485) &amp; microSD</h2>
+
+  <p class="step-goal"><strong>Goal:</strong> install the two RS-485 transceiver modules — the Energy IoT MeshEMS's voice on the Modbus bus — plus the microSD card module for local logging, and the two vertical terminal blocks that wire the buses to the field.</p>
+
+  <ol class="steps">
+    <li><strong>RS-485 module #1</strong> (blue board) mounts next to the Ethernet module, beside the microSD position. Match the pin labels on the module (RXD/TXD side) to the silkscreen on the PCB.</li>
+    <li><strong>RS-485 module #2</strong> mounts below the microSD module, feeding the Temp Sensor / RS-485 terminal group — the silkscreen marks the two buses <strong>RS485(SENS)</strong> and <strong>RS485(EVC)</strong>: one for sensors, one for an EV charger or other equipment.</li>
+    <li><strong>Vertical terminal blocks</strong> — install the two vertical RS-485 terminal blocks (A/B field wiring) alongside their transceivers now.</li>
+    <li><strong>microSD module</strong> — check its pin order (3V3, CS, MOSI, CLK, MISO, GND) against the PCB silkscreen before soldering; not all microSD breakouts share the same pinout.</li>
+    <li>For each module: insert the pins, hold flush with foam, tack one corner pin, verify it's level, then solder the rest.</li>
+  </ol>
+
+  <div class="img-row img-h340">
+    <figure><img src="images/step5-modbus-front.jpg" alt="Board with both blue RS-485 transceiver modules and microSD module installed"><figcaption>Both RS-485 transceivers, the microSD module, and the vertical bus terminals in place. (This build added Ethernet later — yours already has it.)</figcaption></figure>
+    <figure><img src="images/step5-modbus-back.jpg" alt="Back of board after soldering the module pins"><figcaption>Back: module joints soldered.</figcaption></figure>
+  </div>
+
+  <div class="img-row img-h340">
+    <figure><img src="images/step5-sd-foam.jpg" alt="microSD module pressed into the foam block ready for soldering"><figcaption>The foam trick, in action: press the module into the foam, flip the sandwich, solder — it stays perfectly flush.</figcaption></figure>
+    <figure><img src="images/step5-modules-complete.jpg" alt="Board with Ethernet, both RS-485 modules and microSD installed"><figcaption>Checkpoint state: Ethernet, both RS-485 transceivers, and microSD all seated.</figcaption></figure>
+  </div>
+
+  <div class="tip"><span class="callout-title">Why two RS-485 buses?</span>
+    Modbus RTU allows many devices per bus, but mixing slow sensors with chatty equipment hurts polling rates. Two independent buses let you poll a power meter fast on one bus while temperature sensors amble along on the other.</div>
+
+  <div class="check"><span class="callout-title">✓ Checkpoint before Step 6</span>
+    <ul>
+      <li>Module pin labels match the PCB silkscreen (especially the microSD pinout)</li>
+      <li>All modules sit level and fully seated; vertical terminal blocks stand straight</li>
+      <li>A/B lines of each RS-485 module route to the correct terminal block (SENS vs EVC)</li>
+    </ul>
+  </div>
+
+  <!-- ================= STEP 6 ================= -->
+  <h2 id="step6"><span class="stepnum">Step 6</span>Terminal connectors</h2>
+
+  <p class="step-goal"><strong>Goal:</strong> install the six remaining green screw-terminal blocks — this is where the real world (power, relays, sensors, GPS, door switch) wires into your Energy IoT MeshEMS.</p>
+
+  <table>
+    <thead><tr><th>Qty</th><th style="width:210px">Connector</th><th>Position</th></tr></thead>
+    <tr><td>5</td><td class="part">Right-angle 2-pin</td><td>Bottom edge: 5V/GND power, SSR1, SSR2, GPS (TX/RX), Door SW</td></tr>
+    <tr><td>1</td><td class="part">Right-angle 4-pin</td><td>Right edge: Temp Sensor / RS-485 (3.3V, GND, 5V, A, B group)</td></tr>
+  </table>
+
+  <ol class="steps">
+    <li><strong>Right-angle blocks face outward</strong> — the wire-entry holes must point off the edge of the board, so you can insert wires with the board mounted in an enclosure.</li>
+    <li>Insert all connectors, hold them with the foam block, and flip.</li>
+    <li>Solder <strong>one pin per connector</strong> first, then verify each block is flush and straight before soldering the rest. These take mechanical force when you screw wires in — a tilted block is a future broken joint.</li>
+    <li>These pins are thick and sink heat: hold the iron a beat longer and use plenty of solder so it fills the hole completely.</li>
+  </ol>
+
+  <div class="img-row img-h340">
+    <figure><img src="images/step6-terminals-progress.jpg" alt="Board with right-angle terminal blocks partially installed along the edges"><figcaption>Halfway there: right-angle blocks going in along the edges, openings facing out.</figcaption></figure>
+    <figure><img src="images/step6-terminals-front.jpg" alt="Board with all green terminal blocks installed"><figcaption>All terminal blocks installed, wire-entry openings off the board edge.</figcaption></figure>
+  </div>
+  <div class="img-row img-h340">
+    <figure><img src="images/step6-terminals-back.jpg" alt="Back of board showing terminal block joints"><figcaption>Back: terminal-block joints. Note how much solder these big pins take — that's normal.</figcaption></figure>
+    <figure><img src="images/step6-overview.jpg" alt="Overview of the completed board before the ESP32 is seated"><figcaption>The completed board — every part installed except the brain.</figcaption></figure>
+  </div>
+
+  <div class="check"><span class="callout-title">✓ Checkpoint before Step 7</span>
+    <ul>
+      <li>All wire-entry openings face outward, off the board edge</li>
+      <li>Every block sits flush — try wiggling each one; nothing should move</li>
+      <li>Every pin's hole is completely filled with solder</li>
+    </ul>
+  </div>
+
+  <!-- ================= STEP 6 ================= -->
+  <h2 id="step7"><span class="stepnum">Step 7</span>Microprocessor (ESP32-S3)</h2>
+
+  <p class="step-goal"><strong>Goal:</strong> the moment of truth — seat the ESP32-S3 dev board into its socket. No soldering in this step.</p>
+
+  <ol class="steps">
+    <li><strong>Check orientation first.</strong> The USB-C connectors on the dev board must face the left edge of the PCB (matching the cover photo). Plugging it in backwards applies power to the wrong pins.</li>
+    <li>Align <em>all</em> pins over both female header rows before pressing — it's easy to be offset by one pin. Count pins at both ends.</li>
+    <li>Press down evenly with both thumbs until the module seats fully. It takes noticeable force; support the PCB from beneath.</li>
+    <li>If you have the OLED display, seat it in the short female header the same way.</li>
+  </ol>
+
+  <figure>
+    <img src="images/step7-esp32.jpg" alt="ESP32-S3 dev board seated in its socket, USB-C ports facing the left edge">
+    <figcaption>The ESP32-S3 dev board seated in its socket — both USB-C connectors facing the left edge of the PCB.</figcaption>
+  </figure>
+
+  <div class="warn"><span class="callout-title">Before you press</span>
+    Offset-by-one is the #1 assembly error at this stage — it can put 5&nbsp;V on a 3.3&nbsp;V pin. Check both ends of both rows, then press.</div>
+
+  <!-- ================= STEP 7 ================= -->
+  <h2 id="step8"><span class="stepnum">Step 8</span>Power-up &amp; smoke test</h2>
+
+  <p class="step-goal"><strong>Goal:</strong> verify your build before trusting it with real hardware.</p>
+
+  <ol class="steps">
+    <li><strong>Visual sweep first.</strong> Back of the board under good light: any solder bridges, stray clipped legs, or unfilled joints? Fix them now.</li>
+    <li>Optional but recommended: with a multimeter in continuity mode, confirm <strong>3.3&nbsp;V and GND are not shorted</strong> (probe the expansion header's 3V3-out and GND pins — no beep!).</li>
+    <li>Connect <strong>USB-C</strong> to your laptop. The ESP32-S3's power LED should light immediately.</li>
+    <li>Leave it powered for a minute. Nothing should get hot or smell — the ESP32 module running slightly warm is normal.</li>
+  </ol>
+
+  <figure>
+    <img src="images/step8-back-inspection.jpg" alt="Back of the fully assembled board under inspection">
+    <figcaption>The visual sweep: the back of the fully assembled board. Look for bridges, stray clipped legs, and unfilled joints.</figcaption>
+  </figure>
+
+  <div class="check"><span class="callout-title">✓ Checkpoint before Step 9</span>
+    <ul>
+      <li>No solder bridges or stray leads on the back of the board</li>
+      <li>No short between 3.3&nbsp;V and GND</li>
+      <li>Power LED lights on USB-C; nothing overheats</li>
+    </ul>
+  </div>
+
+  <!-- ================= STEP 8 ================= -->
+  <h2 id="step9"><span class="stepnum">Step 9</span>Flash your firmware</h2>
+
+  <p class="step-goal"><strong>Goal:</strong> put a brain in the machine. The firmware for this board — the <strong>Energy IoT MeshEMS OpenAMI metering application</strong> — lives in our open-source GitHub, together with the complete, always-up-to-date setup and flashing instructions.</p>
+
+  <h3>Follow the README</h3>
+  <p>There are three application-specific repositories:</p>
+  <ul class="compact">
+    <li><strong>SunSpec Gateway:</strong> <a href="https://github.com/energy-iot/meshems-sunspec-gateway">github.com/energy-iot/meshems-sunspec-gateway</a></li>
+    <li><strong>OpenAMI Metering:</strong> <a href="https://github.com/energy-iot/meshems-openami-metering">github.com/energy-iot/meshems-openami-metering</a> — requires the optional 6-channel energy-meter expansion board.</li>
+    <li><strong>EVSE Charging:</strong> <a href="https://github.com/energy-iot/meshems-evse">github.com/energy-iot/meshems-evse</a></li>
+  </ul>
+  <p>Open the application repository that best matches your use case and follow its <strong>Dev Environment Installation Guide</strong> from top to bottom:</p>
+  <div style="background:var(--bg-soft); border:1px solid var(--line); border-radius:8px; padding:12px 16px; margin:10px 0; font-family:ui-monospace,Menlo,monospace; font-size:13.5px; overflow-x:auto;">
+    <a href="https://github.com/energy-iot/meshems-openami-metering#dev-environment-installation-guide">github.com/energy-iot/meshems-openami-metering</a>
+  </div>
+  <p>The README walks you through everything, step by step:</p>
+  <ol class="steps">
+    <li>Install <strong>Visual Studio Code</strong> and the <strong>PlatformIO</strong> extension.</li>
+    <li><strong>Clone the repository</strong> and open the project in VSCode.</li>
+    <li><strong>Configure the build</strong> — feature flags in <code>platformio.ini</code> select which subsystems (meters, display, SSR bank…) are compiled in.</li>
+    <li><strong>Build and flash</strong> the firmware over USB-C, then open the serial monitor and watch it boot (see the README's <em>Upload &amp; Serial Monitor</em> section).</li>
+  </ol>
+
+  <div class="tip"><span class="callout-title">Two USB-C ports?</span>
+    The ESP32-S3 dev board has two USB-C connectors: one labeled <strong>USB</strong> (native USB — use this one for flashing) and one labeled <strong>UART/COM</strong>. If your board doesn't show up on one port, try the other.</div>
+
+  <div class="warn"><span class="callout-title">If the port never appears</span>
+    Try a different USB-C cable first — charge-only cables (no data lines) are the single most common "bricked board" at workshops. Then try the board's other USB port, then another laptop USB port. More fixes live in the README's <em>Troubleshooting</em> section.</div>
+
+  <div class="check"><span class="callout-title">✓ You're done when…</span>
+    <ul>
+      <li>PlatformIO builds and flashes the firmware without errors</li>
+      <li>The boot log appears on the serial monitor</li>
+      <li>The subsystems you enabled (meter readings, display, buttons) report in the log</li>
+    </ul>
+  </div>
+
+  <div class="tip"><span class="callout-title">One firmware, many configurations</span>
+    You don't need a different framework to make this board yours. Every subsystem in the Energy IoT MeshEMS firmware — meter drivers, display, relays, web dashboard, SD logging — sits behind a feature flag in <code>platformio.ini</code>: uncomment the flags your project needs, rebuild, re-flash. The full flag reference lives in <code>docs/FEATURE_FLAGS.md</code> in the repo. And because the module is socketed, you can keep multiple pre-flashed ESP32s — one per configuration — and swap "brains" in seconds.</div>
+
+  <!-- ================= WHAT NEXT ================= -->
+  <h2 id="next">What will you build?</h2>
+  <p class="step-goal">You now own a controller you built and understand down to every joint — and the firmware you just flashed already does the heavy lifting. Here's what it can do out of the box, and where you can take it:</p>
+
+  <h3>Built in today — just flip the feature flag</h3>
+  <ul class="compact">
+    <li><strong>Energy metering</strong> — poll DDS238, CHD130, or DDSU666 single-phase meters over RS-485 Modbus, or read the CircuitSetup ATM90E32 6-channel SPI meter board (the black expansion board on the cover photo) for 3-phase / multi-CT sites.</li>
+    <li><strong>Telemetry</strong> — publish every reading over Wi-Fi or Ethernet via MQTT (<code>ENABLE_MQTT</code>).</li>
+    <li><strong>Environmental monitoring</strong> — the SHT20 temperature/humidity sensor speaks Modbus on the sensor bus, with CSV logging to microSD (<code>ENABLE_SD_SHT20_LOG</code>).</li>
+    <li><strong>Load control</strong> — switch the onboard SSR and an 8-channel I2C SSR bank (<code>ENABLE_RELAYS</code>) — heaters, pumps, contactors.</li>
+    <li><strong>Live site dashboard</strong> — <code>ENABLE_WEBSERVER</code> serves a map-based relay dashboard with per-house energy timelines, straight off the board (beta — field-validated at the Sezibwa Homes microgrid in Uganda).</li>
+  </ul>
+
+  <h3>Where you can take it</h3>
+  <ul class="compact">
+    <li><strong>Your own control logic</strong> — combine what's already there: a solar-surplus contactor, a temperature-controlled cold room with door-switch alarm, a battery supervisor.</li>
+    <li><strong>EV charging manager</strong> — the RS485(EVC) bus is reserved for exactly this: add a charger driver next to the meter drivers in <code>src/metering/</code>.</li>
+    <li><strong>New meter or sensor support</strong> — every Modbus device driver follows the same pattern (<code>src/metering/modbus_*.cpp</code>); copy one and adapt it to your hardware.</li>
+    <li><strong>New hardware</strong> — the expansion headers expose SPI, interrupts, and power; add your board and a driver in <code>src/hw/</code>. Design an add-on and show us — contributions are welcome at <strong>github.com/energy-iot</strong>.</li>
+  </ul>
+
+  <figure>
+    <img src="images/final-back.jpg" alt="Back of the finished board mounted on corner standoffs">
+    <figcaption>Finished: mounted on corner standoffs, ready for an enclosure — or for whatever you build next.</figcaption>
+  </figure>
+
+  <div class="tip"><span class="callout-title">Keep going</span>
+    Firmware examples, pinout maps, and the expansion-board template live at <strong>github.com/energy-iot</strong>. Energy IoT MeshEMS is an open-source project of Energy IoT Open Source under the Apache 2.0 License — contributions welcome.</div>
+
+  <footer class="docfoot">
+    <span>Energy IoT MeshEMS Assembly Workshop — NESL EMS Controller PCB 865B</span>
+  </footer>
+
+</div>
+</body>
+</html>
