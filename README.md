@@ -2,7 +2,7 @@
 
 All files and documentation related to the MeshEMS hardware.
 
-[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/energy-iot/meshems/badge)](https://scorecard.dev/viewer/?uri=github.com/{owner}/{repo})
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/energy-iot/meshems/badge)](https://scorecard.dev/viewer/?uri=github.com/energy-iot/meshems)
 
 ## Overview
 
