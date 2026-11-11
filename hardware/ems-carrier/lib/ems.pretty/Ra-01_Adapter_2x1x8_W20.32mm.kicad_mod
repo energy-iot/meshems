@@ -1,5 +1,5 @@
-(footprint "Ra-01_Adapter_2x1x8_W20.32mm" (version 20241229) (generator "ems_mklib") (layer "F.Cu")
-(descr "Sockets for an Ai-Thinker Ra-01 (SX1278) on a 2.54 mm adapter: 2 x 1x8 in module pin order, rows 20.32 mm apart (check with the adapter); antenna end = pin 1 end; copper keep-out under the module and 6 mm beyond the antenna end")
+(footprint "Ra-01_Adapter_2x1x8_W20.32mm" (version 20241229) (generator "ems_lib") (layer "F.Cu")
+(descr "Sockets for an Ai-Thinker Ra-01 (SX1278) on a 2.54 mm adapter: 2 x 1x8 in module pin order, rows 20.32 mm apart (confirm with the adapter); antenna end = pin 1 end; copper keep-out under the module and 6 mm beyond the antenna end")
 (attr through_hole)
 (property "Reference" "REF**" (at -10.2 -4.5 0) (layer "F.Fab") (effects (font (size 1.0 1.0) (thickness 0.15))))
 (property "Value" "Ra-01_Adapter_2x1x8_W20.32mm" (at 0 19 0) (layer "F.Fab") (hide yes) (effects (font (size 1.0 1.0) (thickness 0.15))))

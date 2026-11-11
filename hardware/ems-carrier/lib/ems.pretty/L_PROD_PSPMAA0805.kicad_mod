@@ -1,4 +1,4 @@
-(footprint "L_PROD_PSPMAA0805" (version 20241229) (generator "ems_mklib") (layer "F.Cu")
+(footprint "L_PROD_PSPMAA0805" (version 20241229) (generator "ems_lib") (layer "F.Cu")
 (descr "PROD PSPMAA0805 molded power inductor 8.5 x 8.0 mm, land pattern from the datasheet")
 (attr smd)
 (property "Reference" "REF**" (at 0 -5.3 0) (layer "F.Fab") (effects (font (size 1.0 1.0) (thickness 0.15))))

@@ -1,4 +1,4 @@
-(footprint "MountingHole_4.3mm_M4_Pad6.4" (version 20241229) (generator "ems_mklib") (layer "F.Cu")
+(footprint "MountingHole_4.3mm_M4_Pad6.4" (version 20241229) (generator "ems_lib") (layer "F.Cu")
 (descr "M4 plated mounting hole, 4.3 mm drill, 6.4 mm ring; for M4 screws with a 7 mm head (ISO 4762 / ISO 14580)")
 (attr exclude_from_pos_files exclude_from_bom)
 (property "Reference" "REF**" (at 0 -4.6 0) (layer "F.Fab") (effects (font (size 1.0 1.0) (thickness 0.15))))

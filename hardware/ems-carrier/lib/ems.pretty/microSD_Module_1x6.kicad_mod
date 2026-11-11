@@ -1,4 +1,4 @@
-(footprint "microSD_Module_1x6" (version 20241229) (generator "ems_mklib") (layer "F.Cu")
+(footprint "microSD_Module_1x6" (version 20241229) (generator "ems_lib") (layer "F.Cu")
 (descr "Socket for a microSD card module with level shifter (Catalex style): 1x6 GND VCC MISO MOSI SCK CS; body ~24 x 42 mm, card slot at the far end")
 (attr through_hole)
 (property "Reference" "REF**" (at -9.5 -1 0) (layer "F.Fab") (effects (font (size 1.0 1.0) (thickness 0.15))))

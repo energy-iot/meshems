@@ -53,8 +53,8 @@ datasheets, so USB-only operation is meant for the bench. The modem runs from th
 |---|---|
 | `kicad/` | KiCad project: schematic, PCB, design rules, title block sheet. **Requires KiCad 10.** The 3D models of the plug-in modules are not included; use the renders in `docs/` for 3D views. |
 | `lib/` | project symbol and footprint libraries (`ems.kicad_sym`, `ems.pretty/`) for the modules, the HLK-20M12, the DIN clips and the M4 holes |
-| `fab/` | JLCPCB production files: Gerbers + drills (`ems-carrier-gerbers.zip`), `bom-jlc.csv`, `cpl-jlc.csv`, `hand-fit.csv` (parts fitted by hand), `jlc-check.csv` (stock and price at export), `ems-carrier.step` (3D model of the board) |
-| `docs/` | this README, schematic PDF ([`ems-carrier-schematic.pdf`](ems-carrier-schematic.pdf)), annotated top views, 3D renders (fitted with the SIM800L or the A7670, as assembled before the modules, plain PCB), routed copper |
+| `fab/` | JLCPCB production files: Gerbers + drills (`ems-carrier-gerbers.zip`), BOM (`bom-jlc.csv`), placement (`cpl-jlc.csv`), parts fitted by hand (`hand-fit.csv`), 3D model of the board (`ems-carrier.step`) |
+| `docs/` | this README; schematic PDF ([`ems-carrier-schematic.pdf`](ems-carrier-schematic.pdf)); annotated top views; 3D renders, angled (`*-iso*.png`) and top (`ems-carrier-3d.png` with the SIM800L, `-3d-4g.png` with the A7670, `-3d-assembled.png` before the modules, `-3d-bare.png` plain PCB); routed copper (`ems-carrier-routed.png`, `.svg`) |
 
 
 ## Checks

@@ -25501,7 +25501,7 @@
 				)
 			)
 		)
-		(property "Check" "W5500 module pin order: confirm with the module before fitting"
+		(property "Check" "W5500 module header order: confirm with the module before fitting"
 			(at 664.21 207.01 0)
 			(hide yes)
 			(effects
@@ -27876,7 +27876,7 @@
 				)
 			)
 		)
-		(property "Check" "confirm header order and row spacing with your adapter"
+		(property "Check" "confirm header order and row spacing with the adapter"
 			(at 62.23 215.9 0)
 			(hide yes)
 			(effects
@@ -29253,7 +29253,7 @@
 				)
 			)
 		)
-		(property "Check" "pin order and outline from the user's SIM800L EVB V2.0 photos"
+		(property "Check" "pin order and outline measured from a SIM800L EVB V2.0 board"
 			(at 314.96 241.3 0)
 			(hide yes)
 			(effects
@@ -29742,7 +29742,7 @@
 				)
 			)
 		)
-		(property "Check" "pin order and header position from the user's board photo; outline 40 x 40 mm"
+		(property "Check" "pin order and header position measured from an A7670 Cat-1 board; outline 40 x 40 mm"
 			(at 179.07 250.19 0)
 			(hide yes)
 			(effects

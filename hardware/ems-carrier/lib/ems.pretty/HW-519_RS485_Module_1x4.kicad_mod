@@ -1,4 +1,4 @@
-(footprint "HW-519_RS485_Module_1x4" (version 20241229) (generator "ems_mklib") (layer "F.Cu")
+(footprint "HW-519_RS485_Module_1x4" (version 20241229) (generator "ems_lib") (layer "F.Cu")
 (descr "Socket for an HW-519 RS-485 module: 1x4 GND RXD TXD VCC; module body ~14.7 x 43.5 mm incl. terminal")
 (attr through_hole)
 (property "Reference" "REF**" (at -4.85 -0.3 0) (layer "F.Fab") (effects (font (size 1.0 1.0) (thickness 0.15))))

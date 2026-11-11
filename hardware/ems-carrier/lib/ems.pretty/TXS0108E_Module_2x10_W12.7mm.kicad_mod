@@ -1,4 +1,4 @@
-(footprint "TXS0108E_Module_2x10_W12.7mm" (version 20241229) (generator "ems_mklib") (layer "F.Cu")
+(footprint "TXS0108E_Module_2x10_W12.7mm" (version 20241229) (generator "ems_lib") (layer "F.Cu")
 (descr "Sockets for a TXS0108E 8-bit level shifter module: 2x10 at 2.54 mm, rows 12.7 mm apart; top row OE A8..A1 VA, bottom row GND B8..B1 VB")
 (attr through_hole)
 (property "Reference" "REF**" (at -10.65 -0.05 0) (layer "F.Fab") (effects (font (size 1.0 1.0) (thickness 0.15))))

@@ -1,4 +1,4 @@
-(footprint "MCP2515_CAN_Module_1x7" (version 20241229) (generator "ems_mklib") (layer "F.Cu")
+(footprint "MCP2515_CAN_Module_1x7" (version 20241229) (generator "ems_lib") (layer "F.Cu")
 (descr "Socket for an MCP2515/TJA1050 CAN module (HW-184): 1x7 VCC GND CS SO SI SCK INT; body ~27.7 x 41.6 mm")
 (attr through_hole)
 (property "Reference" "REF**" (at -11.35 -0.9 0) (layer "F.Fab") (effects (font (size 1.0 1.0) (thickness 0.15))))

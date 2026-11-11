@@ -1,4 +1,4 @@
-(footprint "OLED_1.3in_SPI_1x7" (version 20241229) (generator "ems_mklib") (layer "F.Cu")
+(footprint "OLED_1.3in_SPI_1x7" (version 20241229) (generator "ems_lib") (layer "F.Cu")
 (descr "Socket for a 1.3\" SH1106 SPI OLED: 1x7 GND VCC CLK MOSI RES DC CS; body ~35.5 x 33.7 mm")
 (attr through_hole)
 (property "Reference" "REF**" (at -15.25 -0.5 0) (layer "F.Fab") (effects (font (size 1.0 1.0) (thickness 0.15))))

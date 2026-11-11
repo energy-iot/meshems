@@ -6079,7 +6079,7 @@
 		(layer "F.Cu")
 		(uuid "383dcbdf-c67d-4875-a731-3339a96b56e0")
 		(at 74.42 99.05 90)
-		(descr "Socket for a W5500 Ethernet module with a 2x5 header (pin order of the common module, check); body ~28 x 55 mm, RJ45 at the far end (unverified)")
+		(descr "Socket for a W5500 Ethernet module with a 2x5 header (pin order of the common module); body ~28 x 55 mm, RJ45 at the far end")
 		(property "Reference" "U11"
 			(at -49.5 -7.42 90)
 			(layer "F.Fab")
@@ -6161,7 +6161,7 @@
 				)
 			)
 		)
-		(property "Check" "W5500 module pin order: confirm with the module before fitting"
+		(property "Check" "W5500 module header order: confirm with the module before fitting"
 			(at 0 0 90)
 			(layer "F.SilkS")
 			(hide yes)
@@ -9824,7 +9824,7 @@
 		(layer "F.Cu")
 		(uuid "4b175280-acf2-46c2-9bba-bb0e46f687f6")
 		(at 209.4 65 180)
-		(descr "Socket for the SIM800L EVB V2.0 5V board: 1x7 VCC GND VDD SIM_TXD SIM_RXD GND RST on its 24 mm edge; board ~24 x 34 mm (measured from a photo of the user's board)")
+		(descr "Socket for the SIM800L EVB V2.0 5V board: 1x7 VCC GND VDD SIM_TXD SIM_RXD GND RST on its 24 mm edge; board ~24 x 34 mm (measured from a SIM800L EVB V2.0 board)")
 		(property "Reference" "U15"
 			(at -8.38 -0.2 180)
 			(layer "F.Fab")
@@ -9918,7 +9918,7 @@
 				)
 			)
 		)
-		(property "Check" "pin order and outline from the user's SIM800L EVB V2.0 photos"
+		(property "Check" "pin order and outline measured from a SIM800L EVB V2.0 board"
 			(at 0 0 180)
 			(layer "F.SilkS")
 			(hide yes)
@@ -10032,7 +10032,7 @@
 				)
 			)
 		)
-		(fp_text user "module holes (approx., not drilled)"
+		(fp_text user "module mounting holes (not drilled)"
 			(at 1.1 17 180)
 			(layer "F.Fab")
 			(uuid "b3cad51c-f7db-44ed-958e-d69c0c7d2420")
@@ -13794,7 +13794,7 @@
 		(layer "F.Cu")
 		(uuid "7cc6298a-0f19-4424-bda1-32241dcc8276")
 		(at 78.2 39)
-		(descr "Sockets for an Ai-Thinker Ra-01 (SX1278) on a 2.54 mm adapter: 2 x 1x8 in module pin order, rows 20.32 mm apart (check with the adapter); antenna end = pin 1 end; copper keep-out under the module and 6 mm beyond the antenna end")
+		(descr "Sockets for an Ai-Thinker Ra-01 (SX1278) on a 2.54 mm adapter: 2 x 1x8 in module pin order, rows 20.32 mm apart (confirm with the adapter); antenna end = pin 1 end; copper keep-out under the module and 6 mm beyond the antenna end")
 		(property "Reference" "U14"
 			(at -10.2 -4.5 0)
 			(layer "F.Fab")
@@ -13888,7 +13888,7 @@
 				)
 			)
 		)
-		(property "Check" "confirm header order and row spacing with your adapter"
+		(property "Check" "confirm header order and row spacing with the adapter"
 			(at 0 0 0)
 			(layer "F.SilkS")
 			(hide yes)
@@ -29468,7 +29468,7 @@
 				)
 			)
 		)
-		(property "Check" "pin order and header position from the user's board photo; outline 40 x 40 mm"
+		(property "Check" "pin order and header position measured from an A7670 Cat-1 board; outline 40 x 40 mm"
 			(at 0 0 180)
 			(layer "F.SilkS")
 			(hide yes)

@@ -1,4 +1,4 @@
-(footprint "A7670_4G_Board_1x7" (version 20241229) (generator "ems_mklib") (layer "F.Cu")
+(footprint "A7670_4G_Board_1x7" (version 20241229) (generator "ems_lib") (layer "F.Cu")
 (descr "Socket for an A7670 4G LTE Cat-1 board (SIMCom A7670E): 1x7 GND URX UTX PWR-K 5-12V GND SLEEP; outline 40 x 40 mm; shares the SIM800L EVB position (fit one of the two)")
 (attr through_hole)
 (property "Reference" "REF**" (at -21.18 0 0) (layer "F.Fab") (effects (font (size 1.0 1.0) (thickness 0.15))))

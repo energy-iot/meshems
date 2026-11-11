@@ -1,4 +1,4 @@
-(footprint "DIN_Clip_Bud_DNC-4796" (version 20241229) (generator "ems_mklib") (layer "F.Cu")
+(footprint "DIN_Clip_Bud_DNC-4796" (version 20241229) (generator "ems_lib") (layer "F.Cu")
 (descr "Bud Industries DNC-4796 DIN rail clip (35 mm rail), 14 x 37.3 mm steel, M4 x 8 screw from the top; 4.3 mm NPTH; clip under the board (B.Fab): no B.Cu copper under it, no F.Cu under the screw head")
 (attr exclude_from_pos_files exclude_from_bom)
 (property "Reference" "REF**" (at 0 -20.2 0) (layer "F.Fab") (effects (font (size 1.0 1.0) (thickness 0.15))))
