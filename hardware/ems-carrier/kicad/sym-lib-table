@@ -1,0 +1,4 @@
+(sym_lib_table
+	(version 7)
+	(lib (name "ems")(type "KiCad")(uri "${KIPRJMOD}/../lib/ems.kicad_sym")(options "")(descr "EMS carrier modules (tools/mklib.py)"))
+)
