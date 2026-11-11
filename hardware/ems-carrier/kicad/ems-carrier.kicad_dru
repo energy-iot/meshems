@@ -1,0 +1,13 @@
+(version 1)
+(rule "mains to SELV 6.5 mm"
+  (condition "A.NetClass == 'Mains' && B.NetClass != 'Mains'")
+  (constraint clearance (min 6.5mm)))
+(rule "mains to edge"
+  (condition "A.NetClass == 'Mains'")
+  (constraint edge_clearance (min 1.0mm)))
+(rule "thermal spokes"
+  (condition "A.NetName == 'GND'")
+  (constraint min_resolved_spokes 1))
+(rule "mains L to N"
+  (condition "A.NetClass == 'Mains' && B.NetClass == 'Mains'")
+  (constraint clearance (min 2.0mm)))
