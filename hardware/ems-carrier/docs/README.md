@@ -7,15 +7,15 @@ can be swapped. Power comes from mains through an on-board 12 V supply or from a
 **Status: design complete, not yet fabricated or tested.** ERC and DRC are clean and the power and interface
 circuits are simulated (see [Checks](#checks)). The first boards are meant for the pilot run and review.
 
-![EMS carrier, 3D view with the SIM800L](ems-carrier-3d-iso.png)
+![EMS carrier, 3D view with the SIM800L](images/ems-carrier-3d-iso.png)
 
 ## Board overview
 
 Top views with every block numbered: the cellular position takes either modem.
 
-![EMS carrier top view, annotated, with the SIM800L](ems-carrier-annotated-sim800l.png)
+![EMS carrier top view, annotated, with the SIM800L](images/ems-carrier-annotated-sim800l.png)
 
-![EMS carrier top view, annotated, with the A7670](ems-carrier-annotated-a7670.png)
+![EMS carrier top view, annotated, with the A7670](images/ems-carrier-annotated-a7670.png)
 
 ## Features
 
@@ -45,7 +45,7 @@ datasheets, so USB-only operation is meant for the bench. The modem runs from th
 
 | With the A7670 (4G) instead | As assembled, before the modules go in | Plain PCB |
 |---|---|---|
-| ![PCB with the A7670 4G board](ems-carrier-3d-iso-4g.png) | ![PCB with every assembled part and the module sockets](ems-carrier-3d-assembled-iso.png) | ![plain PCB](ems-carrier-3d-bare-iso.png) |
+| ![PCB with the A7670 4G board](images/ems-carrier-3d-iso-4g.png) | ![PCB with every assembled part and the module sockets](images/ems-carrier-3d-assembled-iso.png) | ![plain PCB](images/ems-carrier-3d-bare-iso.png) |
 
 ## Files
 
@@ -54,7 +54,7 @@ datasheets, so USB-only operation is meant for the bench. The modem runs from th
 | `kicad/` | KiCad project: schematic, PCB, design rules, title block sheet. **Requires KiCad 10.** The 3D models of the plug-in modules are not included; use the renders in `docs/` for 3D views. |
 | `lib/` | project symbol and footprint libraries (`ems.kicad_sym`, `ems.pretty/`) for the modules, the HLK-20M12, the DIN clips and the M4 holes |
 | `fab/` | JLCPCB production files: Gerbers + drills (`ems-carrier-gerbers.zip`), BOM (`bom-jlc.csv`), placement (`cpl-jlc.csv`), parts fitted by hand (`hand-fit.csv`), 3D model of the board (`ems-carrier.step`) |
-| `docs/` | this README; schematic PDF ([`ems-carrier-schematic.pdf`](ems-carrier-schematic.pdf)); annotated top views; 3D renders, angled (`*-iso*.png`) and top (`ems-carrier-3d.png` with the SIM800L, `-3d-4g.png` with the A7670, `-3d-assembled.png` before the modules, `-3d-bare.png` plain PCB); routed copper (`ems-carrier-routed.png`, `.svg`) |
+| `docs/` | this README; schematic PDF ([`ems-carrier-schematic.pdf`](ems-carrier-schematic.pdf)); `images/`: annotated top views; 3D renders, angled (`*-iso*.png`) and top (`ems-carrier-3d.png` with the SIM800L, `-3d-4g.png` with the A7670, `-3d-assembled.png` before the modules, `-3d-bare.png` plain PCB); routed copper (`ems-carrier-routed.png`, `.svg`) |
 
 
 ## Checks
